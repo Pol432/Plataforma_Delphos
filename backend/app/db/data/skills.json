@@ -1,0 +1,111 @@
+[
+  {
+    "name": "Python",
+    "slug": "python",
+    "category": "technical",
+    "description": "Python programming language",
+    "market_demand": "high",
+    "trend": "growing",
+    "avg_salary_impact": 1.5
+  },
+  {
+    "name": "JavaScript",
+    "slug": "javascript",
+    "category": "technical",
+    "description": "JavaScript and TypeScript",
+    "market_demand": "high",
+    "trend": "stable",
+    "avg_salary_impact": 1.4
+  },
+  {
+    "name": "React",
+    "slug": "react",
+    "category": "technical",
+    "description": "React.js framework",
+    "market_demand": "high",
+    "trend": "growing",
+    "avg_salary_impact": 1.6,
+    "parent_slug": "javascript"
+  },
+  {
+    "name": "SQL",
+    "slug": "sql",
+    "category": "technical",
+    "description": "SQL databases",
+    "market_demand": "high",
+    "trend": "stable",
+    "avg_salary_impact": 1.3
+  },
+  {
+    "name": "Data Analysis",
+    "slug": "data-analysis",
+    "category": "technical",
+    "description": "Data analytics and visualization",
+    "market_demand": "high",
+    "trend": "growing",
+    "avg_salary_impact": 1.7
+  },
+  {
+    "name": "Machine Learning",
+    "slug": "machine-learning",
+    "category": "technical",
+    "description": "ML algorithms and AI",
+    "market_demand": "high",
+    "trend": "growing",
+    "avg_salary_impact": 2.0
+  },
+  {
+    "name": "Leadership",
+    "slug": "leadership",
+    "category": "soft",
+    "description": "Team leadership and management",
+    "market_demand": "high",
+    "trend": "stable",
+    "avg_salary_impact": 1.8
+  },
+  {
+    "name": "Communication",
+    "slug": "communication",
+    "category": "soft",
+    "description": "Effective communication skills",
+    "market_demand": "high",
+    "trend": "stable",
+    "avg_salary_impact": 1.4
+  },
+  {
+    "name": "Problem Solving",
+    "slug": "problem-solving",
+    "category": "soft",
+    "description": "Analytical and critical thinking",
+    "market_demand": "high",
+    "trend": "stable",
+    "avg_salary_impact": 1.5
+  },
+  {
+    "name": "Project Management",
+    "slug": "project-management",
+    "category": "soft",
+    "description": "Agile, Scrum, project planning",
+    "market_demand": "medium",
+    "trend": "stable",
+    "avg_salary_impact": 1.6
+  },
+  {
+    "name": "Excel Advanced",
+    "slug": "excel-advanced",
+    "category": "tool",
+    "description": "Advanced Excel functions and macros",
+    "market_demand": "medium",
+    "trend": "stable",
+    "avg_salary_impact": 1.2
+  },
+  {
+    "name": "English",
+    "slug": "english",
+    "category": "language",
+    "description": "English language proficiency",
+    "market_demand": "high",
+    "trend": "stable",
+    "avg_salary_impact": 1.5
+  }
+]

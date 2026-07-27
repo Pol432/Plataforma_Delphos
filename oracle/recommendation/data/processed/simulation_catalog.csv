@@ -1,0 +1,65 @@
+simulation_id,simulation_title,simulation_categoria,simulation_nivel_dificultad,simulation_duracion_horas,simulation_industria,simulation_required_skills,base_career
+sim_data_scientist,Data Scientist Virtual Experience,STEM,Upper-Intermediate,9.9,Technology,"['SQL', 'Data Analysis', 'Python', 'Statistics', 'Machine Learning', 'R', 'TensorFlow']",Data Scientist
+sim_software_engineer,Software Engineer Virtual Experience,STEM,Expert,20.0,Technology,"['SQL', 'Node.js', 'Python', 'AWS', 'JavaScript', 'Git']",Software Engineer
+sim_ux_designer,UX Designer Virtual Experience,Design,Beginner,3.5,Creative & Design,"['UI Design', 'UX Research', 'User Research', 'Figma', 'Wireframing']",UX Designer
+sim_ai_researcher,AI Researcher Virtual Experience,STEM,Advanced,15.0,Technology,"['Research', 'Excel', 'Python']",AI Researcher
+sim_project_manager,Project Manager Virtual Experience,Business,Advanced,12.6,Business & Management,"['Project Management', 'Jira', 'Excel', 'Scrum', 'Agile']",Project Manager
+sim_embedded_systems_engineer,Embedded Systems Engineer Virtual Experience,STEM,Upper-Intermediate,9.3,Technology,"['Research', 'Python', 'Data Analysis']",Embedded Systems Engineer
+sim_data_analyst,Data Analyst Virtual Experience,STEM,Lower-Intermediate,5.1,Technology,"['SQL', 'Tableau', 'Data Analysis', 'Excel', 'Statistics']",Data Analyst
+sim_digital_marketer,Digital Marketer Virtual Experience,Other,Beginner,4.3,General,"['PPC', 'Social Media', 'Content Creation', 'SEO', 'Marketing']",Digital Marketer
+sim_nlp_engineer,NLP Engineer Virtual Experience,STEM,Advanced,13.3,Technology,"['Research', 'Excel', 'Python']",NLP Engineer
+sim_financial_analyst,Financial Analyst Virtual Experience,Finance,Advanced,13.7,Finance & Banking,"['SQL', 'Financial Modeling', 'Financial Analysis', 'Excel', 'Accounting', 'DCF Analysis', 'Forecasting']",Financial Analyst
+sim_research_scientist,Research Scientist Virtual Experience,STEM,Lower-Intermediate,6.6,Technology,"['Research', 'Data Analysis', 'Python', 'Statistics', 'Machine Learning', 'TensorFlow']",Research Scientist
+sim_front-end_developer,Front-end Developer Virtual Experience,STEM,Advanced,13.3,Technology,"['Research', 'Excel', 'Python']",Front-end Developer
+sim_software_developer,Software Developer Virtual Experience,STEM,Advanced,14.2,Technology,"['SQL', 'Node.js', 'Docker', 'Python', 'JavaScript', 'Git']",Software Developer
+sim_machine_learning_engineer,Machine Learning Engineer Virtual Experience,STEM,Lower-Intermediate,7.2,Technology,"['Data Analysis', 'Python', 'Machine Learning', 'Kubernetes', 'TensorFlow']",Machine Learning Engineer
+sim_marketing_manager,Marketing Manager Virtual Experience,Business,Advanced,12.3,Business & Management,"['Strategic Planning', 'Marketing', 'Social Media', 'SEO']",Marketing Manager
+sim_full_stack_developer,Full Stack Developer Virtual Experience,STEM,Lower-Intermediate,5.6,Technology,"['SQL', 'Node.js', 'Docker', 'AWS', 'React', 'JavaScript', 'MongoDB']",Full Stack Developer
+sim_ai_specialist,AI Specialist Virtual Experience,Other,Upper-Intermediate,9.4,General,"['Research', 'Excel', 'Data Analysis']",AI Specialist
+sim_cybersecurity_analyst,Cybersecurity Analyst Virtual Experience,STEM,Lower-Intermediate,5.2,Technology,"['Research', 'Excel', 'Python']",Cybersecurity Analyst
+sim_research_analyst,Research Analyst Virtual Experience,STEM,Advanced,14.2,Technology,"['Research', 'Tableau', 'Data Analysis', 'Excel', 'Statistics']",Research Analyst
+sim_devops_engineer,DevOps Engineer Virtual Experience,STEM,Lower-Intermediate,6.9,Technology,"['Docker', 'Python', 'AWS', 'Kubernetes', 'Git']",DevOps Engineer
+sim_graphic_designer,Graphic Designer Virtual Experience,Design,Upper-Intermediate,9.6,Creative & Design,"['Photoshop', 'Branding', 'Adobe Creative Suite', 'Visual Design']",Graphic Designer
+sim_deep_learning_engineer,Deep Learning Engineer Virtual Experience,STEM,Lower-Intermediate,6.2,Technology,"['Research', 'Excel', 'Python']",Deep Learning Engineer
+sim_business_analyst,Business Analyst Virtual Experience,Business,Upper-Intermediate,11.1,Business & Management,"['Excel', 'Business Analysis', 'Data Analysis', 'Python']",Business Analyst
+sim_backend_developer,Backend Developer Virtual Experience,STEM,Beginner,4.2,Technology,"['SQL', 'Node.js', 'MongoDB', 'Python', 'AWS', 'Kubernetes', 'Git']",Backend Developer
+sim_biostatistician,Biostatistician Virtual Experience,Other,Beginner,3.7,General,"['Research', 'Excel', 'Data Analysis']",Biostatistician
+sim_data_engineer,Data Engineer Virtual Experience,STEM,Lower-Intermediate,6.0,Technology,"['Research', 'Python', 'Data Analysis']",Data Engineer
+sim_content_strategist,Content Strategist Virtual Experience,Business,Beginner,3.3,Business & Management,"['Research', 'Excel', 'Marketing']",Content Strategist
+sim_automation_engineer,Automation Engineer Virtual Experience,STEM,Advanced,12.9,Technology,"['Research', 'Excel', 'Python']",Automation Engineer
+sim_mobile_developer,Mobile Developer Virtual Experience,STEM,Expert,16.9,Technology,"['Research', 'Excel', 'Python']",Mobile Developer
+sim_ux_researcher,UX Researcher Virtual Experience,STEM,Advanced,14.4,Technology,"['Research', 'Python', 'Data Analysis']",UX Researcher
+sim_cybersecurity_specialist,Cybersecurity Specialist Virtual Experience,Other,Advanced,12.3,General,"['Research', 'Excel', 'Data Analysis']",Cybersecurity Specialist
+sim_clerk,Clerk Virtual Experience,Finance,Beginner,3.7,Finance & Banking,"['Research', 'Financial Analysis', 'Accounting']",Clerk
+sim_sales_assistant,Sales Assistant Virtual Experience,Other,Beginner,4.1,General,"['Research', 'Excel', 'Data Analysis']",Sales Assistant
+sim_professor,Professor Virtual Experience,Education,Lower-Intermediate,5.1,Education,"['Research', 'Grant Writing', 'Pedagogy', 'Academic Writing']",Professor
+sim_marketing_executive,Marketing Executive Virtual Experience,Business,Expert,18.4,Business & Management,"['Strategic Planning', 'Marketing', 'Brand Management']",Marketing Executive
+sim_junior_accountant,Junior Accountant Virtual Experience,Finance,Advanced,13.7,Finance & Banking,"['Research', 'Excel', 'Financial Analysis']",Junior Accountant
+sim_school_counselor,School Counselor Virtual Experience,Education,Lower-Intermediate,6.9,Education,"['Research', 'Excel', 'Pedagogy']",School Counselor
+sim_data_entry_operator,Data Entry Operator Virtual Experience,Other,Beginner,3.1,General,"['Research', 'Excel', 'Data Analysis']",Data Entry Operator
+sim_veterinarian,Veterinarian Virtual Experience,Other,Beginner,4.6,General,"['Research', 'Excel', 'Data Analysis']",Veterinarian
+sim_music_teacher,Music teacher Virtual Experience,Education,Lower-Intermediate,7.0,Education,"['Research', 'Pedagogy', 'Curriculum Development']",Music teacher
+sim_actuary,Actuary Virtual Experience,Finance,Advanced,13.1,Finance & Banking,"['Research', 'Financial Analysis', 'Accounting']",Actuary
+sim_chartered_accountant,Chartered Accountant Virtual Experience,Finance,Beginner,4.8,Finance & Banking,"['Research', 'Excel', 'Financial Analysis']",Chartered Accountant
+sim_database_designer,Database designer Virtual Experience,Design,Advanced,12.3,Creative & Design,"['Research', 'Visual Design', 'Adobe Creative Suite']",Database designer
+sim_economist,Economist Virtual Experience,Finance,Expert,19.8,Finance & Banking,"['Research', 'Excel', 'Financial Analysis']",Economist
+sim_lawyer,Lawyer Virtual Experience,Legal,Expert,16.6,Legal Services,"['Intellectual Property', 'Legal Research', 'Case Analysis', 'Compliance', 'Legal Writing', 'Contract Review']",Lawyer
+sim_pharmacist,Pharmacist Virtual Experience,Health,Advanced,13.0,Healthcare,"['Research', 'Patient Care', 'Medical Knowledge']",Pharmacist
+sim_physician,Physician Virtual Experience,Health,Beginner,4.2,Healthcare,"['Research', 'Excel', 'Patient Care']",Physician
+sim_physical_therapist,Physical Therapist Virtual Experience,Health,Expert,16.7,Healthcare,"['Research', 'Patient Care', 'Medical Knowledge']",Physical Therapist
+sim_language_teacher,Language Teacher Virtual Experience,Education,Lower-Intermediate,6.6,Education,"['Research', 'Excel', 'Pedagogy']",Language Teacher
+sim_artist,Artist Virtual Experience,Design,Advanced,14.9,Creative & Design,"['Research', 'Visual Design', 'Adobe Creative Suite']",Artist
+sim_fashion_designer,Fashion Designer Virtual Experience,Design,Beginner,5.0,Creative & Design,"['Research', 'Excel', 'Visual Design']",Fashion Designer
+sim_psychologist,Psychologist Virtual Experience,Health,Upper-Intermediate,8.7,Healthcare,"['Patient Education', 'Clinical Assessment', 'Research', 'Counseling', 'Patient Care']",Psychologist
+sim_marketing,Marketing Virtual Experience,Business,Beginner,3.0,Business & Management,"['Research', 'Excel', 'Marketing']",Marketing
+sim_logistics_manager,Logistics manager Virtual Experience,Business,Beginner,4.0,Business & Management,"['Research', 'Marketing', 'Excel']",Logistics manager
+sim_business_manager,Business manager Virtual Experience,Business,Advanced,15.9,Business & Management,"['Research', 'Marketing', 'Excel']",Business manager
+sim_internal_auditor,Internal auditor Virtual Experience,Finance,Advanced,16.0,Finance & Banking,"['Research', 'Excel', 'Financial Analysis']",Internal auditor
+sim_chief_financial_officer,Chief financial officer Virtual Experience,Finance,Upper-Intermediate,10.7,Finance & Banking,"['Research', 'Financial Analysis', 'Accounting']",Chief financial officer
+sim_financial_advisor,Financial Advisor Virtual Experience,Finance,Upper-Intermediate,10.5,Finance & Banking,"['Research', 'Excel', 'Financial Analysis']",Financial Advisor
+sim_consultant,Consultant Virtual Experience,Business,Upper-Intermediate,12.0,Business & Management,"['Strategic Planning', 'Business Analysis', 'Financial Modeling']",Consultant
+sim_pre_primary_teacher_(2020_nep_and_mental_health),Pre Primary Teacher (2020 NEP and Mental Health) Virtual Experience,Education,Lower-Intermediate,7.1,Education,"['Research', 'Excel', 'Pedagogy']",Pre Primary Teacher (2020 NEP and Mental Health)
+sim_primary_teacher,Primary Teacher Virtual Experience,Education,Upper-Intermediate,11.3,Education,"['Research', 'Pedagogy', 'Curriculum Development']",Primary Teacher
+"sim_middle,_higher_school_teacher_and_professors","Middle, Higher School Teacher and Professors Virtual Experience",Education,Lower-Intermediate,5.0,Education,"['Research', 'Excel', 'Pedagogy']","Middle, Higher School Teacher and Professors"
+sim_medical,Medical Virtual Experience,Health,Upper-Intermediate,10.6,Healthcare,"['Research', 'Excel', 'Patient Care']",Medical
+"sim_para_medical_(physiotherapy,_occupational_theropy,_audio_and_speech_language_theropy,_nursing)","Para Medical (physiotherapy, occupational theropy, audio and speech language theropy, nursing) Virtual Experience",Health,Expert,19.1,Healthcare,"['Research', 'Excel', 'Patient Care']","Para Medical (physiotherapy, occupational theropy, audio and speech language theropy, nursing)"

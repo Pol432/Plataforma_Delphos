@@ -1,0 +1,69 @@
+services:
+  # ============================================
+  # BASE DE DATOS POSTGRESQL
+  # ============================================
+  db:
+    image: postgres:15-alpine
+    container_name: aurum_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: aurum_dao
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aurum_network
+
+  # ============================================
+  # API FASTAPI
+  # ============================================
+  web:
+    build: .
+    container_name: aurum_api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/aurum_dao
+      SECRET_KEY: dev-secret-key-change-in-production
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - aurum_network
+
+  # ============================================
+  # PGADMIN (OPCIONAL - INTERFACE WEB PARA DB)
+  # ============================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: aurum_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@aurum.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - aurum_network
+    profiles:
+      - tools
+
+networks:
+  aurum_network:
+    driver: bridge
+
+volumes:
+  postgres_data:

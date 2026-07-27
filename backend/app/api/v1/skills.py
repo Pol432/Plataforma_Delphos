@@ -1,0 +1,48 @@
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.db.session import get_db
+from app.models.skill import Skill
+from app.schemas.skill import SkillCreate, SkillUpdate, SkillOut
+from app.api.deps import get_current_user
+
+router = APIRouter()
+
+@router.post("/", response_model=SkillOut, status_code=201)
+def create_skill(skill: SkillCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    existing = db.query(Skill).filter(Skill.name == skill.name).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Skill already exists")
+    db_obj = Skill(**skill.model_dump())
+    db.add(db_obj); db.commit(); db.refresh(db_obj)
+    return db_obj
+
+@router.get("/", response_model=List[SkillOut])
+def list_skills(category: Optional[str] = None, db: Session = Depends(get_db)):
+    q = db.query(Skill).filter(Skill.is_active == True)  # FIX: Solo activos
+    if category: q = q.filter(Skill.category == category)
+    return q.all()
+
+@router.get("/{skill_id}", response_model=SkillOut)
+def get_skill(skill_id: int, db: Session = Depends(get_db)):
+    s = db.query(Skill).filter(Skill.id == skill_id).first()
+    if not s: raise HTTPException(status_code=404, detail="Skill not found")
+    return s
+
+@router.put("/{skill_id}", response_model=SkillOut)
+def update_skill(skill_id: int, skill: SkillUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    db_skill = db.query(Skill).filter(Skill.id == skill_id).first()
+    if not db_skill: raise HTTPException(status_code=404, detail="Skill not found")
+    for k, v in skill.model_dump(exclude_unset=True).items():
+        setattr(db_skill, k, v)
+    db.commit(); db.refresh(db_skill)
+    return db_skill
+
+@router.delete("/{skill_id}", status_code=204)
+def delete_skill(skill_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    s = db.query(Skill).filter(Skill.id == skill_id).first()
+    if not s: raise HTTPException(status_code=404, detail="Skill not found")
+    s.is_active = False
+    db.commit()
+    return None
+

@@ -1,0 +1,37 @@
+# DELPHOS — Wide & Deep Career Recommendation System
+#
+# Consolidated from setup_env.sh and the inline `pip install` cells in
+# notebooks/Week 2 and Week 3.
+#
+# Only MindSpore is pinned: the baseline checkpoint was trained against 2.2.14
+# and the vendored src/wide_and_deep.py targets that API. The remaining
+# packages were never pinned anywhere in the project, so they are left
+# unpinned rather than pinned to guessed versions.
+#
+# MindSpore may need the Huawei index if PyPI does not serve your platform:
+#   pip install -r requirements.txt \
+#     -i https://repo.mindspore.cn/pypi/simple \
+#     --trusted-host repo.mindspore.cn \
+#     --extra-index-url https://repo.huaweicloud.com/repository/pypi/simple
+
+# ── Framework ────────────────────────────────────────────────────────────────
+mindspore==2.6.0
+
+# ── Data / modelling ─────────────────────────────────────────────────────────
+numpy
+pandas
+scikit-learn
+
+# ── Visualisation ────────────────────────────────────────────────────────────
+matplotlib
+seaborn
+
+# ── Notebook environment ─────────────────────────────────────────────────────
+jupyterlab
+notebook
+ipywidgets
+
+# ── Utilities ────────────────────────────────────────────────────────────────
+tqdm
+kaggle          # scripts/01_download_datasets.sh
+download        # `from download import download` — Week 1 MNIST fetch

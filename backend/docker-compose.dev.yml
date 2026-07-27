@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  api:
+    env_file: .env
+    volumes:
+      - .:/app
+    environment:
+      UVICORN_ARGS: "--reload"
+    # Keep same command as Dockerfile (wait-for-db.sh) so migrations still run
+    command: ./scripts/wait-for-db.sh

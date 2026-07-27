@@ -1,0 +1,53 @@
+skill_id,skill_name,frequency,slug
+1,Budgeting,1049,budgeting
+2,Pedagogy,1015,pedagogy
+3,JavaScript,972,javascript
+4,Forecasting,888,forecasting
+5,Docker,864,docker
+6,Python,500,python
+7,TensorFlow,500,tensorflow
+8,Git,500,git
+9,Statistics,500,statistics
+10,Data Analysis,500,data-analysis
+11,Excel,500,excel
+12,Accounting,500,accounting
+13,Machine Learning,500,machine-learning
+14,SQL,500,sql
+15,Business Analysis,500,business-analysis
+16,Financial Analysis,500,financial-analysis
+17,Research,500,research
+18,Marketing,500,marketing
+19,Counseling,500,counseling
+20,Social Media,486,social-media
+21,Strategic Planning,486,strategic-planning
+22,Financial Modeling,437,financial-modeling
+23,Curriculum Development,364,curriculum-development
+24,Lesson Planning,352,lesson-planning
+25,SEO,291,seo
+26,Patient Care,290,patient-care
+27,Node.js,270,node-js
+28,Requirements Gathering,267,requirements-gathering
+29,Content Strategy,258,content-strategy
+30,Kubernetes,256,kubernetes
+31,Deep Learning,256,deep-learning
+32,Google Analytics,255,google-analytics
+33,DCF Analysis,251,dcf-analysis
+34,React,247,react
+35,Academic Writing,246,academic-writing
+36,Valuation,241,valuation
+37,Medical Knowledge,224,medical-knowledge
+38,Visual Design,212,visual-design
+39,Adobe Creative Suite,208,adobe-creative-suite
+40,R,159,r
+41,Brand Management,138,brand-management
+42,Tableau,134,tableau
+43,Email Marketing,130,email-marketing
+44,AWS,129,aws
+45,MongoDB,125,mongodb
+46,Grant Writing,121,grant-writing
+47,Bloomberg Terminal,118,bloomberg-terminal
+48,Content Creation,115,content-creation
+49,Legal Research,50,legal-research
+50,Case Analysis,50,case-analysis
+51,Legal Writing,50,legal-writing
+52,Clinical Assessment,50,clinical-assessment

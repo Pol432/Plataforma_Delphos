@@ -1,0 +1,15 @@
+feat(api-core): implementacion de endpoints reales para Auth y Users (Fase 13)
+
+RESUMEN ARQUITECTÓNICO:
+Respuesta directa a la auditoría técnica. Transición de la capa de datos (modelos) a la capa de controladores (API). Se implementó el flujo completo de autenticación OAuth2 con JWT, inyección de dependencias robusta y operaciones CRUD de usuarios delegando la lógica al UserService. 17/17 pruebas de integración exitosas.
+
+CREATED:
+- `app/api/deps.py`: Motor centralizado de inyección de dependencias (`get_db`, `get_current_user`, `get_current_active_user`) para manejo seguro de sesiones DB y decodificación de tokens.
+- `tests/api/test_auth_endpoints.py`: Suite de pruebas de integración con TestClient validando registro, login, protección de rutas (RBAC) y edge cases de seguridad.
+
+UPDATED:
+- `app/api/v1/auth.py`: Reescritura completa. Implementación de los endpoints `/register` y `/token` conectando el esquema Pydantic con la base de datos real.
+- `app/api/v1/users.py`: Implementación de endpoints CRUD (`/`, `/me`, `/{id}`) incorporando validación de autorización (un usuario solo puede editar/eliminar su propia data).
+
+DELETED:
+- Estructuras "dummy" o endpoints mock provisionales que existían previamente en los archivos de rutas de autenticación y usuarios.

@@ -1,0 +1,10 @@
+{
+  "auc_roc": 0.7762742066574879,
+  "accuracy": 83.64955357142857,
+  "f1_score": 0.6029810298102981,
+  "precision": 0.5514250309789344,
+  "recall": 0.6651718983557549,
+  "threshold": 0.65,
+  "n_test": 3584,
+  "checkpoint": "/workspace/checkpoints/baseline/dao_wide_deep_best.ckpt"
+}

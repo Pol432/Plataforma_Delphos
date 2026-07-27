@@ -1,0 +1,18 @@
+"""
+Models Package
+Importa todos los modelos para que Alembic los detecte
+"""
+from app.models.user import User
+from app.models.catalog import Region, Provincia, Ciudad
+from app.models.university import Universidad, Carrera
+from app.models.empresa import Empresa
+
+__all__ = [
+    "User",
+    "Region",
+    "Provincia",
+    "Ciudad",
+    "Universidad",
+    "Carrera",
+    "Empresa"
+]

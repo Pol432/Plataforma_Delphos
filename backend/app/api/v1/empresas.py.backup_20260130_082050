@@ -1,0 +1,179 @@
+# app/api/v1/empresas.py
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy.orm import Session
+from typing import List, Optional
+
+from app.db.session import get_db
+from app.models.empresa import Empresa, from app.schemas.empresa import (
+    EmpresaCreate, 
+    EmpresaUpdate, 
+    EmpresaOut, 
+    EmpresaConUsuarios,
+    Create,
+    Out
+)
+from app.api.v1.auth import get_password_hash
+
+router = APIRouter(prefix='/empresas', tags=['empresas'])
+
+# ===== CRUD EMPRESAS =====
+
+@router.post('/', response_model=EmpresaOut, status_code=status.HTTP_201_CREATED)
+def crear_empresa(empresa: EmpresaCreate, db: Session = Depends(get_db)):
+    '''Crear una nueva empresa partner'''
+    
+    # Verificar que no exista el slug
+    db_empresa = db.query(Empresa).filter(Empresa.slug == empresa.slug).first()
+    if db_empresa:
+        raise HTTPException(
+            status_code=400,
+            detail=f'Ya existe una empresa con el slug: {empresa.slug}'
+        )
+    
+    # Crear empresa
+    nueva_empresa = Empresa(**empresa.model_dump())
+    db.add(nueva_empresa)
+    db.commit()
+    db.refresh(nueva_empresa)
+    
+    return nueva_empresa
+
+@router.get('/', response_model=List[EmpresaOut])
+def listar_empresas(
+    skip: int = 0,
+    limit: int = 100,
+    tipo_empresa: Optional[str] = None,
+    es_partner: Optional[bool] = None,
+    verificado: Optional[bool] = None,
+    db: Session = Depends(get_db)
+):
+    '''Listar todas las empresas con filtros opcionales'''
+    
+    query = db.query(Empresa).filter(Empresa.esta_activo == True)
+    
+    if tipo_empresa:
+        query = query.filter(Empresa.tipo_empresa == tipo_empresa)
+    
+    if es_partner is not None:
+        query = query.filter(Empresa.es_partner_activo == es_partner)
+    
+    if verificado is not None:
+        query = query.filter(Empresa.verificado == verificado)
+    
+    empresas = query.offset(skip).limit(limit).all()
+    return empresas
+
+@router.get('/{empresa_id}', response_model=EmpresaConUsuarios)
+def obtener_empresa(empresa_id: int, db: Session = Depends(get_db)):
+    '''Obtener detalles de una empresa específica con sus usuarios'''
+    
+    empresa = db.query(Empresa).filter(Empresa.id == empresa_id).first()
+    if not empresa:
+        raise HTTPException(status_code=404, detail='Empresa no encontrada')
+    
+    # Obtener usuarios de la empresa
+    usuarios = db.query().filter(
+        .empresa_id == empresa_id,
+        .esta_activo == True
+    ).all()
+    
+    # Convertir a dict y agregar usuarios
+    empresa_dict = {
+        **{c.name: getattr(empresa, c.name) for c in empresa.__table__.columns},
+        'usuarios': usuarios
+    }
+    
+    return empresa_dict
+
+@router.put('/{empresa_id}', response_model=EmpresaOut)
+def actualizar_empresa(
+    empresa_id: int, 
+    empresa_update: EmpresaUpdate, 
+    db: Session = Depends(get_db)
+):
+    '''Actualizar información de una empresa'''
+    
+    empresa = db.query(Empresa).filter(Empresa.id == empresa_id).first()
+    if not empresa:
+        raise HTTPException(status_code=404, detail='Empresa no encontrada')
+    
+    # Actualizar solo campos proporcionados
+    update_data = empresa_update.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(empresa, key, value)
+    
+    db.commit()
+    db.refresh(empresa)
+    return empresa
+
+@router.delete('/{empresa_id}', status_code=status.HTTP_204_NO_CONTENT)
+def desactivar_empresa(empresa_id: int, db: Session = Depends(get_db)):
+    '''Desactivar una empresa (soft delete)'''
+    
+    empresa = db.query(Empresa).filter(Empresa.id == empresa_id).first()
+    if not empresa:
+        raise HTTPException(status_code=404, detail='Empresa no encontrada')
+    
+    empresa.esta_activo = False
+    empresa.razon_desactivacion = 'Desactivada por administrador'
+    db.commit()
+    
+    return None
+
+# ===== USUARIOS DE EMPRESA =====
+
+@router.post('/{empresa_id}/usuarios', response_model=Out, status_code=status.HTTP_201_CREATED)
+def crear_usuario_empresa(
+    empresa_id: int,
+    usuario: Create,
+    db: Session = Depends(get_db)
+):
+    '''Crear un nuevo usuario para una empresa'''
+    
+    # Verificar que la empresa existe
+    empresa = db.query(Empresa).filter(Empresa.id == empresa_id).first()
+    if not empresa:
+        raise HTTPException(status_code=404, detail='Empresa no encontrada')
+    
+    # Verificar que el email no existe
+    usuario_existente = db.query().filter(
+        .email == usuario.email
+    ).first()
+    if usuario_existente:
+        raise HTTPException(status_code=400, detail='Email ya registrado')
+    
+    # Hashear password
+    password_hash = get_password_hash(usuario.password)
+    
+    # Crear usuario
+    usuario_data = usuario.model_dump(exclude={'password'})
+    usuario_data['empresa_id'] = empresa_id
+    usuario_data['password_hash'] = password_hash
+    
+    nuevo_usuario = (**usuario_data)
+    db.add(nuevo_usuario)
+    db.commit()
+    db.refresh(nuevo_usuario)
+    
+    return nuevo_usuario
+
+@router.get('/{empresa_id}/usuarios', response_model=List[Out])
+def listar_usuarios_empresa(
+    empresa_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    '''Listar todos los usuarios de una empresa'''
+    
+    # Verificar que la empresa existe
+    empresa = db.query(Empresa).filter(Empresa.id == empresa_id).first()
+    if not empresa:
+        raise HTTPException(status_code=404, detail='Empresa no encontrada')
+    
+    usuarios = db.query().filter(
+        .empresa_id == empresa_id,
+        .esta_activo == True
+    ).offset(skip).limit(limit).all()
+    
+    return usuarios

@@ -1,0 +1,37 @@
+{
+  "run_name": "baseline",
+  "batch_size": 256,
+  "field_size": 115,
+  "vocab_size": 148,
+  "emb_dim": 16,
+  "deep_layer_dim": [
+    256,
+    128,
+    64,
+    32
+  ],
+  "deep_layer_act": "relu",
+  "l2_coef": 0.001,
+  "epochs": 1000,
+  "device_target": "CPU",
+  "cat_vocab_sizes": [
+    4,
+    13,
+    8,
+    5,
+    8
+  ],
+  "cat_offsets": [
+    0,
+    4,
+    17,
+    25,
+    30
+  ],
+  "cont_base_id": 38,
+  "skill_base_id": 44,
+  "sim_skill_base": 96,
+  "best_auc": 0.7762742066574879,
+  "best_ckpt_path": "/workspace/checkpoints/baseline/dao_wide_deep_best.ckpt",
+  "total_time_min": 37.05217303037644
+}

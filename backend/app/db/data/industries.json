@@ -1,0 +1,76 @@
+[
+  {
+    "name": "Technology",
+    "slug": "technology",
+    "description": "Software, Hardware, IT Services",
+    "color": "#0066CC",
+    "level": 1
+  },
+  {
+    "name": "Software Development",
+    "slug": "software-development",
+    "description": "Web, Mobile, Desktop Applications",
+    "color": "#0080FF",
+    "level": 2,
+    "parent_slug": "technology"
+  },
+  {
+    "name": "Cloud Computing",
+    "slug": "cloud-computing",
+    "description": "AWS, Azure, GCP Services",
+    "color": "#00AAFF",
+    "level": 2,
+    "parent_slug": "technology"
+  },
+  {
+    "name": "Finance & Banking",
+    "slug": "finance-banking",
+    "description": "Banking, Fintech, Investment",
+    "color": "#006633",
+    "level": 1
+  },
+  {
+    "name": "Investment Banking",
+    "slug": "investment-banking",
+    "description": "M&A, Capital Markets, Trading",
+    "color": "#008844",
+    "level": 2,
+    "parent_slug": "finance-banking"
+  },
+  {
+    "name": "Healthcare",
+    "slug": "healthcare",
+    "description": "Medical, Pharmaceutical, Biotech",
+    "color": "#CC0000",
+    "level": 1
+  },
+  {
+    "name": "Consulting",
+    "slug": "consulting",
+    "description": "Management, Strategy, IT Consulting",
+    "color": "#660099",
+    "level": 1
+  },
+  {
+    "name": "Strategy Consulting",
+    "slug": "strategy-consulting",
+    "description": "McKinsey, BCG, Bain Style",
+    "color": "#8800BB",
+    "level": 2,
+    "parent_slug": "consulting"
+  },
+  {
+    "name": "Marketing & Advertising",
+    "slug": "marketing-advertising",
+    "description": "Digital Marketing, Brand Strategy",
+    "color": "#FF6600",
+    "level": 1
+  },
+  {
+    "name": "Education",
+    "slug": "education",
+    "description": "EdTech, Universities, Online Learning",
+    "color": "#FFAA00",
+    "level": 1
+  }
+]

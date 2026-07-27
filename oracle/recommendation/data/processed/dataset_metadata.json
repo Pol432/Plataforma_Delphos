@@ -1,0 +1,21 @@
+{
+  "total_samples": 18501,
+  "positive_samples": 4871,
+  "negative_samples": 13630,
+  "positive_rate": 0.2632830657802281,
+  "num_users": 8800,
+  "num_simulations": 64,
+  "num_skills": 52,
+  "difficulty_levels": [
+    "Beginner",
+    "Lower-Intermediate",
+    "Upper-Intermediate",
+    "Advanced",
+    "Expert"
+  ],
+  "skill_distribution": {
+    "max": 1049,
+    "median": 280,
+    "min": 50
+  }
+}

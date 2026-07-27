@@ -1,0 +1,65 @@
+# --- Python & Venv ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# --- Environment Variables ---
+.env
+.env.local
+.env.*.local
+
+# --- Database ---
+*.db
+*.sqlite
+*.sqlite3
+test.db
+sql_app.db
+test_aurum.db
+instance/
+
+# --- Testing & Coverage ---
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# --- IDEs & OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+logs/
+
+# --- ARCHIVOS TEMPORALES Y CONTEXTO (CLAUDE/IA) ---
+contexto_para_claude.txt
+commands.txt
+COMMIT_MSG_TEMP.txt
+comandos-docker.ps1
+
+# --- BACKUPS Y REFACCIÓN (Sueltos en tu carpeta) ---
+backup_refactor_*/
+problematic_migrations_backup/
+fastapi-jwt-auth/
+
+# --- SCRIPTS DE MANTENIMIENTO (SUELTOS) ---
+fix_*.py
+restore_*.py
+ultimate_*.py
+final_*.py
+rescue_*.py
+boost_*.py
+temp_*.py
+*_fix.py
+force_fix_tests.py
+fix_auth_final.py
+force_fix_tests.py
