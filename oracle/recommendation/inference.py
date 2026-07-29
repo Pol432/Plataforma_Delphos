@@ -554,12 +554,16 @@ class WideDeepRecommender:
             raise FileNotFoundError(f"No existe el checkpoint {ckpt_path}")
 
         params = ms.load_checkpoint(str(ckpt_path))
-        not_loaded = ms.load_param_into_net(network, params)
-        # MindSpore devuelve la lista de parámetros que no encontró destino.
-        if not_loaded:
+        # load_param_into_net devuelve la TUPLA (param_not_load, ckpt_not_load):
+        # parámetros de la red que el checkpoint no cubrió, y parámetros del
+        # checkpoint que la red no tiene. Hay que desempaquetarla — la tupla
+        # ([], []) es truthy y comprobarla entera da un falso positivo siempre.
+        missing_in_net, missing_in_ckpt = ms.load_param_into_net(network, params)
+        if missing_in_net or missing_in_ckpt:
             raise RuntimeError(
-                f"El checkpoint {ckpt_path.name} no encaja con la arquitectura; "
-                f"parámetros sin cargar: {not_loaded}"
+                f"El checkpoint {ckpt_path.name} no encaja con la arquitectura. "
+                f"Sin valor en la red: {missing_in_net}. "
+                f"Sobrantes en el checkpoint: {missing_in_ckpt}."
             )
 
         network.set_train(False)

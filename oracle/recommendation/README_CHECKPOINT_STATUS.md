@@ -72,3 +72,47 @@ diagnóstico.
 No se reentrenó ni se regeneró el MindRecord. Las métricas de arriba son las
 registradas en `evaluation_results.json` del entrenamiento original, no una
 reevaluación local.
+
+---
+
+## 2026-07-29 — Métricas reproducidas localmente
+
+El pendiente de arriba ("AUC/F1 real NO reproducido") queda **cerrado**. No hizo
+falta regenerar el MindRecord: `inference.py` featuriza directamente desde
+`unified_training_dataset_v3.csv` y los vectores `.npy`, aplicando el mismo
+corte secuencial 80/20 y el mismo truncado a múltiplos de 256 (`drop_remainder`)
+que usó el entrenamiento.
+
+Evaluado sobre las 3584 filas del split de test con
+`checkpoints/baseline/dao_wide_deep_best.ckpt`, en el contenedor
+`Dockerfile.inference` (Python 3.10 + MindSpore 2.6.0):
+
+| Métrica   | Reproducido | Publicado | Delta    |
+|-----------|-------------|-----------|----------|
+| AUC-ROC   | 0.776371    | 0.776274  | +0.0001  |
+| Accuracy  | 83.6496 %   | 83.6496 % | exacto   |
+| F1        | 0.6030      | 0.6030    | exacto   |
+| Precision | 0.5514      | 0.5514    | exacto   |
+| Recall    | 0.6652      | 0.6652    | exacto   |
+
+Las cuatro métricas de umbral coinciden **exactamente**, es decir que las
+predicciones binarias a 0.65 son idénticas a las de la evaluación original. Esto
+valida de punta a punta que la featurización de `inference.py` reproduce la del
+entrenamiento.
+
+Nota sobre el AUC: `MatchingOutput.engagement_probability` redondea a 4
+decimales y eso colapsa 2329 de 3584 probabilidades a `0.0` exacto. Medido sobre
+esos valores redondeados el AUC sube artificialmente a 0.7972. El 0.776371 de la
+tabla es sobre probabilidades crudas.
+
+### Generalización
+
+| Split           | n    | AUC-ROC | Accuracy @0.65 |
+|-----------------|------|---------|----------------|
+| Test (no visto) | 3701 | 0.7740  | 83.03 %        |
+| Train (muestra) | 3701 | 0.9928  | 95.38 %        |
+
+Hay sobreajuste real: 0.99 en entrenamiento contra 0.77 en test. Además el
+modelo está mal calibrado en ambos splits — 85.6 % de las probabilidades de test
+caen fuera de [0.01, 0.99] y sólo un 8.1 % queda en la zona media 0.1–0.9. La
+saturación no es memoria de las filas vistas: ocurre igual sobre datos nuevos.
