@@ -18,7 +18,7 @@ import app.models.skill
 import app.models.user_progress
 
 # Imports de Routers (¡Comunidad añadida al final!)
-from app.api.v1 import content, auth, catalogs, universities, empresas, company_users, simulations, users, skills, progress, community
+from app.api.v1 import content, auth, catalogs, universities, empresas, company_users, simulations, users, skills, progress, community, oracle
 
 from app.db.session import get_db
 
@@ -69,3 +69,6 @@ app.include_router(content.router, prefix="/api/v1", tags=["content"])
 
 # ¡NUEVA RUTA DE COMUNIDAD!
 app.include_router(community.router, prefix="/api/v1/community", tags=["community"])
+
+# Oráculo: recomendación de simulaciones (puente heurístico)
+app.include_router(oracle.router, prefix="/api/v1/oracle", tags=["oracle"])
