@@ -4,7 +4,7 @@ services:
   # ============================================
   db:
     image: postgres:15-alpine
-    container_name: aurum_postgres
+    container_name: delphos_postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -26,13 +26,17 @@ services:
   # ============================================
   web:
     build: .
-    container_name: aurum_api
+    container_name: delphos_api
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - .:/code
+      # Catálogo del oráculo (solo lectura) — lo consume /api/v1/oracle.
+      # Fuera de /code a propósito: anidarlo dentro del bind `.:/code` no es fiable.
+      - ../oracle/recommendation/data/processed:/opt/oracle_data:ro
     ports:
       - "8000:8000"
     environment:
+      ORACLE_DATA_DIR: /opt/oracle_data
       DATABASE_URL: postgresql://postgres:postgres@db:5432/aurum_dao
       SECRET_KEY: dev-secret-key-change-in-production
       ALGORITHM: HS256

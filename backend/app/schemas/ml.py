@@ -28,12 +28,21 @@ class SimulationCategory(str, Enum):
     HEALTH = "Health"
     ARTS = "Arts"
     LAW = "Law"
+    # Categorías presentes en el catálogo del oráculo (simulation_catalog.csv)
+    DESIGN = "Design"
+    EDUCATION = "Education"
+    FINANCE = "Finance"
+    LEGAL = "Legal"
+    OTHER = "Other"
 
 class DifficultyLevel(str, Enum):
     BEGINNER = "Beginner"
     INTERMEDIATE = "Intermediate"
     ADVANCED = "Advanced"
     EXPERT = "Expert"
+    # Niveles reales del dataset de entrenamiento (dataset_metadata.json)
+    LOWER_INTERMEDIATE = "Lower-Intermediate"
+    UPPER_INTERMEDIATE = "Upper-Intermediate"
 
 # --- CORE SCHEMAS ---
 class UserFeaturesInput(BaseModel):
@@ -113,5 +122,69 @@ class MatchingOutput(BaseModel):
     skill_overlap_score: float = Field(..., ge=0.0, le=1.0)
     difficulty_match_score: float = Field(..., ge=0.0, le=1.0)
     confidence_interval: Optional[tuple[float, float]] = None
-    
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- ORACLE ENDPOINT SCHEMAS ---
+class OracleProfileInput(BaseModel):
+    """
+    Perfil que el cliente envía a /oracle/recommend.
+
+    Los skills van como nombres o slugs ("Python", "ux_research") y se resuelven
+    contra el catálogo del oráculo; los IDs de la tabla `skills` del backend no
+    corresponden al vocabulario del modelo.
+    """
+    skills: List[str] = Field(default_factory=list, max_length=100)
+    education_level: EducationLevel = EducationLevel.BACHELOR
+    field_of_study: str = Field(default="General", min_length=1, max_length=200)
+
+    analytical_score: int = Field(50, ge=0, le=100)
+    creative_score: int = Field(50, ge=0, le=100)
+    social_score: int = Field(50, ge=0, le=100)
+    linguistic_score: int = Field(50, ge=0, le=100)
+    hands_on_score: int = Field(50, ge=0, le=100)
+
+    top_n: int = Field(5, ge=1, le=64, description="Cuántas recomendaciones devolver")
+
+    @field_validator('skills')
+    @classmethod
+    def sanitize_skills(cls, v: List[str]) -> List[str]:
+        cleaned = [s.strip() for s in v if s and s.strip()]
+        if len(cleaned) != len(set(s.lower() for s in cleaned)):
+            # Deduplicar preservando orden
+            seen, out = set(), []
+            for s in cleaned:
+                if s.lower() not in seen:
+                    seen.add(s.lower())
+                    out.append(s)
+            return out
+        return cleaned
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+
+class RecommendationItem(BaseModel):
+    simulation_id: str
+    title: str
+    base_career: Optional[str] = None
+    categoria: str
+    nivel_dificultad: str
+    duracion_horas: float
+    matched_skills: List[str] = []
+    scores: MatchingOutput
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RecommendationResponse(BaseModel):
+    user_id: int
+    engine: str = Field(..., description="Motor usado: 'heuristic_bridge_v1' o 'wide_and_deep'")
+    catalog_size: int
+    resolved_skill_ids: List[int] = []
+    unresolved_skills: List[str] = Field(
+        default=[], description="Skills enviados que no existen en el catálogo del oráculo"
+    )
+    recommendations: List[RecommendationItem]
+
     model_config = ConfigDict(from_attributes=True)

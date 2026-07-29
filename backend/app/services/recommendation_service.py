@@ -24,7 +24,9 @@ class RecommendationService:
     # Difficulty-to-score mapping
     DIFFICULTY_THRESHOLDS = {
         "Beginner": (0, 40),
+        "Lower-Intermediate": (25, 60),
         "Intermediate": (30, 70),
+        "Upper-Intermediate": (50, 80),
         "Advanced": (60, 90),
         "Expert": (80, 100)
     }
@@ -55,7 +57,13 @@ class RecommendationService:
             "Business": {"social": 0.3, "linguistic": 0.3, "analytical": 0.2, "creative": 0.1, "hands_on": 0.1},
             "Arts": {"creative": 0.4, "linguistic": 0.2, "analytical": 0.1, "social": 0.2, "hands_on": 0.1},
             "Health": {"analytical": 0.3, "social": 0.3, "hands_on": 0.2, "linguistic": 0.1, "creative": 0.1},
-            "Law": {"linguistic": 0.4, "analytical": 0.3, "social": 0.2, "creative": 0.05, "hands_on": 0.05}
+            "Law": {"linguistic": 0.4, "analytical": 0.3, "social": 0.2, "creative": 0.05, "hands_on": 0.05},
+            # Categorías del catálogo del oráculo
+            "Legal": {"linguistic": 0.4, "analytical": 0.3, "social": 0.2, "creative": 0.05, "hands_on": 0.05},
+            "Design": {"creative": 0.4, "hands_on": 0.2, "social": 0.15, "linguistic": 0.15, "analytical": 0.1},
+            "Education": {"social": 0.35, "linguistic": 0.3, "analytical": 0.15, "creative": 0.15, "hands_on": 0.05},
+            "Finance": {"analytical": 0.45, "linguistic": 0.2, "social": 0.15, "hands_on": 0.1, "creative": 0.1},
+            "Other": {"analytical": 0.2, "creative": 0.2, "social": 0.2, "linguistic": 0.2, "hands_on": 0.2}
         }
         
         cat_weights = weights.get(category, weights["STEM"])

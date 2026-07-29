@@ -11,3 +11,168 @@ hayan derivado del código que vio el checkpoint original.
 Pendiente: regenerar MindRecord y reevaluar, o localizar
 dao_wide_deep_best.ckpt (el checkpoint de mejor época, distinto del
 final, nunca commiteado a git).
+
+---
+
+## 2026-07-27 — dao_wide_deep_best.ckpt localizado
+
+`dao_wide_deep_best.ckpt` (el checkpoint de mejor época, no sólo el
+`_final.ckpt`) fue localizado en el repo fuente
+`IA_Delphos/Wide-Deep-Career-Recommendation-System/checkpoints/baseline/`
+y copiado al monorepo:
+
+    oracle/recommendation/checkpoints/baseline/dao_wide_deep_best.ckpt
+
+`training_config.json` y `evaluation_results.json` ya estaban presentes en
+`oracle/recommendation/checkpoints/` y son idénticos a los del repo fuente
+(verificado con `cmp`), así que no se re-copiaron.
+
+### Métricas confirmadas
+
+Provienen de `evaluation_results.json`, cuyo campo `checkpoint` apunta
+explícitamente a `.../baseline/dao_wide_deep_best.ckpt` — es decir, estas
+métricas corresponden a este checkpoint, no al `_final.ckpt`:
+
+| Métrica    | Valor    |
+|------------|----------|
+| AUC-ROC    | 0.7763   |
+| F1 Score   | 0.6030   |
+| Accuracy   | 83.65 %  |
+| Threshold  | 0.65     |
+| Precision  | 0.5514   |
+| Recall     | 0.6652   |
+| n_test     | 3584     |
+
+### Corrección de la celda 6 del notebook
+
+`notebooks/Week 3 - Model Training/02_model_build_and_train.ipynb`, celda 6,
+declaraba `emb_dim=8` y `deep_layer_dim=[128, 64, 32, 16]`, valores que **no**
+corresponden al checkpoint y que provocaban un fallo de carga por shape
+mismatch. Se corrigieron a los valores reales del checkpoint:
+
+- `emb_dim = 16`
+- `deep_layer_dim = [256, 128, 64, 32]`
+
+Confirmado contra las shapes del propio checkpoint (`embedding_table`
+(148, 16), `dense_layer_1` (1840, 256) = field_size 115 × emb_dim 16) y contra
+`training_config.json`, que ya registraba `emb_dim: 16` y
+`deep_layer_dim: [256, 128, 64, 32]`. La celda 6 había sido editada después
+del entrenamiento — de ahí la discrepancia original. Con esto el notebook
+queda alineado con el checkpoint y no se vuelve a caer en el mismo
+diagnóstico.
+
+### Estado
+
+- **`checkpoints/baseline/dao_wide_deep_best.ckpt` es ahora el checkpoint de
+  referencia para la demo.**
+- `checkpoints/dao_wide_deep_final.ckpt` (época 980, sin best-AUC) queda
+  únicamente como histórico; no debe usarse para la demo ni para reportar
+  métricas.
+
+No se reentrenó ni se regeneró el MindRecord. Las métricas de arriba son las
+registradas en `evaluation_results.json` del entrenamiento original, no una
+reevaluación local.
+
+---
+
+## 2026-07-29 — Métricas reproducidas localmente
+
+El pendiente de arriba ("AUC/F1 real NO reproducido") queda **cerrado**. No hizo
+falta regenerar el MindRecord: `inference.py` featuriza directamente desde
+`unified_training_dataset_v3.csv` y los vectores `.npy`, aplicando el mismo
+corte secuencial 80/20 y el mismo truncado a múltiplos de 256 (`drop_remainder`)
+que usó el entrenamiento.
+
+Evaluado sobre las 3584 filas del split de test con
+`checkpoints/baseline/dao_wide_deep_best.ckpt`, en el contenedor
+`Dockerfile.inference` (Python 3.10 + MindSpore 2.6.0):
+
+| Métrica   | Reproducido | Publicado | Delta    |
+|-----------|-------------|-----------|----------|
+| AUC-ROC   | 0.776371    | 0.776274  | +0.0001  |
+| Accuracy  | 83.6496 %   | 83.6496 % | exacto   |
+| F1        | 0.6030      | 0.6030    | exacto   |
+| Precision | 0.5514      | 0.5514    | exacto   |
+| Recall    | 0.6652      | 0.6652    | exacto   |
+
+Las cuatro métricas de umbral coinciden **exactamente**, es decir que las
+predicciones binarias a 0.65 son idénticas a las de la evaluación original. Esto
+valida de punta a punta que la featurización de `inference.py` reproduce la del
+entrenamiento.
+
+Nota sobre el AUC: `MatchingOutput.engagement_probability` redondea a 4
+decimales y eso colapsa 2329 de 3584 probabilidades a `0.0` exacto. Medido sobre
+esos valores redondeados el AUC sube artificialmente a 0.7972. El 0.776371 de la
+tabla es sobre probabilidades crudas.
+
+### Generalización
+
+| Split           | n    | AUC-ROC | Accuracy @0.65 |
+|-----------------|------|---------|----------------|
+| Test (no visto) | 3701 | 0.7740  | 83.03 %        |
+| Train (muestra) | 3701 | 0.9928  | 95.38 %        |
+
+Hay sobreajuste real: 0.99 en entrenamiento contra 0.77 en test. Además el
+modelo está mal calibrado en ambos splits — 85.6 % de las probabilidades de test
+caen fuera de [0.01, 0.99] y sólo un 8.1 % queda en la zona media 0.1–0.9. La
+saturación no es memoria de las filas vistas: ocurre igual sobre datos nuevos.
+
+---
+
+## RIESGO ABIERTO — Calibración del modelo
+
+**Estado: documentado, sin arreglar. No bloqueante hoy** — el endpoint
+`/api/v1/oracle` corre con la heurística de puente, no con este checkpoint.
+
+### Qué se midió
+
+Sobre el split de test (3701 filas nunca vistas) contra una muestra del mismo
+tamaño del split de entrenamiento, con `dao_wide_deep_best.ckpt`:
+
+| Split           | n    | AUC-ROC | Accuracy @0.65 | Saturadas | Zona 0.1–0.9 |
+|-----------------|------|---------|----------------|-----------|--------------|
+| Test (no visto) | 3701 | 0.7740  | 83.03 %        | 85.6 %    | 8.1 %        |
+| Train (muestra) | 3701 | 0.9928  | 95.38 %        | 82.5 %    | 12.7 %       |
+
+Son **dos problemas distintos**, no uno:
+
+**1. Sobreajuste.** AUC 0.9928 en entrenamiento contra 0.7740 en test. Esperable
+con 18 501 muestras y ~828 épocas, pero la brecha es grande.
+
+**2. Mala calibración, independiente del sobreajuste.** El 85.6 % de las
+predicciones de test cae fuera de [0.01, 0.99] y sólo un 8.1 % queda en la zona
+media. 2801 de 3701 caen en el primer decil. **La saturación no es memoria de
+las filas vistas: el test satura más que el train (85.6 % vs 82.5 %).** El
+modelo es igual de sobreconfiado sobre datos nuevos.
+
+### Consecuencia práctica para el ranking
+
+Sobre las 3584 filas de la evaluación de referencia, 900 probabilidades (25.1 %)
+son **exactamente 0.0** por underflow de sigmoid en float32 — no por redondeo.
+Esos 900 candidatos empatan y no son ordenables por probabilidad.
+
+El logit sí los separa, pero **no sirve para ordenarlos**:
+
+| Región                 | n    | AUC por probabilidad | AUC por logit |
+|------------------------|------|----------------------|---------------|
+| Fuera de la cola       | 2684 | 0.835092             | 0.835092      |
+| Dentro de la cola      |  900 | empates (0.5)        | **0.2129**    |
+| Global                 | 3584 | **0.776371**         | 0.765215      |
+
+Dentro de la cola saturada el logit ordena **peor que al azar**: es
+anti-informativo ahí. Ordenar por logit baja el AUC global de 0.7764 a 0.7652.
+Por eso `inference.py::rank_candidates()` desempata con los diagnósticos
+descriptivos (solapamiento de skills, luego alineación de dificultad), que son
+interpretables y no dependen de la calibración.
+
+### Qué NO se hizo y por qué
+
+No se aplicó ningún ajuste de calibración (temperature scaling, Platt scaling,
+isotonic). Es una decisión de coste/beneficio para el timeline del piloto y no
+urge: el endpoint no usa este modelo todavía. Si se decide abordarlo, temperature
+scaling sobre el logit es lo más barato — un solo parámetro ajustado en el split
+de test — pero conviene medir antes si mueve el AUC o sólo la calibración
+(típicamente sólo lo segundo, que es justo lo que aquí importa para el ranking).
+
+Cualquier decisión sobre esto debe considerar además que el sobreajuste es real:
+recalibrar no arregla un modelo que generaliza a 0.77.

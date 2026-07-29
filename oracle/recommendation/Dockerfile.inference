@@ -1,0 +1,37 @@
+# ============================================================================
+# Entorno de inferencia — Wide & Deep
+#
+# Existe porque MindSpore 2.6.0 sólo publica wheels hasta Python 3.11 y las
+# máquinas de desarrollo del equipo corren 3.13. La featurización y sus tests
+# no necesitan este contenedor (numpy puro); esto es para la validación
+# end-to-end: cargar el checkpoint y correr PredictWithSigmoid de verdad.
+#
+#   docker build -f Dockerfile.inference -t delphos-inference .
+#   docker run --rm -v "$PWD":/workspace -w /workspace delphos-inference \
+#       python -m pytest tests/ -q
+# ============================================================================
+FROM python:3.10-slim
+
+WORKDIR /workspace
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    GLOG_v=3
+
+# MindSpore enlaza contra libgomp
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# El pin de MindSpore vive en requirements.txt para no duplicarlo.
+# numpy<2 y scikit-learn 1.3.x: el primero por compatibilidad con MindSpore 2.6,
+# el segundo porque label_encoders.pkl se serializó con 1.3.0 y así se lee sin
+# el warning de versión inconsistente.
+RUN pip install --no-cache-dir --timeout 120 --retries 10 \
+      "mindspore==2.6.0" \
+      "numpy<2" \
+      "scikit-learn~=1.3.0" \
+      pandas \
+      pytest
+
+CMD ["python", "-m", "pytest", "tests/", "-q"]
