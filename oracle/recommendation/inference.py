@@ -63,6 +63,18 @@ Limitaciones registradas
   produce un único logit. No son comparables con los de la heurística.
 * `confidence_interval` se deja en None: el modelo no estima incertidumbre y
   fabricar un intervalo sería inventar.
+* El modelo está mal calibrado: sobre el split de test, el 25 % de las
+  probabilidades es exactamente 0.0 por underflow de sigmoid en float32. Esos
+  900 candidatos empatan y no son ordenables por probabilidad.
+
+  El logit sí los separa, pero medido resulta ANTI-informativo en esa región:
+  el AUC dentro de la cola usando logit es 0.2129, peor que el 0.5 de dejarlos
+  empatados. Ordenar por logit baja el AUC global de 0.7764 a 0.7652. Por eso
+  `rank_candidates()` desempata con los diagnósticos (solapamiento de skills),
+  no con el logit. `predict_many_with_logits()` existe para trabajo de
+  calibración, no como criterio de orden.
+
+  Ver README_CHECKPOINT_STATUS.md, sección de riesgos abiertos.
 """
 from __future__ import annotations
 
@@ -581,7 +593,7 @@ class WideDeepRecommender:
         self, matching_input: Any
     ) -> Tuple[MatchingOutput, FeaturizationReport]:
         """Como `predict()` pero devuelve además qué se descartó o sustituyó."""
-        outputs, reports = self._run([matching_input])
+        outputs, reports, _ = self._run([matching_input])
         return outputs[0], reports[0]
 
     def predict_many(self, inputs: Sequence[Any]) -> List[MatchingOutput]:
@@ -591,16 +603,56 @@ class WideDeepRecommender:
     def predict_many_verbose(
         self, inputs: Sequence[Any]
     ) -> Tuple[List[MatchingOutput], List[FeaturizationReport]]:
-        return self._run(inputs)
+        outputs, reports, _ = self._run(inputs)
+        return outputs, reports
+
+    def predict_many_with_logits(
+        self, inputs: Sequence[Any]
+    ) -> Tuple[List[MatchingOutput], List[float]]:
+        """
+        Como `predict_many()` pero devuelve además el logit de cada muestra.
+
+        Para diagnóstico y trabajo de calibración. **No usar para ordenar**: en
+        la cola donde sigmoid satura, el logit ordena peor que al azar
+        (AUC 0.2129 medido sobre el split de test). Para ordenar, ver
+        `rank_candidates()`.
+        """
+        outputs, _, logits = self._run(inputs)
+        return outputs, [float(x) for x in logits]
+
+    def rank_candidates(self, inputs: Sequence[Any]) -> List[Tuple[int, MatchingOutput]]:
+        """
+        Ordena candidatos de mejor a peor y devuelve `(índice_original, salida)`.
+
+        Criterio: probabilidad primero y, donde ésta empata — el 25 % de los
+        casos que saturan a 0.0 exacto —, se desempata con los diagnósticos
+        descriptivos (solapamiento de skills, luego alineación de dificultad).
+
+        No se desempata con el logit a propósito: aunque separa los empates, en
+        esa región va en contra de la señal (AUC 0.2129 dentro de la cola,
+        contra 0.5 de dejarlos empatados). El solapamiento de skills, en cambio,
+        es interpretable y no depende de la calibración del modelo.
+        """
+        outputs = self.predict_many(inputs)
+        order = sorted(
+            range(len(outputs)),
+            key=lambda i: (
+                outputs[i].engagement_probability,
+                outputs[i].skill_overlap_score,
+                outputs[i].difficulty_match_score,
+            ),
+            reverse=True,
+        )
+        return [(i, outputs[i]) for i in order]
 
     def _run(
         self, inputs: Sequence[Any]
-    ) -> Tuple[List[MatchingOutput], List[FeaturizationReport]]:
+    ) -> Tuple[List[MatchingOutput], List[FeaturizationReport], np.ndarray]:
         if not inputs:
-            return [], []
+            return [], [], np.zeros(0, dtype=np.float32)
 
         ids, vals, reports = self.featurizer.featurize_batch(inputs)
-        probs = self._forward(ids, vals)
+        logits, probs = self._forward(ids, vals)
 
         outputs = []
         for i, item in enumerate(inputs):
@@ -612,7 +664,11 @@ class WideDeepRecommender:
             outputs.append(
                 MatchingOutput(
                     label=1 if prob >= self.threshold else 0,
-                    engagement_probability=round(prob, 4),
+                    # Sin redondear: a 4 decimales, 2329 de 3584 predicciones del
+                    # split de test colapsaban a 0.0 exacto. Sin redondeo quedan
+                    # 900 (underflow real de sigmoid), que rank_candidates()
+                    # desempata con los diagnósticos.
+                    engagement_probability=prob,
                     skill_overlap_score=round(_jaccard_from_vectors(user_vec, sim_vec), 4),
                     difficulty_match_score=_difficulty_alignment(
                         item.user_features.analytical_score,
@@ -621,14 +677,20 @@ class WideDeepRecommender:
                     confidence_interval=None,
                 )
             )
-        return outputs, reports
+        return outputs, reports, logits
 
-    def _forward(self, ids: np.ndarray, vals: np.ndarray) -> np.ndarray:
-        """Corre la red por lotes del tamaño congelado, con padding."""
+    def _forward(self, ids: np.ndarray, vals: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Corre la red por lotes del tamaño congelado, con padding.
+
+        Devuelve `(logits, probs)`. El logit se conserva porque es lo único
+        utilizable para ordenar cuando sigmoid satura.
+        """
         import mindspore as ms
 
         n = len(ids)
-        results = np.zeros(n, dtype=np.float32)
+        out_logits = np.zeros(n, dtype=np.float32)
+        out_probs = np.zeros(n, dtype=np.float32)
 
         for start in range(0, n, self.batch_size):
             chunk_ids = ids[start : start + self.batch_size]
@@ -643,12 +705,13 @@ class WideDeepRecommender:
                 )
 
             dummy_labels = ms.Tensor(np.zeros((self.batch_size, 1), np.float32))
-            _, probs, _ = self.predictor(
+            logits, probs, _ = self.predictor(
                 ms.Tensor(chunk_ids), ms.Tensor(chunk_vals), dummy_labels
             )
-            results[start : start + actual] = probs.asnumpy().reshape(-1)[:actual]
+            out_logits[start : start + actual] = logits.asnumpy().reshape(-1)[:actual]
+            out_probs[start : start + actual] = probs.asnumpy().reshape(-1)[:actual]
 
-        return results
+        return out_logits, out_probs
 
 
 @dataclass

@@ -116,3 +116,63 @@ Hay sobreajuste real: 0.99 en entrenamiento contra 0.77 en test. Además el
 modelo está mal calibrado en ambos splits — 85.6 % de las probabilidades de test
 caen fuera de [0.01, 0.99] y sólo un 8.1 % queda en la zona media 0.1–0.9. La
 saturación no es memoria de las filas vistas: ocurre igual sobre datos nuevos.
+
+---
+
+## RIESGO ABIERTO — Calibración del modelo
+
+**Estado: documentado, sin arreglar. No bloqueante hoy** — el endpoint
+`/api/v1/oracle` corre con la heurística de puente, no con este checkpoint.
+
+### Qué se midió
+
+Sobre el split de test (3701 filas nunca vistas) contra una muestra del mismo
+tamaño del split de entrenamiento, con `dao_wide_deep_best.ckpt`:
+
+| Split           | n    | AUC-ROC | Accuracy @0.65 | Saturadas | Zona 0.1–0.9 |
+|-----------------|------|---------|----------------|-----------|--------------|
+| Test (no visto) | 3701 | 0.7740  | 83.03 %        | 85.6 %    | 8.1 %        |
+| Train (muestra) | 3701 | 0.9928  | 95.38 %        | 82.5 %    | 12.7 %       |
+
+Son **dos problemas distintos**, no uno:
+
+**1. Sobreajuste.** AUC 0.9928 en entrenamiento contra 0.7740 en test. Esperable
+con 18 501 muestras y ~828 épocas, pero la brecha es grande.
+
+**2. Mala calibración, independiente del sobreajuste.** El 85.6 % de las
+predicciones de test cae fuera de [0.01, 0.99] y sólo un 8.1 % queda en la zona
+media. 2801 de 3701 caen en el primer decil. **La saturación no es memoria de
+las filas vistas: el test satura más que el train (85.6 % vs 82.5 %).** El
+modelo es igual de sobreconfiado sobre datos nuevos.
+
+### Consecuencia práctica para el ranking
+
+Sobre las 3584 filas de la evaluación de referencia, 900 probabilidades (25.1 %)
+son **exactamente 0.0** por underflow de sigmoid en float32 — no por redondeo.
+Esos 900 candidatos empatan y no son ordenables por probabilidad.
+
+El logit sí los separa, pero **no sirve para ordenarlos**:
+
+| Región                 | n    | AUC por probabilidad | AUC por logit |
+|------------------------|------|----------------------|---------------|
+| Fuera de la cola       | 2684 | 0.835092             | 0.835092      |
+| Dentro de la cola      |  900 | empates (0.5)        | **0.2129**    |
+| Global                 | 3584 | **0.776371**         | 0.765215      |
+
+Dentro de la cola saturada el logit ordena **peor que al azar**: es
+anti-informativo ahí. Ordenar por logit baja el AUC global de 0.7764 a 0.7652.
+Por eso `inference.py::rank_candidates()` desempata con los diagnósticos
+descriptivos (solapamiento de skills, luego alineación de dificultad), que son
+interpretables y no dependen de la calibración.
+
+### Qué NO se hizo y por qué
+
+No se aplicó ningún ajuste de calibración (temperature scaling, Platt scaling,
+isotonic). Es una decisión de coste/beneficio para el timeline del piloto y no
+urge: el endpoint no usa este modelo todavía. Si se decide abordarlo, temperature
+scaling sobre el logit es lo más barato — un solo parámetro ajustado en el split
+de test — pero conviene medir antes si mueve el AUC o sólo la calibración
+(típicamente sólo lo segundo, que es justo lo que aquí importa para el ranking).
+
+Cualquier decisión sobre esto debe considerar además que el sobreajuste es real:
+recalibrar no arregla un modelo que generaliza a 0.77.

@@ -488,3 +488,70 @@ class TestModelInference:
 
     def test_empty_batch_returns_empty(self, recommender):
         assert recommender.predict_many([]) == []
+
+    def test_probability_is_not_rounded(self, recommender, sample_input):
+        """
+        Redondear a 4 decimales colapsaba el 65% del split de test a 0.0 exacto.
+        La probabilidad debe conservar la precisión de float32.
+        """
+        out = recommender.predict(sample_input)
+        p = out.engagement_probability
+        assert p == pytest.approx(float(np.float32(p)), abs=0)
+
+    def test_logits_available_for_ranking(self, recommender, sample_input):
+        outs, logits = recommender.predict_many_with_logits([sample_input])
+        assert len(outs) == len(logits) == 1
+        assert isinstance(logits[0], float)
+
+    def test_saturated_candidates_are_still_ordered(self, recommender):
+        """
+        El caso que motivó el cambio: candidatos cuya probabilidad satura a 0.0
+        deben seguir quedando ordenados de forma determinista.
+
+        El desempate lo hacen los diagnósticos, no el logit — medido, el logit
+        ordena peor que al azar en esa región (AUC 0.2129 sobre el test).
+        """
+        base = dict(
+            education_level="High School",
+            field_of_study="Arts",
+            analytical_score=5,
+            creative_score=5,
+            social_score=5,
+            linguistic_score=5,
+            hands_on_score=5,
+        )
+        candidates = [
+            MatchingInput(
+                user_features=UserFeatures(user_skill_ids=[], **base),
+                simulation_features=SimulationFeatures(
+                    simulation_id=f"sim_{i}",
+                    simulation_categoria="STEM",
+                    simulation_nivel_dificultad=level,
+                    simulation_duracion_horas=duration,
+                    simulation_industria="Technology",
+                    simulation_skill_ids=[i + 1],
+                ),
+            )
+            for i, (level, duration) in enumerate(
+                [("Expert", 20.0), ("Beginner", 3.0), ("Advanced", 12.0)]
+            )
+        ]
+        ranked = recommender.rank_candidates(candidates)
+        assert len(ranked) == len(candidates)
+        # Orden total y determinista, sin importar cuánto sature la probabilidad
+        assert sorted(i for i, _ in ranked) == list(range(len(candidates)))
+        keys = [
+            (o.engagement_probability, o.skill_overlap_score, o.difficulty_match_score)
+            for _, o in ranked
+        ]
+        assert keys == sorted(keys, reverse=True)
+        # Y es estable: dos llamadas dan el mismo orden
+        assert [i for i, _ in ranked] == [
+            i for i, _ in recommender.rank_candidates(candidates)
+        ]
+
+    def test_logit_and_probability_are_consistent(self, recommender, sample_input):
+        """probabilidad = sigmoid(logit), salvo underflow."""
+        outs, logits = recommender.predict_many_with_logits([sample_input])
+        expected = 1.0 / (1.0 + np.exp(-np.float64(logits[0])))
+        assert outs[0].engagement_probability == pytest.approx(expected, abs=1e-5)
