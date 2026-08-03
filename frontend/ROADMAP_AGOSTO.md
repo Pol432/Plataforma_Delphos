@@ -6,7 +6,7 @@
 
 ---
 
-## 🎯 Hitos y Tareas por Semana
+## Tareas por Semana
 
 ### Semana 1: Rediseño y Bases del Sistema (1 - 7 de Agosto)
 - [ ] **Auditoría de UI actual:** Revisar las pantallas existentes en `src/screens/` y eliminar cualquier elemento visual de gamificación (barras de experiencia, monedas, avatares tipo juego, etc.).
@@ -18,7 +18,7 @@
 - [ ] **Módulo de Recomendación de Carreras:** Crear la interfaz para mostrar los resultados del motor de IA (`oracle/recommendation`), mostrando el porqué de cada sugerencia.
 - [ ] **Rutas de Aprendizaje (Learning Paths):** Implementar la visualización del grafo de habilidades y las rutas óptimas generadas por `oracle/learning_path`.
 
-### Semana 3: Módulo de Simulaciones (15 - 21 de Agosto) *[Trabajo Conjunto con Matías]*
+### Semana 3: Módulo de Simulaciones (15 - 21 de Agosto) *[Trabajo Conjunto con Mati]*
 - [ ] **Definición de Contratos API:** Reunión con Mati para definir los endpoints, requests y responses del módulo de simulaciones.
 - [ ] **Desarrollo de UI de Simulaciones:** Crear las interfaces interactivas donde el usuario ejecutará y visualizará las simulaciones.
 - [ ] **Integración Frontend-Backend:** Conectar las pantallas de simulación con los endpoints desarrollados por Mati.
@@ -30,8 +30,4 @@
 - [ ] **Optimización de Rendimiento:** Revisar el bundle con Vite, optimizar carga de imágenes y tiempos de respuesta percibidos.
 - [ ] **Congelamiento de Código (Code Freeze):** Resolución de bugs finales y preparación para la entrega de fin de mes.
 
----
 
-## 📝 Notas Adicionales
-- Mantener comunicación constante con **Matías** durante la Semana 3 para evitar bloqueos en el módulo de simulaciones.
-- El diseño debe priorizar la **accesibilidad** y la **claridad de la información** sobre los adornos visuales.
