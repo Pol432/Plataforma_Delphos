@@ -29,8 +29,8 @@ SIMULATION_DATA = [
                 "tasks": [
                     {
                         "task": {
-                            "title": "Tarea 1.1: Análisis de Código del Script de Ingesta",
-                            "description": "Se te ha entregado el script `ingest_sensor_data.py`, que actualmente está fallando bajo carga. Analiza el código, identifica las ineficiencias (ej. procesamiento síncrono, falta de manejo de errores, consultas N+1) y redacta un informe técnico con tus hallazgos y recomendaciones de refactorización.",
+                            "title": "Tarea 1.1: Auditoría de la Ingesta de Datos en Tiempo Real",
+                            "description": "Skywork AI está procesando más de 18 millones de eventos por hora desde una red global de sensores IoT. El pipeline actual falla bajo carga y está introduciendo inconsistencias de datos en la capa analítica. Se te entrega un módulo Python de ingestión que lee payloads JSON, normaliza campos y persiste registros en PostgreSQL. Tu misión es detectar fallas técnicas reales: procesamiento síncrono, falta de control de reintentos, manejo inadecuado de particiones temporales, uso de `pandas` en loops innecesarios y ausencia de transacciones de escritura por lote. Debes entregar un informe técnico con una propuesta concreta de refactorización que incluya: (1) arquitectura de procesamiento con `ThreadPoolExecutor` o `asyncio`, (2) estrategia de reintentos y backoff exponencial, (3) modelado de esquema para eventos de sensor con claves de partición y (4) recomendación de `SQLAlchemy` + `psycopg2` o `asyncpg` para escrituras masivas. Además, debes especificar cómo validarías la integridad de los datos y la latencia p95 del pipeline.",
                             "order": 1,
                             "task_type": "submission",
                             "instructor_name": "Dra. Aris Thorne",
@@ -44,18 +44,19 @@ SIMULATION_DATA = [
                             {"name": "Métricas de Performance del Pipeline (Gráficos)", "resource_type": "dashboard", "url": "/resources/simulations/skywork/pipeline_performance.png"}
                         ],
                         "model_answer": {
-                            "description": "La solución óptima implicaba identificar el bucle de procesamiento s-incrono como el principal cuello de botella. Las recomendaciones clave debían incluir la paralelización con `ThreadPoolExecutor`, la implementación de un sistema de colas (como RabbitMQ o Kafka) para desacoplar la ingesta y el procesamiento, y el uso de `bulk_insert` en la base de datos para evitar escrituras individuales.",
+                            "description": "La respuesta de alto nivel debía identificar que el cuello de botella principal era el procesamiento en serie, con escrituras individuales a la base de datos y falta de gestión de errores por lote. La solución óptima incluía refactorizar el flujo a un modelo productor-consumidor con workers, usar `ThreadPoolExecutor` o `asyncio` para paralelizar la normalización, introducir reintentos con backoff exponencial y consolidar las inserciones con `bulk_insert` o `insertmanyvalues` mediante SQLAlchemy. También se debía recomendar separar la ingesta y el enriquecimiento, aplicar particiones por día y usar checksums de integridad para validar mensajes duplicados o corruptos antes de persistirlos.",
                             "key_learnings": [
-                                "Identificación de cuellos de botella en código Python.",
-                                "Principios de procesamiento asíncrono y en lotes.",
-                                "Redacción de informes técnicos de ingeniería."
+                                "Auditoría de pipelines de datos en producción.",
+                                "Diseño de ingestión escalable en Python.",
+                                "Optimización de carga con SQLAlchemy y PostgreSQL.",
+                                "Control de tolerancia a fallos y observabilidad de latencia."
                             ]
                         }
                     },
                     {
                         "task": {
                             "title": "Tarea 1.2: Re-diseño de la Consulta SQL de Agregación",
-                            "description": "El dashboard de análisis de datos está experimentando timeouts. La causa principal es una consulta de agregación ineficiente en la base de datos SQL Server que resume los datos de los sensores. Se te ha proporcionado la consulta actual. Tu tarea es re-escribirla para optimizar su rendimiento, utilizando técnicas avanzadas como CTEs (Common Table Expressions), Window Functions y una correcta indexación.",
+                            "description": "El dashboard de análisis de datos está experimentando timeouts severos durante los reportes ejecutivos. La causa principal es una consulta de agregación en PostgreSQL que resume los eventos térmicos y de movimiento de una flota de sensores IoT. Se te ha proporcionado la consulta actual, que genera múltiples escaneos de tabla y hace joins costosos contra tablas de eventos históricos. Tu tarea es re-escribirla para optimizar el rendimiento aplicando CTEs, window functions, filtrado temprano y diseño de índices. Debes justificar por qué tu propuesta reduce el costo de ejecución, qué columnas deberían indexarse y cómo manejarías la partición del dataset para mantener reportes por hora, día y semana sin degradar el rendimiento. Tu respuesta debe incluir una propuesta de SQL y una explicación técnica breve sobre el plan de ejecución esperado.",
                             "order": 2,
                             "task_type": "submission",
                             "instructor_name": "Dra. Aris Thorne",
@@ -68,11 +69,12 @@ SIMULATION_DATA = [
                             {"name": "Plan de Ejecución de la Consulta (Actual)", "resource_type": "image", "url": "/resources/simulations/skywork/query_plan.png"}
                         ],
                         "model_answer": {
-                            "description": "Una consulta optimizada utilizaría CTEs para pre-filtrar y agregar datos en etapas lógicas, evitando subconsultas correlacionadas. El uso de `SUM() OVER (PARTITION BY ...)` sería clave para cálculos eficientes sin auto-joins costosos. El informe también debería sugerir un índice compuesto en las columnas de `sensor_id`, `timestamp` y `data_type`.",
+                            "description": "Una consulta optimizada debía pre-filtrar primero por rango de tiempo, aplicar CTEs para reducir cardinalidad antes de hacer agregaciones y utilizar `SUM() OVER (PARTITION BY ...)` o agregados condicionales cuando la lógica lo permitía. El plan esperado debía evitar subconsultas correlacionadas y reescribir joins costosos como joins a tablas históricas sin filtros. Además, se debía recomendar un índice compuesto en `sensor_id`, `event_time` y `event_type`, con particiones por día o por mes según el volumen de eventos para mantener el reporte ejecutable en tiempo real.",
                             "key_learnings": [
                                 "Optimización de consultas SQL avanzadas.",
                                 "Uso de CTEs y Window Functions.",
-                                "Análisis de planes de ejecución de consulta."
+                                "Análisis de planes de ejecución de consulta.",
+                                "Diseño de índices y particionamiento para analytics."
                             ]
                         }
                     }
