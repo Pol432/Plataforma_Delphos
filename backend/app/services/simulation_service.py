@@ -64,11 +64,25 @@ class SimulationService:
         )
 
     def _get_completed_tasks_count(self, user_id: int, simulation_id: int) -> int:
+        completed_task_ids = {
+            task_id
+            for (task_id,) in (
+                self.db.query(UserTask.task_id)
+                .filter(UserTask.user_id == user_id)
+                .all()
+            )
+        }
+
+        if not completed_task_ids:
+            return 0
+
         return (
-            self.db.query(UserTask)
-            .join(UserTask.task)
+            self.db.query(ModuleTask)
             .join(ModuleTask.module)
-            .filter(UserTask.user_id == user_id, SimulationModule.simulation_id == simulation_id)
+            .filter(
+                ModuleTask.id.in_(completed_task_ids),
+                SimulationModule.simulation_id == simulation_id,
+            )
             .count()
         )
 
@@ -212,20 +226,21 @@ class SimulationService:
 
         completed_tasks = (
             self.db.query(UserTask)
-            .join(UserTask.task)
-            .join(ModuleTask.module)
-            .filter(UserTask.user_id == user_id, SimulationModule.simulation_id == simulation_id)
+            .filter(UserTask.user_id == user_id)
             .all()
         )
 
-        task_payload = [
-            {
-                "task_id": task.task_id,
-                "score": float(task.calificacion_obtenida or 0.0),
-                "skills": [],
-            }
-            for task in completed_tasks
-        ]
+        task_payload = []
+        for submission in completed_tasks:
+            task = self.db.query(ModuleTask).filter(ModuleTask.id == submission.task_id).first()
+            if task and task.module and task.module.simulation_id == simulation_id:
+                task_payload.append(
+                    {
+                        "task_id": submission.task_id,
+                        "score": float(submission.calificacion_obtenida or 0.0),
+                        "skills": [],
+                    }
+                )
 
         current_user_fields = {
             "field_of_study": getattr(current_user, "campo_estudio", None) or getattr(current_user, "field_of_study", None) or "General"
