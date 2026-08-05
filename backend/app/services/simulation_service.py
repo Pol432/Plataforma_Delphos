@@ -258,12 +258,41 @@ class SimulationService:
         from app.api.v1.oracle import recommend_simulations
 
         recommendation_response = recommend_simulations(profile=profile, current_user=current_user)
+
+        # El snapshot se recalcula PRIMERO (crea las filas si no existen y deja
+        # UserSimulationProgress al día) y el cierre explícito se escribe DESPUÉS.
+        # En el orden inverso, _sync_progress_snapshot pisaba el 100.0 con el
+        # porcentaje calculado desde las tareas reales y dejaba el registro
+        # incoherente: estado="completado" con porcentaje_completado=33.33.
+        self._sync_progress_snapshot(user_id, simulation_id)
+
+        now = datetime.utcnow()
         progress = self._get_or_create_user_simulation(user_id, simulation_id)
         progress.estado = "completado"
         progress.porcentaje_completado = 100.0
-        progress.completado_en = datetime.utcnow()
-        progress.ultima_actividad = datetime.utcnow()
-        self._sync_progress_snapshot(user_id, simulation_id)
+        progress.completado_en = now
+        progress.ultima_actividad = now
+
+        # UserSimulationProgress es el espejo de UserSimulation y lo escribe el
+        # mismo snapshot, así que hay que cerrarlo aquí también: si no, quedaba
+        # en IN_PROGRESS con el porcentaje parcial mientras UserSimulation ya
+        # decía "completado".
+        user_progress = (
+            self.db.query(UserSimulationProgress)
+            .filter(
+                UserSimulationProgress.user_id == user_id,
+                UserSimulationProgress.simulation_id == simulation_id,
+            )
+            .first()
+        )
+        if user_progress is not None:
+            user_progress.status = ProgressStatus.COMPLETED
+            user_progress.score = 100.0
+            user_progress.completion_percentage = 100.0
+            user_progress.last_activity_at = now
+            if not user_progress.completed_at:
+                user_progress.completed_at = now
+
         self.db.commit()
 
         return {
