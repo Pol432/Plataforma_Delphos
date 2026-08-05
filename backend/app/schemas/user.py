@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
 from typing import Optional, Dict, Any
 from datetime import datetime, date
 
@@ -15,12 +15,53 @@ class UserBase(BaseModel):
     full_name: Optional[str] = None
 
 class UserCreate(UserBase):
+    # `extra="forbid"`: hasta ahora Pydantic descartaba en silencio cualquier
+    # campo no declarado y el registro devolvía 201 como si nada. El frontend
+    # manda `role`, `country` y `birth_year` (Screen1Register.jsx) y los tres
+    # se perdían. Ahora un campo inesperado da 422 en vez de fingir que se
+    # guardó. Ver TODO_MATIAS_SCHEMA.md para `role` y `country`.
+    model_config = ConfigDict(extra="forbid")
+
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=1, max_length=200)
     phone: Optional[str] = None
     gender: Optional[str] = None
     birth_date: Optional[date] = None
     city_id: Optional[int] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _map_birth_year_to_birth_date(cls, data):
+        """Convierte el `birth_year` del frontend en el `birth_date` que ya existe.
+
+        Corre en modo "before", así que `birth_year` desaparece del payload
+        antes de que actúe `extra="forbid"` y nunca llega a ser un campo del
+        modelo (si lo fuera, `User(**model_dump())` en UserService reventaría).
+
+        Ojo: el año no lleva mes ni día, así que se normaliza a 1 de enero.
+        Es una convención, no un dato real del usuario.
+        """
+        if not isinstance(data, dict) or "birth_year" not in data:
+            return data
+
+        data = dict(data)
+        birth_year = data.pop("birth_year")
+
+        # Un `birth_date` explícito manda sobre el año suelto.
+        if birth_year in (None, "") or data.get("birth_date"):
+            return data
+
+        try:
+            year = int(birth_year)
+        except (TypeError, ValueError):
+            raise ValueError("birth_year debe ser un año numérico")
+
+        current_year = date.today().year
+        if not 1900 <= year <= current_year:
+            raise ValueError(f"birth_year fuera de rango (1900-{current_year})")
+
+        data["birth_date"] = date(year, 1, 1)
+        return data
 
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
