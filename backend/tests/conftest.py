@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from app.db.base import Base
 from app.main import app
 from app.db.session import get_db
+from app.api.deps import get_db as deps_get_db
 
 TEST_DB_FILE = "test.db"
 SQLALCHEMY_DATABASE_URL = f"sqlite:///{TEST_DB_FILE}"
@@ -61,7 +62,13 @@ def client(db_session):
         finally:
             pass
     
+    # Los routers de auth/users/community dependen de `app.api.deps.get_db`,
+    # que es una función distinta de `app.db.session.get_db` aunque la envuelva.
+    # FastAPI indexa los overrides por objeto función, así que hay que
+    # sobreescribir las dos: si no, esos endpoints se saltan la sesión de test
+    # y acaban escribiendo contra la base de datos real.
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[deps_get_db] = override_get_db
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
