@@ -24,20 +24,20 @@ const CAREERS = [
     { id: 'iot', label: 'IoT & Redes', icon: Wifi, color: 'var(--primary)', cat: 'Tecnología', affinity: [2, 0, 2] },
     { id: 'research', label: 'Investigación & I+D', icon: FlaskConical, color: 'var(--primary)', cat: 'Tecnología', affinity: [1, 1, 2] },
     // Negocios
-    { id: 'product', label: 'Product Management', icon: Lightbulb, color: 'var(--gold)', cat: 'Negocios', affinity: [1, 2, 2] },
+    { id: 'product', label: 'Product Management', icon: Lightbulb, color: 'var(--accent)', cat: 'Negocios', affinity: [1, 2, 2] },
     { id: 'biz', label: 'Consultoría de Negocios', icon: Handshake, color: 'var(--primary)', cat: 'Negocios', affinity: [0, 2, 1] },
-    { id: 'finance', label: 'Finanzas Corporativas', icon: DollarSign, color: 'var(--gold)', cat: 'Negocios', affinity: [2, 1, 0] },
+    { id: 'finance', label: 'Finanzas Corporativas', icon: DollarSign, color: 'var(--accent)', cat: 'Negocios', affinity: [2, 1, 0] },
     { id: 'marketing', label: 'Growth & Marketing', icon: Megaphone, color: 'var(--primary)', cat: 'Negocios', affinity: [1, 2, 1] },
     { id: 'intl', label: 'Negocios Internacionales', icon: Globe, color: 'var(--accent)', cat: 'Negocios', affinity: [0, 2, 0] },
     { id: 'hr', label: 'Recursos Humanos', icon: Users, color: 'var(--primary)', cat: 'Negocios', affinity: [0, 2, 1] },
-    { id: 'logistics', label: 'Logística & Supply Chain', icon: Truck, color: 'var(--gold)', cat: 'Negocios', affinity: [1, 1, 1] },
+    { id: 'logistics', label: 'Logística & Supply Chain', icon: Truck, color: 'var(--accent)', cat: 'Negocios', affinity: [1, 1, 1] },
     { id: 'ecommerce', label: 'E-commerce & Retail', icon: TrendingUp, color: 'var(--primary)', cat: 'Negocios', affinity: [1, 2, 1] },
     { id: 'banking', label: 'Banca & Inversiones', icon: Landmark, color: 'var(--accent)', cat: 'Negocios', affinity: [2, 1, 0] },
-    { id: 'startup', label: 'Emprendimiento', icon: Zap, color: 'var(--gold)', cat: 'Negocios', affinity: [1, 2, 2] },
+    { id: 'startup', label: 'Emprendimiento', icon: Zap, color: 'var(--accent)', cat: 'Negocios', affinity: [1, 2, 2] },
     // Diseño & Creatividad
-    { id: 'ux', label: 'UX / Product Design', icon: Palette, color: 'var(--gold)', cat: 'Diseño', affinity: [0, 1, 2] },
+    { id: 'ux', label: 'UX / Product Design', icon: Palette, color: 'var(--accent)', cat: 'Diseño', affinity: [0, 1, 2] },
     { id: 'graphic', label: 'Diseño Gráfico', icon: PenTool, color: 'var(--accent)', cat: 'Diseño', affinity: [0, 0, 2] },
-    { id: 'architecture', label: 'Arquitectura', icon: Building, color: 'var(--gold)', cat: 'Diseño', affinity: [1, 1, 2] },
+    { id: 'architecture', label: 'Arquitectura', icon: Building, color: 'var(--accent)', cat: 'Diseño', affinity: [1, 1, 2] },
     { id: 'interior', label: 'Diseño de Interiores', icon: Home, color: 'var(--primary)', cat: 'Diseño', affinity: [0, 1, 2] },
     { id: 'photo', label: 'Fotografía & Audiovisual', icon: Camera, color: 'var(--accent)', cat: 'Diseño', affinity: [0, 0, 2] },
     { id: 'music', label: 'Producción Musical', icon: Music, color: 'var(--primary)', cat: 'Diseño', affinity: [0, 0, 2] },
@@ -45,7 +45,7 @@ const CAREERS = [
     { id: 'medicine', label: 'Medicina', icon: Stethoscope, color: 'var(--primary)', cat: 'Salud', affinity: [2, 1, 1] },
     { id: 'nursing', label: 'Enfermería', icon: Heart, color: 'var(--primary)', cat: 'Salud', affinity: [0, 2, 1] },
     { id: 'pharmacy', label: 'Farmacia', icon: Pill, color: 'var(--accent)', cat: 'Salud', affinity: [2, 1, 1] },
-    { id: 'psychology', label: 'Psicología', icon: Smile, color: 'var(--gold)', cat: 'Salud', affinity: [0, 2, 1] },
+    { id: 'psychology', label: 'Psicología', icon: Smile, color: 'var(--accent)', cat: 'Salud', affinity: [0, 2, 1] },
     { id: 'nutrition', label: 'Nutrición & Dietética', icon: Leaf, color: 'var(--primary)', cat: 'Salud', affinity: [1, 1, 1] },
     { id: 'physio', label: 'Fisioterapia', icon: Activity, color: 'var(--accent)', cat: 'Salud', affinity: [0, 2, 1] },
     { id: 'optometry', label: 'Optometría', icon: Eye, color: 'var(--accent)', cat: 'Salud', affinity: [2, 1, 1] },
@@ -58,26 +58,26 @@ const CAREERS = [
     { id: 'env', label: 'Ciencias Ambientales', icon: Leaf, color: 'var(--primary)', cat: 'Ciencias', affinity: [1, 1, 2] },
     { id: 'astro', label: 'Astronomía', icon: Sparkles, color: 'var(--accent)', cat: 'Ciencias', affinity: [2, 0, 2] },
     // Ingeniería
-    { id: 'civil', label: 'Ingeniería Civil', icon: Building, color: 'var(--gold)', cat: 'Ingeniería', affinity: [2, 1, 1] },
+    { id: 'civil', label: 'Ingeniería Civil', icon: Building, color: 'var(--accent)', cat: 'Ingeniería', affinity: [2, 1, 1] },
     { id: 'electro', label: 'Ing. Electrónica', icon: Cpu, color: 'var(--accent)', cat: 'Ingeniería', affinity: [2, 0, 2] },
     { id: 'mech', label: 'Ing. Mecánica', icon: Zap, color: 'var(--primary)', cat: 'Ingeniería', affinity: [2, 0, 1] },
     { id: 'aero', label: 'Ing. Aeronáutica', icon: Plane, color: 'var(--accent)', cat: 'Ingeniería', affinity: [2, 0, 2] },
-    { id: 'industrial', label: 'Ing. Industrial', icon: TrendingUp, color: 'var(--gold)', cat: 'Ingeniería', affinity: [2, 1, 1] },
+    { id: 'industrial', label: 'Ing. Industrial', icon: TrendingUp, color: 'var(--accent)', cat: 'Ingeniería', affinity: [2, 1, 1] },
     { id: 'energy', label: 'Ing. de Energía', icon: Zap, color: 'var(--primary)', cat: 'Ingeniería', affinity: [2, 0, 2] },
     // Sociales & Humanidades
-    { id: 'law', label: 'Derecho', icon: Scale, color: 'var(--gold)', cat: 'Social', affinity: [1, 2, 1] },
+    { id: 'law', label: 'Derecho', icon: Scale, color: 'var(--accent)', cat: 'Social', affinity: [1, 2, 1] },
     { id: 'journalism', label: 'Periodismo & Comunicación', icon: Megaphone, color: 'var(--primary)', cat: 'Social', affinity: [0, 2, 1] },
     { id: 'education', label: 'Educación & Pedagogía', icon: BookOpen, color: 'var(--primary)', cat: 'Social', affinity: [0, 2, 1] },
     { id: 'polisci', label: 'Ciencias Políticas', icon: Globe, color: 'var(--accent)', cat: 'Social', affinity: [0, 2, 1] },
     { id: 'socialwork', label: 'Trabajo Social', icon: Heart, color: 'var(--primary)', cat: 'Social', affinity: [0, 2, 0] },
-    { id: 'tourism', label: 'Turismo & Hotelería', icon: Plane, color: 'var(--gold)', cat: 'Social', affinity: [0, 2, 1] },
+    { id: 'tourism', label: 'Turismo & Hotelería', icon: Plane, color: 'var(--accent)', cat: 'Social', affinity: [0, 2, 1] },
 ]
 
 const CATS = ['Todas', 'Tecnología', 'Negocios', 'Diseño', 'Salud', 'Ciencias', 'Ingeniería', 'Social']
 
 const CAT_COLORS = {
-    'Tecnología': 'var(--accent)', 'Negocios': 'var(--primary)', 'Diseño': 'var(--gold)',
-    'Salud': 'var(--primary)', 'Ciencias': 'var(--accent)', 'Ingeniería': 'var(--gold)', 'Social': 'var(--primary)',
+    'Tecnología': 'var(--accent)', 'Negocios': 'var(--primary)', 'Diseño': 'var(--accent)',
+    'Salud': 'var(--primary)', 'Ciencias': 'var(--accent)', 'Ingeniería': 'var(--accent)', 'Social': 'var(--primary)',
 }
 
 function computeScores(answers) {
@@ -94,25 +94,25 @@ function CareerPill({ career, selected, onToggle, rank }) {
     return (
         <motion.button
             onClick={() => onToggle(career.id)}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
             style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                padding: '9px 12px', borderRadius: '10px', cursor: 'pointer',
-                background: selected ? 'var(--card2)' : 'var(--card)',
+                display: 'flex', alignItems: 'center', gap: '12px',
+                padding: '12px', borderRadius: '8px', cursor: 'pointer',
+                background: selected ? 'var(--bg2)' : 'var(--card)',
                 border: `1px solid ${selected ? career.color : 'var(--border)'}`,
                 transition: 'all 0.18s', textAlign: 'left', width: '100%',
-                boxShadow: selected ? `0 0 12px var(--primary-glow)` : 'none',
+                boxShadow: 'none',
             }}
         >
-            <div style={{ width: '28px', height: '28px', flexShrink: 0, borderRadius: '7px', background: 'var(--bg2)', border: `1px solid var(--border)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon size={14} color={career.color} strokeWidth={1.8} />
+            <div style={{ width: '20px', height: '20px', flexShrink: 0, borderRadius: '4px', background: selected ? career.color : 'var(--bg)', border: `1px solid ${selected ? career.color : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {selected && <CheckCircle2 size={14} color="#fff" strokeWidth={3} />}
+            </div>
+            <div style={{ width: '24px', height: '24px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={16} color={selected ? career.color : 'var(--text-muted)'} strokeWidth={1.8} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontFamily: 'Inter', fontWeight: selected ? 700 : 500, fontSize: '0.75rem', color: selected ? career.color : 'var(--text)', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{career.label}</p>
-                {rank <= 3 && <p style={{ fontFamily: 'Inter', fontSize: '0.57rem', color: 'var(--gold)', fontWeight: 600, marginTop: '1px' }}>#{rank} afinidad</p>}
+                <p style={{ fontFamily: 'Inter', fontWeight: selected ? 600 : 500, fontSize: '0.8rem', color: selected ? 'var(--text-bright)' : 'var(--text)', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{career.label}</p>
+                {rank <= 3 && <p style={{ fontFamily: 'Inter', fontSize: '0.65rem', color: 'var(--accent)', fontWeight: 600, marginTop: '2px' }}>#{rank} afinidad</p>}
             </div>
-            {selected && <CheckCircle2 size={13} color={career.color} strokeWidth={2.5} style={{ flexShrink: 0 }} />}
         </motion.button>
     )
 }
@@ -177,15 +177,14 @@ export default function Screen2bCareerSelect({ oracleAnswers = [], onConfirm, on
                         <p style={{ fontFamily: 'Inter', fontSize: '0.74rem', color: 'var(--text-muted)' }}>Selecciona las que más te llamen la atención — sin límite</p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                        <motion.div animate={{ opacity: [0.65, 1, 0.65] }} transition={{ repeat: Infinity, duration: 2.5 }}
-                            style={{ display: 'flex', alignItems: 'center', gap: '5px', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '7px', padding: '6px 12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', border: '1px solid var(--border)', background: 'var(--bg)', borderRadius: '6px', padding: '6px 12px' }}>
                             <Sparkles size={11} color="var(--accent)" strokeWidth={2} />
-                            <span style={{ fontFamily: 'Inter', fontSize: '0.65rem', color: 'var(--accent)', fontWeight: 600 }}>Ordenado por afinidad con el Oráculo</span>
-                        </motion.div>
-                        <motion.button onClick={onBackToOracle} whileHover={{ background: 'var(--primary-glow)' }} whileTap={{ scale: 0.96 }}
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid var(--border)', background: 'transparent', borderRadius: '7px', padding: '6px 12px', fontFamily: 'Inter', fontSize: '0.65rem', fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>
-                            <RotateCcw size={11} strokeWidth={2.5} /> Más preguntas al Oráculo
-                        </motion.button>
+                            <span style={{ fontFamily: 'Inter', fontSize: '0.65rem', color: 'var(--accent)', fontWeight: 600 }}>Ordenado por afinidad</span>
+                        </div>
+                        <button onClick={onBackToOracle}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid var(--border)', background: 'transparent', borderRadius: '6px', padding: '6px 12px', fontFamily: 'Inter', fontSize: '0.65rem', fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>
+                            <RotateCcw size={11} strokeWidth={2.5} /> Volver al Oráculo
+                        </button>
                     </div>
                 </div>
 
@@ -262,11 +261,10 @@ export default function Screen2bCareerSelect({ oracleAnswers = [], onConfirm, on
                         style={{ padding: '9px 16px', border: '1px solid var(--border)', background: 'transparent', borderRadius: '7px', fontFamily: 'Inter', fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}>
                         Continuar con el Oráculo
                     </motion.button>
-                    <motion.button disabled={selected.size === 0 || saving} onClick={handleConfirm}
-                        whileHover={selected.size > 0 ? { background: 'var(--primary-dim)', boxShadow: '0 4px 18px var(--primary-glow)' } : {}} whileTap={{ scale: 0.97 }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '9px 20px', border: 'none', borderRadius: '8px', background: selected.size > 0 ? 'var(--primary)' : 'var(--bg2)', color: selected.size > 0 ? '#fff' : 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 700, fontSize: '0.78rem', cursor: selected.size > 0 && !saving ? 'pointer' : 'not-allowed', boxShadow: selected.size > 0 ? '0 4px 16px var(--primary-glow)' : 'none', transition: 'all 0.2s' }}>
+                    <button disabled={selected.size === 0 || saving} onClick={handleConfirm}
+                        style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '9px 20px', border: 'none', borderRadius: '6px', background: selected.size > 0 ? 'var(--primary)' : 'var(--bg2)', color: selected.size > 0 ? '#fff' : 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 600, fontSize: '0.78rem', cursor: selected.size > 0 && !saving ? 'pointer' : 'not-allowed', boxShadow: 'none', transition: 'all 0.2s' }}>
                         {saving ? 'Guardando...' : <>Ir al Campus <ArrowRight size={14} strokeWidth={2.5} /></>}
-                    </motion.button>
+                    </button>
                 </div>
             </div>
         </div>
