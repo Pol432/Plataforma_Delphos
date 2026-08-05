@@ -41,7 +41,7 @@ sim_veterinarian,Veterinarian Virtual Experience,Other,Beginner,4.6,General,"['R
 sim_music_teacher,Music teacher Virtual Experience,Education,Lower-Intermediate,7.0,Education,"['Research', 'Pedagogy', 'Curriculum Development']",Music teacher
 sim_actuary,Actuary Virtual Experience,Finance,Advanced,13.1,Finance & Banking,"['Research', 'Financial Analysis', 'Accounting']",Actuary
 sim_chartered_accountant,Chartered Accountant Virtual Experience,Finance,Beginner,4.8,Finance & Banking,"['Research', 'Excel', 'Financial Analysis']",Chartered Accountant
-sim_database_designer,Database designer Virtual Experience,Design,Advanced,12.3,Creative & Design,"['Research', 'Visual Design', 'Adobe Creative Suite']",Database designer
+sim_database_designer,Database designer Virtual Experience,STEM,Advanced,12.3,Technology,"['SQL', 'MongoDB', 'Data Analysis', 'Requirements Gathering']",Database designer
 sim_economist,Economist Virtual Experience,Finance,Expert,19.8,Finance & Banking,"['Research', 'Excel', 'Financial Analysis']",Economist
 sim_lawyer,Lawyer Virtual Experience,Legal,Expert,16.6,Legal Services,"['Intellectual Property', 'Legal Research', 'Case Analysis', 'Compliance', 'Legal Writing', 'Contract Review']",Lawyer
 sim_pharmacist,Pharmacist Virtual Experience,Health,Advanced,13.0,Healthcare,"['Research', 'Patient Care', 'Medical Knowledge']",Pharmacist
