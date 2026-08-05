@@ -30,6 +30,19 @@ detalle de los tres subsistemas de IA (hoy independientes, no fusionados).
 Requisitos: **Docker** (con Compose), **Node 20+** y **Python 3.10+**.
 Backend y frontend son independientes — puedes levantar solo uno.
 
+### 0. Atajo: todo de una vez
+
+```bash
+./dev.sh            # backend (Docker) + frontend (Vite), espera a que respondan
+./dev.sh stop       # detiene ambos
+./dev.sh status     # estado de los tres servicios
+./dev.sh logs web   # logs de la API (o db | front)
+```
+
+Instala `node_modules` la primera vez si falta. Docker por sí solo no basta:
+`docker compose` cubre PostgreSQL y la API, pero el frontend corre fuera.
+Las secciones siguientes explican cada pieza por separado.
+
 ### 1. Backend (API + PostgreSQL)
 
 ```bash
