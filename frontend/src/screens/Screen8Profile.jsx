@@ -3,11 +3,12 @@ import api from '../services/api'
 import {
     Clock, Trophy, BookOpen,
     Cloud, Handshake, Palette, Cpu, BarChart2,
-    User2, Calendar, Hash, LogOut, Code, Globe, ShieldCheck
+    User2, Calendar, Hash, LogOut, Code, ShieldCheck
 } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 const COMPETENCIES = [
-    { label: 'Cloud Architecture', category: 'Tecnología', progress: 80, color: 'var(--accent)', Icon: Cloud },
+    { label: 'Cloud Architecture', category: 'Tecnología', progress: 80, color: 'var(--primary)', Icon: Cloud },
     { label: 'Desarrollo Frontend', category: 'Tecnología', progress: 65, color: 'var(--primary)', Icon: Code },
     { label: 'Análisis de Datos', category: 'Datos', progress: 40, color: 'var(--accent)', Icon: BarChart2 },
     { label: 'Diseño UX/UI', category: 'Diseño', progress: 90, color: 'var(--primary)', Icon: Palette },
@@ -53,98 +54,102 @@ export default function Screen8Profile({ onNavigate, onLogout }) {
     }
 
     if (loading) return (
-        <div style={{ height: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <p style={{ color: 'var(--text-muted)', fontFamily: 'Inter', fontSize: '0.9rem' }}>Cargando perfil...</p>
+        <div style={{ height: '100vh', background: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <p style={{ color: 'var(--text-muted)', fontFamily: 'Inter', fontSize: '1rem' }}>Cargando perfil...</p>
         </div>
     )
 
     const STATS = [
-        { label: 'Horas Invertidas', value: String(progressStats.totalHours), color: 'var(--text-bright)', Icon: Clock },
-        { label: 'Módulos Completados', value: String(progressStats.completed), color: 'var(--text-bright)', Icon: BookOpen },
-        { label: 'Nivel Profesional', value: user?.level_current || '1', color: 'var(--text-bright)', Icon: Trophy },
+        { label: 'Horas Invertidas', value: String(progressStats.totalHours), Icon: Clock },
+        { label: 'Módulos Completados', value: String(progressStats.completed), Icon: BookOpen },
+        { label: 'Nivel Profesional', value: user?.level_current || '1', Icon: Trophy },
     ]
 
     return (
-        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f8f9fa' }}>
             
             {/* Header Profile */}
-            <div style={{ flexShrink: 0, padding: '48px 48px 32px', borderBottom: '1px solid var(--border)', background: 'var(--bg2)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-                    <div style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'var(--card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <User2 size={40} color="var(--text-muted)" strokeWidth={1.5} />
+            <div style={{ flexShrink: 0, padding: '64px 48px 48px', borderBottom: '1px solid var(--border)', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+                    <div style={{ width: '120px', height: '120px', borderRadius: '50%', background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}>
+                        <User2 size={64} color="var(--text-muted)" strokeWidth={1} />
                     </div>
                     <div>
-                        <h1 style={{ fontFamily: 'Inter', fontWeight: 800, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '8px' }}>
+                        <h1 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '2.5rem', color: 'var(--text-bright)', marginBottom: '8px' }}>
                             {user?.username || 'Estudiante'}
                         </h1>
-                        <div style={{ display: 'flex', gap: '16px' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                <Hash size={14} /> ID: {user?.id || '000'}
+                        <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>
+                                <Hash size={16} /> Estudiante #{user?.id || '000'}
                             </span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                <Calendar size={14} /> {user?.created_at ? `Miembro desde ${new Date(user.created_at).getFullYear()}` : 'Nuevo miembro'}
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>
+                                <Calendar size={16} /> {user?.created_at ? `Miembro desde ${new Date(user.created_at).getFullYear()}` : 'Nuevo miembro'}
                             </span>
                         </div>
                     </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '16px' }}>
-                    <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px 24px', textAlign: 'right' }}>
-                        <p style={{ fontFamily: 'Inter', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Rendimiento Global</p>
-                        <p style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.4rem', color: 'var(--primary)', lineHeight: 1 }}>{user?.xp_total || 0} PUNTOS</p>
+                    <div style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '8px', padding: '16px 32px', textAlign: 'center' }}>
+                        <p style={{ fontFamily: 'Inter', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '4px', fontWeight: 600 }}>Rendimiento Global</p>
+                        <p style={{ fontFamily: 'Inter', fontWeight: 800, fontSize: '2rem', color: 'var(--text-bright)', lineHeight: 1 }}>{user?.xp_total || 0}</p>
                     </div>
-                    <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                        <LogOut size={14} /> Cerrar sesión
+                    <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', fontSize: '0.95rem', color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'Inter', fontWeight: 500, padding: '8px 16px', borderRadius: '4px', transition: 'background 0.2s' }}
+                        onMouseOver={e => e.currentTarget.style.background = '#f0f2f5'}
+                        onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                        <LogOut size={16} /> Cerrar sesión
                     </button>
                 </div>
             </div>
 
             {/* Body */}
-            <div style={{ flex: 1, overflow: 'auto', padding: '32px 48px' }}>
-                
-                {/* Stats Row */}
-                <div style={{ display: 'flex', gap: '16px', marginBottom: '32px' }}>
-                    {STATS.map((s, i) => (
-                        <div key={i} style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: 'var(--bg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <s.Icon size={20} color="var(--primary)" />
-                            </div>
-                            <div>
-                                <p style={{ fontWeight: 800, fontSize: '1.4rem', color: s.color, marginBottom: '4px' }}>{s.value}</p>
-                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'Inter', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Competencies Grid */}
-                <div style={{ marginBottom: '32px' }}>
-                    <h2 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-bright)', marginBottom: '16px' }}>
-                        Desarrollo de Competencias
-                    </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
-                        {COMPETENCIES.map((comp, i) => (
-                            <div key={i} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'var(--bg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <comp.Icon size={18} color={comp.color} />
-                                        </div>
-                                        <div>
-                                            <h4 style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-bright)', marginBottom: '2px' }}>{comp.label}</h4>
-                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{comp.category}</span>
-                                        </div>
-                                    </div>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: comp.color }}>{comp.progress}%</span>
+            <div style={{ flex: 1, overflow: 'auto', padding: '48px' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                    
+                    {/* Stats Row */}
+                    <div style={{ display: 'flex', gap: '24px', marginBottom: '48px' }}>
+                        {STATS.map((s, i) => (
+                            <motion.div whileHover={{ y: -4 }} key={i} style={{ flex: 1, background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '32px', display: 'flex', alignItems: 'center', gap: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+                                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <s.Icon size={32} color="var(--primary)" />
                                 </div>
-                                <div style={{ height: '6px', background: 'var(--bg)', borderRadius: '3px', overflow: 'hidden' }}>
-                                    <div style={{ width: `${comp.progress}%`, height: '100%', background: comp.color, borderRadius: '3px' }} />
+                                <div>
+                                    <p style={{ fontWeight: 800, fontSize: '2rem', color: 'var(--text-bright)', marginBottom: '4px', fontFamily: 'Inter', lineHeight: 1.2 }}>{s.value}</p>
+                                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 500 }}>{s.label}</p>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
-                </div>
 
+                    {/* Competencies Grid */}
+                    <div style={{ marginBottom: '48px' }}>
+                        <h2 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '24px' }}>
+                            Desarrollo de Competencias
+                        </h2>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
+                            {COMPETENCIES.map((comp, i) => (
+                                <div key={i} style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                            <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: `${comp.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <comp.Icon size={24} color={comp.color} />
+                                            </div>
+                                            <div>
+                                                <h4 style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '1.05rem', color: 'var(--text-bright)', marginBottom: '4px' }}>{comp.label}</h4>
+                                                <span style={{ fontFamily: 'Inter', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{comp.category}</span>
+                                            </div>
+                                        </div>
+                                        <span style={{ fontFamily: 'Inter', fontSize: '1rem', fontWeight: 700, color: comp.color }}>{comp.progress}%</span>
+                                    </div>
+                                    <div style={{ height: '8px', background: '#f0f2f5', borderRadius: '4px', overflow: 'hidden' }}>
+                                        <div style={{ width: `${comp.progress}%`, height: '100%', background: comp.color, borderRadius: '4px', transition: 'width 1s ease-in-out' }} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     )

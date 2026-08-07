@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Map, Target, Users, User2, ChevronRight, UserCircle, MapPin, Zap, CheckCircle2, Clock, Layers, Activity, BookOpen, ChevronDown } from 'lucide-react'
+import { UserCircle, MapPin, Zap, CheckCircle2, Clock, Activity, BookOpen, ChevronRight } from 'lucide-react'
 import api from '../services/api' 
 
 const EMPTY_STARTERS = [
@@ -11,18 +11,18 @@ const EMPTY_STARTERS = [
 
 function TimelineMap({ modules, activeIdx, color, onNodeClick }) {
     return (
-        <div style={{ padding: '10px 0', display: 'flex', flexDirection: 'column', gap: '0' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
             {modules.map((mod, i) => {
                 const isCompleted = i < activeIdx;
                 const isCurrent = i === activeIdx;
                 const isLocked = i > activeIdx;
                 
                 return (
-                    <div key={i} style={{ display: 'flex', gap: '16px', position: 'relative' }}>
+                    <div key={i} style={{ display: 'flex', gap: '20px', position: 'relative' }}>
                         {/* Timeline Line */}
                         {i < modules.length - 1 && (
                             <div style={{ 
-                                position: 'absolute', left: '15px', top: '30px', bottom: '-20px', 
+                                position: 'absolute', left: '15px', top: '32px', bottom: '-8px', 
                                 width: '2px', background: isCompleted ? color : 'var(--border)', 
                                 zIndex: 0 
                             }} />
@@ -34,10 +34,11 @@ function TimelineMap({ modules, activeIdx, color, onNodeClick }) {
                                 onClick={isCurrent ? () => onNodeClick(5) : undefined}
                                 style={{ 
                                     width: '32px', height: '32px', borderRadius: '50%', 
-                                    background: isCompleted ? color : isCurrent ? 'var(--bg2)' : 'var(--bg)', 
+                                    background: isCompleted ? color : '#fff', 
                                     border: `2px solid ${isCompleted || isCurrent ? color : 'var(--border)'}`, 
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     cursor: isCurrent ? 'pointer' : 'default',
+                                    boxShadow: isCurrent ? `0 0 0 4px ${color}20` : 'none',
                                     transition: 'all 0.2s'
                                 }}>
                                 {isCompleted ? (
@@ -45,41 +46,41 @@ function TimelineMap({ modules, activeIdx, color, onNodeClick }) {
                                 ) : isCurrent ? (
                                     <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color }} />
                                 ) : (
-                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>{i + 1}</span>
+                                    <span style={{ fontFamily: 'Inter', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>{i + 1}</span>
                                 )}
                             </div>
                         </div>
 
                         {/* Content Card */}
-                        <div style={{ 
-                            flex: 1, paddingBottom: '24px', 
-                            opacity: isLocked ? 0.6 : 1 
-                        }}>
+                        <div style={{ flex: 1, paddingBottom: '32px', opacity: isLocked ? 0.6 : 1 }}>
                             <div style={{ 
-                                background: isCurrent ? 'var(--card)' : 'transparent', 
-                                border: isCurrent ? `1px solid ${color}` : '1px solid transparent', 
-                                borderRadius: '8px', padding: '12px 16px',
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                            }}>
+                                background: '#fff', 
+                                border: isCurrent ? `1px solid ${color}` : '1px solid var(--border)', 
+                                borderRadius: '8px', padding: '16px 20px',
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                boxShadow: isCurrent ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
+                                cursor: isCurrent ? 'pointer' : 'default'
+                            }}
+                            onClick={isCurrent ? () => onNodeClick(5) : undefined}
+                            >
                                 <div>
-                                    <h4 style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-bright)', marginBottom: '4px' }}>
+                                    <h4 style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-bright)', marginBottom: '6px' }}>
                                         {mod.title}
                                     </h4>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <Clock size={12} color="var(--text-muted)" />
-                                        <span style={{ fontFamily: 'Inter', fontSize: '0.7rem', color: 'var(--text-muted)' }}>{mod.duration}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <Clock size={14} color="var(--text-muted)" />
+                                        <span style={{ fontFamily: 'Inter', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{mod.duration}</span>
                                     </div>
                                 </div>
                                 {isCurrent && (
                                     <button 
-                                        onClick={() => onNodeClick(5)}
                                         style={{ 
                                             background: color, color: '#fff', border: 'none', 
-                                            borderRadius: '6px', padding: '6px 14px', 
-                                            fontFamily: 'Inter', fontSize: '0.7rem', fontWeight: 600, 
-                                            cursor: 'pointer' 
+                                            borderRadius: '4px', padding: '8px 16px', 
+                                            fontFamily: 'Inter', fontSize: '0.85rem', fontWeight: 600, 
+                                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
                                         }}>
-                                        Continuar
+                                        Continuar <ChevronRight size={16} />
                                     </button>
                                 )}
                             </div>
@@ -94,15 +95,15 @@ function TimelineMap({ modules, activeIdx, color, onNodeClick }) {
 function StatCard({ value, label, color, Icon, delay = 0 }) {
     return (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}
-            style={{ background: 'var(--card)', border: '1px solid var(--border)', borderLeft: `3px solid ${color}`, borderRadius: '8px', padding: '16px', flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon size={20} color={color} />
+            style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px', flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={24} color={color} />
             </div>
             <div>
-                <p style={{ fontFamily: 'Inter', fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-bright)', lineHeight: 1 }}>
+                <p style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.4rem', color: 'var(--text-bright)', lineHeight: 1, marginBottom: '6px' }}>
                     {value}
                 </p>
-                <span style={{ fontSize: '0.65rem', fontFamily: 'Inter', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '4px', display: 'block' }}>{label}</span>
+                <span style={{ fontSize: '0.8rem', fontFamily: 'Inter', color: 'var(--text-muted)' }}>{label}</span>
             </div>
         </motion.div>
     )
@@ -129,97 +130,111 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
     }, []);
 
     return (
-        <div style={{ height: '100vh', background: 'var(--bg)', display: 'flex', overflow: 'hidden' }}>
+        <div style={{ height: '100vh', background: '#f8f9fa', display: 'flex', overflow: 'hidden' }}>
 
             {/* ── LEFT SIDEBAR */}
-            <aside style={{ width: '240px', flexShrink: 0, background: 'var(--bg2)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 20px', gap: '24px', overflow: 'hidden' }}>
-                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--card)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <User2 size={32} color="var(--text-muted)" strokeWidth={1.5} />
-                </div>
-
+            <aside style={{ width: '260px', flexShrink: 0, background: '#fff', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 24px', gap: '32px', overflow: 'hidden' }}>
                 <div style={{ textAlign: 'center', width: '100%' }}>
-                    <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-bright)', fontFamily: 'Inter', marginBottom: '4px' }}>
+                    <div style={{ width: '88px', height: '88px', borderRadius: '50%', background: '#f0f2f5', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <UserCircle size={40} color="var(--text-muted)" strokeWidth={1.5} />
+                    </div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-bright)', fontFamily: 'Inter', marginBottom: '6px' }}>
                         {userData.username}
                     </h3>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>
-                        Estudiante Aurum
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>
+                        Estudiante Activo
                     </span>
                 </div>
 
-                <div style={{ width: '100%', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px' }}>
+                <div style={{ width: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'Inter' }}>Progreso de Ruta</span>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-bright)', fontWeight: 700, fontFamily: 'Inter' }}>{userData.xp_total % 100}%</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'Inter' }}>Progreso del curso</span>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 700, fontFamily: 'Inter' }}>{userData.xp_total % 100}%</span>
                     </div>
-                    <div style={{ background: 'var(--bg)', borderRadius: '4px', overflow: 'hidden', height: '6px', width: '100%' }}>
+                    <div style={{ background: '#f0f2f5', borderRadius: '4px', overflow: 'hidden', height: '8px', width: '100%' }}>
                         <div style={{ width: `${Math.min((userData.xp_total % 100), 100)}%`, height: '100%', background: 'var(--primary)', borderRadius: '4px', transition: 'width 0.5s ease' }} />
                     </div>
                 </div>
 
-                <div style={{ width: '100%', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Activity size={20} color="var(--primary)" />
-                    <div>
-                        <p style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-bright)' }}>{userData.streak_days} Días</p>
-                        <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>Estudio constante</p>
+                <div style={{ width: '100%', borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Activity size={20} color="#10B981" />
+                        </div>
+                        <div>
+                            <p style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1rem', color: 'var(--text-bright)', marginBottom: '2px' }}>{userData.streak_days} Días</p>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>Racha de estudio</p>
+                        </div>
                     </div>
                 </div>
             </aside>
 
             {/* ── CENTER */}
             <main style={{
-                flex: 1, overflow: 'auto', padding: '32px 40px', position: 'relative', background: 'var(--bg)'
+                flex: 1, overflow: 'auto', padding: '48px', position: 'relative'
             }}>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-                    <h2 style={{ fontSize: '1.4rem', fontFamily: 'Inter', fontWeight: 800, color: 'var(--text-bright)' }}>Mi Aprendizaje</h2>
+                <div style={{ marginBottom: '40px' }}>
+                    <h2 style={{ fontSize: '2.5rem', fontFamily: 'Playfair Display', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '8px' }}>Mi Aprendizaje</h2>
+                    <p style={{ fontFamily: 'Inter', fontSize: '1rem', color: 'var(--text-muted)' }}>Continúa donde lo dejaste y alcanza tus metas profesionales.</p>
                 </div>
 
                 {activeModule && (
-                    <div style={{ display: 'flex', gap: '16px', marginBottom: '32px' }}>
-                        <StatCard value={userData.xp_total} label="Puntos de Avance" color="var(--accent)" Icon={Zap} delay={0} />
-                        <StatCard value={activeModule.modules.length} label="Módulos" color="var(--primary)" Icon={BookOpen} delay={0.08} />
-                        <StatCard value={userData.streak_days} label="Días seguidos" color="var(--accent)" Icon={Activity} delay={0.16} />
+                    <div style={{ display: 'flex', gap: '24px', marginBottom: '48px' }}>
+                        <StatCard value={userData.xp_total} label="Puntos de Avance" color="var(--primary)" Icon={Zap} delay={0} />
+                        <StatCard value={activeModule.modules.length} label="Módulos Totales" color="var(--accent)" Icon={BookOpen} delay={0.1} />
+                        <StatCard value={userData.streak_days} label="Días seguidos" color="#10B981" Icon={Activity} delay={0.2} />
                     </div>
                 )}
 
                 <AnimatePresence mode="wait">
                     {activeModule ? (
                         <motion.div key="active" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
+                            
+                            <h3 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '24px' }}>
+                                Curso Actual
+                            </h3>
+                            
                             {/* Mission banner */}
-                            <div style={{ background: 'var(--card)', border: `1px solid var(--border)`, borderLeft: `4px solid ${activeModule.color}`, borderRadius: '12px', padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-                                <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: 'var(--bg)', border: `1px solid var(--border)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <activeModule.Icon size={24} color={activeModule.color} />
+                            <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px 32px', display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                                <div style={{ width: '64px', height: '64px', borderRadius: '8px', background: `${activeModule.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <activeModule.Icon size={32} color={activeModule.color} />
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <p style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Módulo activo</p>
-                                    <h3 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-bright)' }}>{activeModule.title}</h3>
+                                    <p style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '8px' }}>MÓDULO ACTIVO</p>
+                                    <h3 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.4rem', color: 'var(--text-bright)' }}>{activeModule.title}</h3>
                                 </div>
                                 <div style={{ display: 'flex', gap: '12px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '6px', padding: '6px 12px' }}>
-                                        <Clock size={12} color="var(--text-muted)" />
-                                        <span style={{ fontFamily: 'Inter', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{activeModule.estimatedTime}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8f9fa', borderRadius: '4px', padding: '8px 16px' }}>
+                                        <Clock size={16} color="var(--text-muted)" />
+                                        <span style={{ fontFamily: 'Inter', fontSize: '0.9rem', color: 'var(--text-bright)', fontWeight: 500 }}>{activeModule.estimatedTime} restantes</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Timeline map */}
-                            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px 32px' }}>
-                                <h3 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1rem', color: 'var(--text-bright)', marginBottom: '24px' }}>
-                                    Hoja de Ruta del Curso
+                            <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '32px 40px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                                <h3 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.2rem', color: 'var(--text-bright)', marginBottom: '32px' }}>
+                                    Contenido del curso
                                 </h3>
                                 <TimelineMap modules={activeModule.modules} activeIdx={0} color={activeModule.color} onNodeClick={() => onNavigate(5)} />
                             </div>
                         </motion.div>
                     ) : (
                         <motion.div key="empty" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
-                            style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', minHeight: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', padding: '40px' }}>
-                            <BookOpen size={48} color="var(--border)" strokeWidth={1} style={{ marginBottom: '16px' }} />
-                            <div style={{ textAlign: 'center' }}>
-                                <h3 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-bright)', marginBottom: '8px' }}>Selecciona una ruta para empezar</h3>
-                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontFamily: 'Inter', maxWidth: '300px', lineHeight: '1.6' }}>Tu progreso aparecerá aquí cuando inicies tu primer curso.</p>
+                            style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', minHeight: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '40px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                            <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px' }}>
+                                <BookOpen size={40} color="var(--text-muted)" strokeWidth={1.5} />
                             </div>
-                            <button style={{ marginTop: '16px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 24px', fontFamily: 'Inter', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                                onClick={() => onNavigate(4)}>
+                            <div style={{ textAlign: 'center' }}>
+                                <h3 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '12px' }}>Ningún curso en progreso</h3>
+                                <p style={{ fontSize: '1rem', color: 'var(--text-muted)', fontFamily: 'Inter', maxWidth: '400px', lineHeight: '1.6' }}>Explora nuestro catálogo para encontrar la ruta de aprendizaje que mejor se adapte a tus metas.</p>
+                            </div>
+                            <button style={{ marginTop: '24px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '4px', padding: '14px 28px', fontFamily: 'Inter', fontWeight: 600, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.2s' }}
+                                onClick={() => onNavigate(4)}
+                                onMouseOver={(e) => e.currentTarget.style.background = 'var(--primary-dim)'}
+                                onMouseOut={(e) => e.currentTarget.style.background = 'var(--primary)'}
+                            >
                                 Explorar Catálogo
                             </button>
                         </motion.div>
@@ -228,29 +243,33 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
             </main>
 
             {/* ── RIGHT SIDEBAR */}
-            <aside style={{ width: '280px', flexShrink: 0, background: 'var(--bg2)', padding: '32px 20px', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '24px', overflowY: 'auto' }}>
+            <aside style={{ width: '320px', flexShrink: 0, background: '#fff', padding: '40px 24px', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '24px', overflowY: 'auto' }}>
                 <div>
-                    <h3 style={{ fontSize: '0.9rem', fontFamily: 'Inter', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '16px' }}>{activeModule ? 'Próximas Etapas' : 'Tareas Sugeridas'}</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontFamily: 'Inter', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '24px' }}>{activeModule ? 'Próximas Clases' : 'Tareas Sugeridas'}</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {activeModule ? (
                             activeModule.modules.slice(1, 4).map((mod, i) => (
-                                <div key={i} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px' }}>
-                                    <h4 style={{ fontSize: '0.75rem', fontFamily: 'Inter', fontWeight: 600, color: 'var(--text-bright)', marginBottom: '6px' }}>{mod.title}</h4>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <Clock size={10} color="var(--text-muted)" />
-                                        <span style={{ fontFamily: 'Inter', fontSize: '0.65rem', color: 'var(--text-muted)' }}>{mod.duration}</span>
+                                <div key={i} style={{ background: '#f8f9fa', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px' }}>
+                                    <h4 style={{ fontSize: '0.9rem', fontFamily: 'Inter', fontWeight: 600, color: 'var(--text-bright)', marginBottom: '8px', lineHeight: 1.4 }}>{mod.title}</h4>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <Clock size={14} color="var(--text-muted)" />
+                                        <span style={{ fontFamily: 'Inter', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{mod.duration}</span>
                                     </div>
                                 </div>
                             ))
                         ) : (
                             EMPTY_STARTERS.map((m, i) => (
                                 <div key={i} onClick={() => onNavigate(4)}
-                                    style={{ background: 'var(--card)', border: '1px solid var(--border)', borderLeft: `3px solid ${m.color}`, borderRadius: '8px', padding: '14px', cursor: 'pointer' }}>
-                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px' }}>
-                                        <m.Icon size={16} color={m.color} />
-                                        <p style={{ fontSize: '0.8rem', fontFamily: 'Inter', fontWeight: 500, color: 'var(--text-bright)' }}>{m.label}</p>
+                                    style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+                                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `${m.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <m.Icon size={18} color={m.color} />
+                                        </div>
+                                        <span style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-bright)' }}>{m.label}</span>
                                     </div>
-                                    <span style={{ display: 'inline-block', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '4px', padding: '2px 8px', fontFamily: 'Inter', fontSize: '0.65rem', color: 'var(--text-muted)' }}>{m.reward}</span>
+                                    <div style={{ display: 'inline-block', background: '#f0f2f5', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: '4px', fontSize: '0.75rem', fontFamily: 'Inter', fontWeight: 600 }}>
+                                        {m.reward}
+                                    </div>
                                 </div>
                             ))
                         )}

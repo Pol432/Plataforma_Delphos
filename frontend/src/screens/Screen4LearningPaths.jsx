@@ -21,7 +21,6 @@ const ICON_MAP = {
     'Cloud': Cloud,
 };
 
-const CATEGORIES = ['Todos', 'Tecnología', 'Negocios', 'Diseño', 'Marketing']
 const DIFFICULTY_LABELS = { 1: 'Básico', 2: 'Básico', 3: 'Intermedio', 4: 'Avanzado' }
 
 function AIBadge({ active }) {
@@ -29,14 +28,14 @@ function AIBadge({ active }) {
         <motion.div
             animate={{ opacity: active ? [0.7, 1, 0.7] : 1 }}
             transition={{ repeat: active ? Infinity : 0, duration: 2 }}
-            style={{ display: 'flex', alignItems: 'center', gap: '7px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '8px', padding: '6px 14px' }}>
-            <Brain size={13} color="var(--primary)" strokeWidth={2} />
-            <span style={{ fontFamily: 'Inter', fontSize: '0.7rem', fontWeight: 600, color: 'var(--primary)' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '4px', padding: '8px 16px' }}>
+            <Brain size={16} color="var(--primary)" strokeWidth={2} />
+            <span style={{ fontFamily: 'Inter', fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)' }}>
                 {active ? 'IA actualizando recomendaciones...' : 'Catálogo inteligente'}
             </span>
             {active && (
                 <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}>
-                    <Sparkles size={11} color="var(--primary)" strokeWidth={2} />
+                    <Sparkles size={14} color="var(--primary)" strokeWidth={2} />
                 </motion.div>
             )}
         </motion.div>
@@ -47,34 +46,35 @@ function CatalogCard({ module, onSelect }) {
     const CategoryIcon = module.categoryIcon || BookOpen
     return (
         <motion.div
-            whileHover={{ y: -4, boxShadow: `var(--shadow-lg)` }}
+            whileHover={{ y: -4, boxShadow: '0 12px 24px rgba(0,0,0,0.08)' }}
             onClick={() => onSelect(module)}
-            style={{ background: 'var(--card)', border: '1px solid var(--border)', borderTop: `3px solid ${module.color}`, borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ height: '90px', background: `linear-gradient(135deg, var(--card) 0%, var(--bg) 100%)`, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: `1px solid var(--border)` }}>
-                <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'var(--bg2)', border: `1px solid var(--border)`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1 }}>
-                    <module.Icon size={22} color={module.color} strokeWidth={1.8} />
+            style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            
+            <div style={{ height: '140px', background: `${module.color}15`, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                    <module.Icon size={32} color={module.color} strokeWidth={1.5} />
                 </div>
                 {!module.unlocked && (
-                    <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(4px)', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                        <Lock size={16} color="var(--text-muted)" strokeWidth={2} />
-                        <span style={{ fontFamily: 'Inter', fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-muted)' }}>Módulo Bloqueado</span>
+                    <div style={{ position: 'absolute', top: '12px', right: '12px', background: '#fff', borderRadius: '4px', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                        <Lock size={12} color="var(--text-muted)" />
+                        <span style={{ fontFamily: 'Inter', fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>Pro</span>
                     </div>
                 )}
-                <div style={{ position: 'absolute', top: '8px', left: '8px', display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg2)', border: `1px solid var(--border)`, borderRadius: '5px', padding: '2px 8px' }}>
-                    <CategoryIcon size={9} color={module.color} strokeWidth={2.5} />
-                    <span style={{ fontFamily: 'Inter', fontSize: '0.58rem', fontWeight: 700, color: module.color, letterSpacing: '0.06em' }}>{module.category?.toUpperCase() || 'GENERAL'}</span>
+                <div style={{ position: 'absolute', bottom: '12px', left: '12px', display: 'flex', alignItems: 'center', gap: '6px', background: '#fff', borderRadius: '4px', padding: '4px 10px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                    <CategoryIcon size={12} color={module.color} strokeWidth={2} />
+                    <span style={{ fontFamily: 'Inter', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-bright)' }}>{module.category || 'General'}</span>
                 </div>
             </div>
-            <div style={{ padding: '14px', flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <h3 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '0.78rem', color: 'var(--text-bright)', lineHeight: 1.35, letterSpacing: '0.02em' }}>{module.title}</h3>
-                <p style={{ fontFamily: 'Inter', fontSize: '0.73rem', color: 'var(--text-muted)', lineHeight: 1.45, flex: 1 }}>{module.subtitle}</p>
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: 'auto' }}>
-                    <span style={{ fontFamily: 'Inter', fontSize: '0.62rem', color: 'var(--text-muted)', background: 'var(--bg)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)' }}>Nivel: {DIFFICULTY_LABELS[module.difficulty]}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Clock size={10} color="var(--text-muted)" strokeWidth={2} />
-                        <span style={{ fontFamily: 'Inter', fontSize: '0.65rem', color: 'var(--text-muted)' }}>{module.estimatedTime}</span>
+            
+            <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <h3 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-bright)', lineHeight: 1.3 }}>{module.title}</h3>
+                <p style={{ fontFamily: 'Inter', fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.5, flex: 1 }}>{module.subtitle}</p>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                    <span style={{ fontFamily: 'Inter', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>{DIFFICULTY_LABELS[module.difficulty]}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Clock size={14} color="var(--text-muted)" />
+                        <span style={{ fontFamily: 'Inter', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>{module.estimatedTime}</span>
                     </div>
                 </div>
             </div>
@@ -84,9 +84,9 @@ function CatalogCard({ module, onSelect }) {
 
 function SectionTitle({ icon: Icon, label, color }) {
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '12px' }}>
-            <Icon size={13} color={color} strokeWidth={2.5} />
-            <span style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '0.65rem', color, letterSpacing: '0.12em', textTransform: 'uppercase' }}>{label}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <Icon size={18} color={color} />
+            <span style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1rem', color: 'var(--text-bright)' }}>{label}</span>
         </div>
     )
 }
@@ -195,56 +195,55 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
     })
 
     return (
-        <div style={{ minHeight: '100vh', background: 'var(--bg)', padding: '28px 24px 100px 24px', position: 'relative' }}>
-            <div style={{ textAlign: 'center', marginBottom: '22px' }}>
-                <span style={{ fontSize: '0.65rem', fontFamily: 'Inter', color: 'var(--text-muted)', letterSpacing: '0.18em', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>// Catálogo de Aprendizaje</span>
-                <h1 style={{ fontSize: '1.8rem', fontFamily: 'Inter', fontWeight: 900, color: 'var(--text-bright)' }}>RUTAS DE APRENDIZAJE</h1>
+        <div style={{ minHeight: '100vh', background: '#f8f9fa', padding: '48px 48px 120px 48px', position: 'relative' }}>
+            <div style={{ marginBottom: '40px' }}>
+                <h1 style={{ fontSize: '2.5rem', fontFamily: 'Playfair Display', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '12px' }}>Catálogo de Aprendizaje</h1>
+                <p style={{ fontFamily: 'Inter', fontSize: '1.1rem', color: 'var(--text-muted)' }}>Explora nuestras rutas formativas y comienza a desarrollar habilidades clave.</p>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '28px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '32px', marginBottom: '48px', borderBottom: '1px solid var(--border)' }}>
                 {TABS.map((tab, i) => (
-                    <motion.button key={i} onClick={() => setActiveTab(i)}
-                        whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                        style={{ padding: '8px 18px', borderRadius: '8px', background: activeTab === i ? 'var(--primary)' : 'var(--card)', color: activeTab === i ? '#fff' : 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 600, fontSize: '0.65rem', cursor: 'pointer', letterSpacing: '0.07em', textTransform: 'uppercase', border: activeTab === i ? 'none' : '1px solid var(--border)', transition: 'all 0.25s ease', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {i === 2 && <BookOpen size={12} strokeWidth={2.5} />}{tab}
-                    </motion.button>
+                    <div key={i} onClick={() => setActiveTab(i)}
+                        style={{ padding: '12px 0', borderBottom: activeTab === i ? '2px solid var(--primary)' : '2px solid transparent', color: activeTab === i ? 'var(--primary)' : 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 600, fontSize: '1rem', cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {tab}
+                    </div>
                 ))}
             </div>
 
             <AnimatePresence mode="wait">
                 {activeTab < 2 && (
                     <motion.div key="modules" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', padding: '10px 0 40px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '32px', padding: '20px 0', overflowX: 'auto', paddingBottom: '40px' }}>
                             {loading ? (
-                                <p style={{ color: 'var(--text-muted)', fontFamily: 'Inter' }}>CARGANDO RUTAS...</p>
+                                <p style={{ color: 'var(--text-muted)', fontFamily: 'Inter', fontSize: '1.1rem' }}>Cargando rutas de aprendizaje...</p>
                             ) : dbModules.length > 0 ? (
                                 dbModules.slice(0, 3).map((module, idx) => {
                                     const isCenter = idx === centerCard
                                     return (
                                         <motion.div key={module.id || idx} onClick={() => handleCardClick(module, idx)}
-                                            animate={{ scale: isCenter ? 1.05 : 0.92, y: isCenter ? -8 : 0, opacity: isCenter ? 1 : 0.65 }}
-                                            whileHover={{ scale: isCenter ? 1.07 : 0.96 }}
-                                            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-                                            style={{ width: '300px', flexShrink: 0, background: 'var(--card)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', border: `1px solid ${isCenter ? module.color : 'var(--border)'}`, borderTop: `3px solid ${module.color}`, boxShadow: isCenter ? `var(--shadow-lg)` : 'var(--shadow-md)' }}>
-                                            <div style={{ height: '130px', background: `linear-gradient(135deg, var(--card) 0%, var(--bg) 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px', position: 'relative', borderBottom: `1px solid var(--border)` }}>
-                                                <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: 'var(--bg2)', border: `1px solid var(--border)`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1 }}>
-                                                    <module.Icon size={26} color={module.color} strokeWidth={1.8} />
+                                            animate={{ scale: isCenter ? 1.05 : 0.95, opacity: isCenter ? 1 : 0.7 }}
+                                            whileHover={{ scale: isCenter ? 1.05 : 0.98 }}
+                                            transition={{ duration: 0.3 }}
+                                            style={{ width: '340px', flexShrink: 0, background: '#fff', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', border: '1px solid var(--border)', boxShadow: isCenter ? '0 12px 24px rgba(0,0,0,0.08)' : '0 4px 12px rgba(0,0,0,0.03)' }}>
+                                            <div style={{ height: '160px', background: `${module.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                                                    <module.Icon size={36} color={module.color} />
                                                 </div>
                                             </div>
-                                            <div style={{ padding: '16px' }}>
-                                                <h3 style={{ fontSize: '0.8rem', marginBottom: '5px', lineHeight: 1.35, fontFamily: 'Inter', fontWeight: 700, color: isCenter ? module.color : 'var(--text-bright)' }}>{module.title}</h3>
-                                                <p style={{ color: 'var(--text-muted)', fontSize: '0.77rem', marginBottom: '12px', lineHeight: 1.5 }}>{module.subtitle}</p>
-                                                <motion.button style={{ width: '100%', padding: '11px', borderRadius: '8px', background: isCenter ? 'var(--primary)' : 'var(--card2)', color: isCenter ? '#fff' : 'var(--text)', border: isCenter ? 'none' : '1px solid var(--border)', fontFamily: 'Inter', fontWeight: 700, fontSize: '0.7rem', cursor: 'pointer', textTransform: 'uppercase' }}
-                                                    whileHover={isCenter ? { background: 'var(--primary-dim)' } : {}} whileTap={{ scale: 0.97 }}
+                                            <div style={{ padding: '24px' }}>
+                                                <h3 style={{ fontSize: '1.2rem', marginBottom: '8px', lineHeight: 1.3, fontFamily: 'Inter', fontWeight: 700, color: 'var(--text-bright)' }}>{module.title}</h3>
+                                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px', lineHeight: 1.5 }}>{module.subtitle}</p>
+                                                <motion.button style={{ width: '100%', padding: '14px', borderRadius: '4px', background: isCenter ? 'var(--primary)' : '#f0f2f5', color: isCenter ? '#fff' : 'var(--text-bright)', border: 'none', fontFamily: 'Inter', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', transition: 'background 0.2s' }}
+                                                    whileHover={isCenter ? { background: 'var(--primary-dim)' } : {}} whileTap={{ scale: 0.98 }}
                                                     onClick={e => { e.stopPropagation(); if (isCenter) setSelectedModule(module) }}>
-                                                    {isCenter ? 'VER DETALLES' : 'SELECCIONAR'}
+                                                    {isCenter ? 'Ver detalles del curso' : 'Seleccionar'}
                                                 </motion.button>
                                             </div>
                                         </motion.div>
                                     )
                                 })
                             ) : (
-                                <p style={{ color: 'var(--text-muted)' }}>No hay rutas disponibles actualmente.</p>
+                                <p style={{ color: 'var(--text-muted)', fontFamily: 'Inter', fontSize: '1.1rem' }}>No hay rutas disponibles actualmente.</p>
                             )}
                         </div>
                     </motion.div>
@@ -252,14 +251,14 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
 
                 {activeTab === 2 && (
                     <motion.div key="catalog" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '18px', flexWrap: 'wrap' }}>
-                            <AIBadge active={aiActive} />
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '7px 13px', flex: 1, maxWidth: '600px' }}>
-                                <Search size={13} color="var(--text-muted)" />
-                                <input value={search} onChange={e => { setSearch(e.target.value); handleCatalogInteract() }} placeholder="Buscar en el catálogo..." style={{ background: 'transparent', border: 'none', outline: 'none', fontFamily: 'Inter', fontSize: '0.78rem', color: 'var(--text-bright)', flex: 1 }} />
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', marginBottom: '32px', flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#fff', border: '1px solid var(--border)', borderRadius: '4px', padding: '12px 16px', flex: 1, maxWidth: '600px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                                <Search size={20} color="var(--text-muted)" />
+                                <input value={search} onChange={e => { setSearch(e.target.value); handleCatalogInteract() }} placeholder="Buscar cursos, habilidades o certificaciones..." style={{ background: 'transparent', border: 'none', outline: 'none', fontFamily: 'Inter', fontSize: '1rem', color: 'var(--text-bright)', flex: 1 }} />
                             </div>
+                            <AIBadge active={aiActive} />
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '14px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
                             {catalogModules.map(m => (
                                 <CatalogCard key={m.id} module={m} onSelect={ms => { setSelectedModule(ms); handleCatalogInteract() }} />
                             ))}
@@ -271,55 +270,71 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
             <AnimatePresence>
                 {selectedModule && (
                     <>
-                        <motion.div key="backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedModule(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 100 }} />
+                        <motion.div key="backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedModule(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 100 }} />
                         <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 101, pointerEvents: 'none' }}>
-                            <motion.div initial={{ scale: 0.88, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.88, opacity: 0, y: 20 }}
-                                style={{ width: 'min(720px, 94vw)', maxHeight: '86vh', background: 'var(--bg2)', border: `1px solid var(--border)`, borderTop: `3px solid ${selectedModule.color}`, borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', pointerEvents: 'all' }}>
-                                <div style={{ padding: '20px 26px 16px', borderBottom: `1px solid var(--border)`, background: 'var(--card)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '13px' }}>
-                                            <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'var(--bg)', border: `1px solid var(--border)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <selectedModule.Icon size={24} color={selectedModule.color} />
-                                            </div>
-                                            <div>
-                                                <span style={{ fontSize: '0.6rem', color: selectedModule.color, fontWeight: 700 }}>{selectedModule.category?.toUpperCase()}</span>
-                                                <h2 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-bright)' }}>{selectedModule.title}</h2>
-                                            </div>
+                            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                                style={{ width: '100%', maxWidth: '800px', maxHeight: '90vh', background: '#fff', borderRadius: '12px', display: 'flex', flexDirection: 'column', overflow: 'hidden', pointerEvents: 'all', boxShadow: '0 24px 48px rgba(0,0,0,0.15)' }}>
+                                
+                                {/* Modal Header */}
+                                <div style={{ padding: '32px 40px', background: '#fff', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <div style={{ display: 'flex', gap: '24px' }}>
+                                        <div style={{ width: '80px', height: '80px', borderRadius: '8px', background: `${selectedModule.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                            <selectedModule.Icon size={40} color={selectedModule.color} />
                                         </div>
-                                        <button onClick={() => setSelectedModule(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={20} /></button>
+                                        <div>
+                                            <span style={{ fontFamily: 'Inter', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>{selectedModule.category?.toUpperCase() || 'GENERAL'}</span>
+                                            <h2 style={{ fontFamily: 'Playfair Display', fontSize: '2rem', fontWeight: 700, color: 'var(--text-bright)', lineHeight: 1.2, marginBottom: '12px' }}>{selectedModule.title}</h2>
+                                            <p style={{ fontFamily: 'Inter', fontSize: '1rem', color: 'var(--text-muted)' }}>{selectedModule.subtitle}</p>
+                                        </div>
                                     </div>
+                                    <button onClick={() => setSelectedModule(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '8px' }}>
+                                        <X size={24} />
+                                    </button>
                                 </div>
-                                <div style={{ overflowY: 'auto', flex: 1, padding: '22px 26px' }}>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '22px' }}>
+                                
+                                {/* Modal Body */}
+                                <div style={{ overflowY: 'auto', flex: 1, padding: '40px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '48px' }}>
                                         <div>
-                                            <SectionTitle icon={ChevronRight} label="Descripción" color={selectedModule.color} />
-                                            <p style={{ fontSize: '0.82rem', color: 'var(--text)', lineHeight: 1.7 }}>{selectedModule.description}</p>
-                                            <div style={{ marginTop: '20px' }}>
-                                                <SectionTitle icon={Star} label="Habilidades" color={selectedModule.color} />
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                                    {selectedModule.skills.map(s => <div key={s} style={{ fontSize: '0.7rem', color: selectedModule.color, background: 'var(--bg)', border: '1px solid var(--border)', padding: '4px 10px', borderRadius: '5px' }}>{s}</div>)}
-                                                </div>
+                                            <SectionTitle icon={BookOpen} label="Acerca de este curso" color="var(--primary)" />
+                                            <p style={{ fontFamily: 'Inter', fontSize: '1rem', color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: '32px' }}>{selectedModule.description}</p>
+                                            
+                                            <SectionTitle icon={Star} label="Lo que aprenderás" color="var(--primary)" />
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                                                {selectedModule.skills.map(s => (
+                                                    <div key={s} style={{ fontFamily: 'Inter', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-bright)', background: '#f0f2f5', padding: '8px 16px', borderRadius: '4px' }}>{s}</div>
+                                                ))}
                                             </div>
                                         </div>
+                                        
                                         <div>
-                                            <SectionTitle icon={Layers} label="Hoja de ruta" color={selectedModule.color} />
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                                            <SectionTitle icon={Layers} label="Temario del curso" color="var(--primary)" />
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                                 {selectedModule.modules.map((mod, i) => (
-                                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '7px', padding: '10px' }}>
-                                                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: selectedModule.color }}>{i + 1}</span>
-                                                        <p style={{ fontSize: '0.8rem', color: 'var(--text)', flex: 1 }}>{mod.title}</p>
-                                                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{mod.duration}</span>
+                                                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                                                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid var(--border)' }}>
+                                                            <span style={{ fontFamily: 'Inter', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-muted)' }}>{i + 1}</span>
+                                                        </div>
+                                                        <div>
+                                                            <p style={{ fontFamily: 'Inter', fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-bright)', marginBottom: '4px' }}>{mod.title}</p>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                <Clock size={12} color="var(--text-muted)" />
+                                                                <span style={{ fontFamily: 'Inter', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{mod.duration}</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ padding: '16px 26px', background: 'var(--card)', borderTop: `1px solid var(--border)`, display: 'flex', gap: '14px' }}>
-                                    <motion.button style={{ flex: 1, padding: '13px', borderRadius: '9px', background: 'var(--primary)', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}
-                                        whileHover={{ background: 'var(--primary-dim)' }} whileTap={{ scale: 0.97 }}
+                                
+                                {/* Modal Footer */}
+                                <div style={{ padding: '24px 40px', background: '#f8f9fa', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
+                                    <motion.button style={{ padding: '16px 32px', borderRadius: '4px', background: 'var(--primary)', color: '#fff', border: 'none', fontFamily: 'Inter', fontWeight: 700, fontSize: '1rem', cursor: 'pointer', transition: 'background 0.2s' }}
+                                        whileHover={{ background: 'var(--primary-dim)' }} whileTap={{ scale: 0.98 }}
                                         onClick={() => handleStartCourse(selectedModule)}>
-                                        INICIAR RUTA DE APRENDIZAJE
+                                        Inscribirse gratis
                                     </motion.button>
                                 </div>
                             </motion.div>
@@ -331,54 +346,63 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
             <AnimatePresence>
                 {activeCourse && (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-                        style={{ position: 'fixed', inset: 0, background: 'var(--bg)', zIndex: 200, display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ height: '64px', borderBottom: '1px solid var(--border)', background: 'var(--bg2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                <button onClick={() => setActiveCourse(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 600, fontSize: '0.8rem' }}>
-                                    <ArrowLeft size={16} /> Volver al catálogo
+                        style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 200, display: 'flex', flexDirection: 'column' }}>
+                        
+                        {/* Player Header */}
+                        <div style={{ height: '72px', borderBottom: '1px solid var(--border)', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                                <button onClick={() => setActiveCourse(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontFamily: 'Inter', fontWeight: 600, fontSize: '0.95rem' }}>
+                                    <ArrowLeft size={20} /> Volver
                                 </button>
-                                <div style={{ width: '1px', height: '24px', background: 'var(--border)' }} />
-                                <h2 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-bright)' }}>{activeCourse.title}</h2>
+                                <div style={{ width: '1px', height: '32px', background: 'var(--border)' }} />
+                                <h2 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.2rem', color: 'var(--text-bright)' }}>{activeCourse.title}</h2>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>Progreso:</span>
-                                <div style={{ width: '120px', height: '6px', background: 'var(--bg)', borderRadius: '3px', overflow: 'hidden' }}>
-                                    <div style={{ width: `${Math.max(10, ((currentStep.modIndex + 1) / activeCourse.modules.length) * 100)}%`, height: '100%', background: activeCourse.color, transition: 'width 0.4s ease' }} />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{ fontFamily: 'Inter', fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 500 }}>Progreso del curso:</span>
+                                <div style={{ width: '200px', height: '8px', background: '#f0f2f5', borderRadius: '4px', overflow: 'hidden' }}>
+                                    <div style={{ width: `${Math.max(5, ((currentStep.modIndex + 1) / activeCourse.modules.length) * 100)}%`, height: '100%', background: 'var(--primary)', transition: 'width 0.4s ease' }} />
                                 </div>
                             </div>
                         </div>
 
                         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-                            <div style={{ flex: 1, background: 'var(--bg)', padding: '32px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                            {/* Main Content Area */}
+                            <div style={{ flex: 1, background: '#f8f9fa', padding: '48px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                                 {(() => {
                                     const step = activeCourse.modules[currentStep.modIndex].steps[currentStep.stepIndex];
                                     return (
-                                        <div style={{ maxWidth: '800px', width: '100%', margin: '0 auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                            <h1 style={{ fontFamily: 'Inter', fontWeight: 800, fontSize: '1.5rem', color: 'var(--text-bright)', marginBottom: '24px' }}>{step.title}</h1>
-                                            <div style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', textAlign: 'center' }}>
+                                        <div style={{ maxWidth: '900px', width: '100%', margin: '0 auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                            <h1 style={{ fontFamily: 'Inter', fontWeight: 800, fontSize: '2rem', color: 'var(--text-bright)', marginBottom: '32px' }}>{step.title}</h1>
+                                            <div style={{ flex: 1, background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px', textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
                                                 {step.type === 'video' && (
                                                     <>
-                                                        <MonitorPlay size={64} color={activeCourse.color} strokeWidth={1} style={{ marginBottom: '20px', opacity: 0.8 }} />
-                                                        <h3 style={{ fontFamily: 'Inter', fontSize: '1.1rem', color: 'var(--text-bright)', marginBottom: '8px' }}>Reproductor Multimedia</h3>
-                                                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', maxWidth: '500px' }}>{step.desc}</p>
+                                                        <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '32px' }}>
+                                                            <MonitorPlay size={48} color="var(--primary)" />
+                                                        </div>
+                                                        <h3 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.4rem', color: 'var(--text-bright)', marginBottom: '16px' }}>Reproductor Multimedia</h3>
+                                                        <p style={{ color: 'var(--text-muted)', fontFamily: 'Inter', fontSize: '1.1rem', maxWidth: '600px', lineHeight: 1.6 }}>{step.desc}</p>
                                                     </>
                                                 )}
                                                 {step.type === 'lectura' && (
                                                     <>
-                                                        <BookOpen size={64} color={activeCourse.color} strokeWidth={1} style={{ marginBottom: '20px', opacity: 0.8 }} />
-                                                        <h3 style={{ fontFamily: 'Inter', fontSize: '1.1rem', color: 'var(--text-bright)', marginBottom: '8px' }}>Material de Lectura</h3>
-                                                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', maxWidth: '500px' }}>{step.desc}</p>
+                                                        <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '32px' }}>
+                                                            <BookOpen size={48} color="#10B981" />
+                                                        </div>
+                                                        <h3 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.4rem', color: 'var(--text-bright)', marginBottom: '16px' }}>Material de Lectura</h3>
+                                                        <p style={{ color: 'var(--text-muted)', fontFamily: 'Inter', fontSize: '1.1rem', maxWidth: '600px', lineHeight: 1.6 }}>{step.desc}</p>
                                                     </>
                                                 )}
                                                 {step.type === 'tarea' && (
                                                     <>
-                                                        <CheckCircle2 size={64} color="var(--primary)" strokeWidth={1} style={{ marginBottom: '20px', opacity: 0.8 }} />
-                                                        <h3 style={{ fontFamily: 'Inter', fontSize: '1.1rem', color: 'var(--text-bright)', marginBottom: '8px' }}>Laboratorio Práctico</h3>
-                                                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '24px', maxWidth: '500px' }}>{step.desc}</p>
+                                                        <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '32px' }}>
+                                                            <CheckCircle2 size={48} color="#F59E0B" />
+                                                        </div>
+                                                        <h3 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.4rem', color: 'var(--text-bright)', marginBottom: '16px' }}>Laboratorio Práctico</h3>
+                                                        <p style={{ color: 'var(--text-muted)', fontFamily: 'Inter', fontSize: '1.1rem', marginBottom: '40px', maxWidth: '600px', lineHeight: 1.6 }}>{step.desc}</p>
                                                         <motion.button onClick={() => { setActiveCourse(null); onStartModule(activeCourse); }}
-                                                            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                                                            style={{ padding: '14px 24px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '8px', fontFamily: 'Inter', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase' }}>
-                                                            <Sparkles size={16} /> Abrir Workspace
+                                                            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                                                            style={{ padding: '16px 32px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '4px', fontFamily: 'Inter', fontWeight: 700, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                            <Sparkles size={20} /> Iniciar laboratorio
                                                         </motion.button>
                                                     </>
                                                 )}
@@ -387,16 +411,18 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
                                     );
                                 })()}
                             </div>
-                            <div style={{ width: '340px', background: 'var(--bg2)', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
-                                <div style={{ padding: '20px', borderBottom: '1px solid var(--border)' }}>
-                                    <h3 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-bright)' }}>Contenido del Curso</h3>
+                            
+                            {/* Course Sidebar */}
+                            <div style={{ width: '400px', background: '#fff', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)' }}>
+                                    <h3 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-bright)' }}>Contenido del Curso</h3>
                                 </div>
-                                <div style={{ overflowY: 'auto', flex: 1, padding: '16px' }}>
+                                <div style={{ overflowY: 'auto', flex: 1, padding: '24px 32px' }}>
                                     {activeCourse.modules.map((mod, mI) => (
-                                        <div key={mI} style={{ marginBottom: '16px' }}>
-                                            <div style={{ padding: '12px 14px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px 8px 0 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                <span style={{ fontSize: '0.65rem', fontWeight: 700, color: activeCourse.color, textTransform: 'uppercase' }}>Sección {mI + 1}</span>
-                                                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-bright)' }}>{mod.title}</span>
+                                        <div key={mI} style={{ marginBottom: '24px' }}>
+                                            <div style={{ padding: '16px', background: '#f8f9fa', border: '1px solid var(--border)', borderRadius: '8px 8px 0 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <span style={{ fontFamily: 'Inter', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Sección {mI + 1}</span>
+                                                <span style={{ fontFamily: 'Inter', fontSize: '1rem', fontWeight: 600, color: 'var(--text-bright)' }}>{mod.title}</span>
                                             </div>
                                             <div style={{ border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 8px 8px', overflow: 'hidden' }}>
                                                 {mod.steps.map((step, sI) => {
@@ -404,9 +430,9 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
                                                     const StepIcon = step.type === 'video' ? PlayCircle : step.type === 'lectura' ? BookOpen : CheckCircle2;
                                                     return (
                                                         <div key={sI} onClick={() => setCurrentStep({ modIndex: mI, stepIndex: sI })}
-                                                            style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px', background: isActive ? 'rgba(59,130,246,0.1)' : 'var(--bg)', borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.2s' }}>
-                                                            <StepIcon size={14} color={isActive ? 'var(--primary)' : 'var(--text-muted)'} />
-                                                            <span style={{ fontSize: '0.75rem', fontFamily: 'Inter', color: isActive ? 'var(--primary)' : 'var(--text)', fontWeight: isActive ? 600 : 400 }}>{step.title}</span>
+                                                            style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '16px', background: isActive ? 'rgba(59,130,246,0.05)' : '#fff', borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                                                            <StepIcon size={20} color={isActive ? 'var(--primary)' : 'var(--text-muted)'} />
+                                                            <span style={{ fontFamily: 'Inter', fontSize: '0.95rem', color: isActive ? 'var(--primary)' : 'var(--text-bright)', fontWeight: isActive ? 600 : 400 }}>{step.title}</span>
                                                         </div>
                                                     );
                                                 })}

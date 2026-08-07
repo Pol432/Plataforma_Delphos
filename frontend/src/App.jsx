@@ -54,10 +54,10 @@ function BottomNav({ current, onNavigate }) {
         background: 'var(--bg2)',
         backdropFilter: 'blur(16px)',
         border: '1px solid var(--border)',
-        borderRadius: '20px',
-        padding: '6px 10px',
-        display: 'flex', gap: '2px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset',
+        borderRadius: '24px',
+        padding: '8px 12px',
+        display: 'flex', gap: '4px',
+        boxShadow: 'var(--shadow-lg)',
         pointerEvents: 'auto',
       }}>
         {NAV_ITEMS.map(({ id, label, Icon }) => {
