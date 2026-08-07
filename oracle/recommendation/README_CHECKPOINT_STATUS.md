@@ -121,8 +121,10 @@ saturación no es memoria de las filas vistas: ocurre igual sobre datos nuevos.
 
 ## RIESGO ABIERTO — Calibración del modelo
 
-**Estado: documentado, sin arreglar. No bloqueante hoy** — el endpoint
-`/api/v1/oracle` corre con la heurística de puente, no con este checkpoint.
+**Estado: documentado, sin arreglar.** Desde el cableado del 2026-08-06 el
+endpoint SÍ usa este checkpoint, pero sigue sin ser bloqueante: el modelo sólo
+decide el orden y su probabilidad cruda no se publica, justamente porque la
+calibración no está resuelta. Ver la sección "Cableado al endpoint" al final.
 
 ### Qué se midió
 
@@ -396,3 +398,115 @@ punta contra este mismo stack (Postgres + `delphos_api`), con resultados
 idénticos a los de SQLite — `catalog_size=64`, vocabulario de 68 skills,
 `engine=heuristic_bridge_v1`. Las decisiones de datos registradas arriba no
 cambian con el motor real.
+
+---
+
+## 2026-08-06 — Cableado al endpoint `/api/v1/oracle/recommend`
+
+El Wide&Deep ya no está desconectado: `POST /api/v1/oracle/recommend` lo usa.
+Verificado de punta a punta contra el usuario demo (`user_id` 134) sobre el
+stack real (Postgres + `delphos_api`).
+
+### Qué hace exactamente el modelo — y qué NO hace
+
+**El modelo sólo decide el ORDEN de la lista.** Los valores de `scores`
+(`engagement_probability`, `skill_overlap_score`, `difficulty_match_score`,
+`label`, `confidence_interval`) los sigue produciendo `heuristic_bridge_v1`,
+exactamente como antes.
+
+La probabilidad cruda del modelo **no se publica**. Motivo: la calibración está
+sin resolver (AUC 0.9928 train / 0.7740 test; 85.6 % de las probabilidades fuera
+de [0.01, 0.99]; un 25 % son exactamente 0.0 por underflow de sigmoid).
+Publicarla en un campo llamado `engagement_probability` la presentaría como algo
+que no es, y mostraría "0 %" en varias tarjetas de la demo. El orden relativo,
+en cambio, sí es utilizable: AUC 0.7764.
+
+**Consecuencia visible que conviene conocer:** como el orden lo pone el modelo y
+el número lo pone el heurístico, la lista devuelta **no está ordenada de forma
+monótona por `engagement_probability`**. En la validación, el #2 mostraba 0.4155
+y el #3, 0.6058. No es un bug. Si el frontend asume monotonía para algo (barras,
+"score decreciente"), hay que mirarlo.
+
+El orden viene de `inference.py::rank_candidates()`: probabilidad primero y, en
+los empates de la cola saturada, desempate por solapamiento de skills y luego
+alineación de dificultad. No se desempata con el logit a propósito (AUC 0.2129
+dentro de la cola, peor que el azar).
+
+### El contrato JSON no cambia
+
+Mismos campos y mismo shape en los dos caminos. Lo único que cambia es `engine`,
+que refleja **qué motor ordenó de verdad** — sin eso, un fallback silencioso
+sería indistinguible de un modelo funcionando, que es justo lo que había que
+poder comprobar. Cubierto por
+`backend/tests/oracle/test_oracle_engine_selection.py::TestEndpointContract`.
+
+### Motor y fallback (`app/services/oracle_engine.py`)
+
+`ORACLE_ENGINE` controla el motor:
+
+| Valor | Comportamiento |
+|---|---|
+| `auto` (default) | Intenta el Wide&Deep; cae al heurístico ante cualquier problema. |
+| `heuristic` | Kill switch. Ni siquiera importa MindSpore. Apaga el modelo sin redeploy. |
+| `widedeep` | Exige el modelo y propaga los errores. Para tests y diagnóstico. |
+
+En `auto` se cae al heurístico si: el modelo no carga (falta MindSpore, falta el
+checkpoint, no encaja con la arquitectura), la inferencia lanza una excepción, o
+la salida es **degenerada**. Degenerada = las 64 con el mismo score, todas
+saturadas en el mismo extremo, o algún NaN/infinito. Que *muchas* empaten a 0.0
+NO es degenerado: es el comportamiento conocido del checkpoint y
+`rank_candidates()` lo desempata; sólo se rechaza si empata el catálogo entero.
+
+Un fallo de carga se recuerda y no se reintenta por petición — si no, un problema
+de arranque se convertiría en un timeout en cada request.
+
+### Despliegue
+
+* `mindspore==2.6.0`, `numpy<2` y `scikit-learn~=1.3.0` entran en
+  `backend/requirements.txt`. La imagen es `python:3.11-slim` y MindSpore 2.6.0
+  publica wheel `cp311`. La imagen pasa de ~565 MB a ~3.45 GB.
+* `docker-compose.yml` monta `../oracle/recommendation:/opt/oracle:ro` y define
+  `ORACLE_MODEL_DIR`. El montaje anterior de `data/processed` se mantiene:
+  `oracle_catalog` usa su propia variable y no tiene por qué saber del modelo.
+* Si las dependencias faltan, el endpoint **sigue funcionando**: cae al
+  heurístico. No es un despliegue de todo-o-nada.
+
+### Validación end-to-end (usuario demo, `user_id` 134)
+
+Mismo perfil, antes y después:
+
+| # | Antes (`heuristic_bridge_v1`) | Después (`wide_and_deep`) |
+|---|---|---|
+| 1 | `sim_artist` | `sim_artist` |
+| 2 | `sim_embedded_systems_engineer` | `sim_ux_designer` |
+| 3 | `sim_automation_engineer` | `sim_graphic_designer` |
+| 4 | `sim_nlp_engineer` | `sim_fashion_designer` |
+| 5 | `sim_front-end_developer` | `sim_database_designer` |
+
+**9 de 10 posiciones cambian** — el modelo se está usando de verdad, no se está
+ignorando en silencio. El shape de la respuesta es idéntico y los `scores` de
+cada simulación coinciden exactamente entre ambas ejecuciones, como debe ser.
+
+`sim_ux_designer` en el puesto #2 es evidencia directa del mapeo de skills OOV:
+con 0 slots activos no podía llegar ahí.
+
+Fallbacks probados con fallos reales, no simulados:
+
+| Escenario | Resultado |
+|---|---|
+| Checkpoint retirado del disco | HTTP 200, `heuristic_bridge_v1`, aviso en log |
+| `ORACLE_ENGINE=heuristic` | HTTP 200, `heuristic_bridge_v1` |
+| Todo en su sitio | HTTP 200, `wide_and_deep` |
+
+Latencia: ~3 s la primera petición (construye el grafo de MindSpore una vez),
+~18 ms las siguientes.
+
+Suites: **436 passed / 19 skipped** en el backend, **56 passed** en
+`oracle/recommendation`.
+
+### Lo que sigue abierto
+
+* La calibración (sección "RIESGO ABIERTO"). Mitigada, no resuelta: se evita
+  publicar la probabilidad, pero el modelo sigue generalizando a 0.77.
+* El skew de `sim_database_designer` en los pesos, y la paridad train/serve que
+  el mapeo de OOV rompe a propósito. Las dos se cierran reentrenando.

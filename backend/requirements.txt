@@ -15,3 +15,12 @@ httpx>=0.27.0
 passlib[bcrypt]>=1.7.4
 argon2-cffi>=23.1.0
 python-slugify>=8.0.0
+
+# --- Motor Wide&Deep del oráculo (app/services/oracle_engine.py) ---
+# MindSpore 2.6.0 sólo publica wheels hasta cp311; la imagen es python:3.11-slim.
+# numpy<2 por compatibilidad con MindSpore 2.6, y scikit-learn 1.3.x porque
+# label_encoders.pkl se serializó con 1.3.0.
+# Si estas tres faltan, el endpoint sigue funcionando: cae al heurístico.
+mindspore==2.6.0
+numpy<2
+scikit-learn~=1.3.0

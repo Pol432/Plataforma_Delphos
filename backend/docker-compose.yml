@@ -33,10 +33,20 @@ services:
       # Catálogo del oráculo (solo lectura) — lo consume /api/v1/oracle.
       # Fuera de /code a propósito: anidarlo dentro del bind `.:/code` no es fiable.
       - ../oracle/recommendation/data/processed:/opt/oracle_data:ro
+      # inference.py + checkpoints/ — lo que necesita el motor Wide&Deep.
+      # Incluye data/processed, así que el featurizador resuelve sus artefactos
+      # solo; el montaje de arriba se mantiene porque oracle_catalog usa su
+      # propia variable y no tiene por qué saber del modelo.
+      - ../oracle/recommendation:/opt/oracle:ro
     ports:
       - "8000:8000"
     environment:
       ORACLE_DATA_DIR: /opt/oracle_data
+      ORACLE_MODEL_DIR: /opt/oracle
+      # auto = intenta el Wide&Deep y cae al heurístico ante cualquier problema.
+      # heuristic = kill switch, ni siquiera importa MindSpore.
+      # widedeep = exige el modelo (tests/diagnóstico), no enmascara errores.
+      ORACLE_ENGINE: auto
       DATABASE_URL: postgresql://postgres:postgres@db:5432/aurum_dao
       SECRET_KEY: dev-secret-key-change-in-production
       ALGORITHM: HS256
