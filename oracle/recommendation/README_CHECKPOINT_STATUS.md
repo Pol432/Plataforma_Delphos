@@ -176,3 +176,145 @@ de test — pero conviene medir antes si mueve el AUC o sólo la calibración
 
 Cualquier decisión sobre esto debe considerar además que el sobreajuste es real:
 recalibrar no arregla un modelo que generaliza a 0.77.
+
+---
+
+## 2026-08-06 — DECISIÓN TOMADA: skills fuera de vocabulario (IDs ≥1000)
+
+**Estado: decidido. Ya no es un riesgo abierto.** Implementación pendiente para
+Semana 2 (ver "Cuándo se aplica" al final de esta sección).
+
+### El problema, con números
+
+El modelo entrenó con 52 skills (`data/processed/skills_catalog.csv`,
+`skill_id` 1..52, posición en el multi-hot = `skill_id - 1`). El catálogo de
+serving referencia **16 skills adicionales** a los que
+`app/services/oracle_catalog.py` asigna IDs sintéticos ≥1000. El modelo nunca
+los vio y no tienen fila en la tabla de embeddings.
+
+Afectan a **6 de las 64 simulaciones**:
+
+| Simulación | Skills OOV | Skills OOV concretos |
+|---|---|---|
+| `sim_ux_designer`      | 5/5 | UI Design, UX Research, User Research, Figma, Wireframing |
+| `sim_project_manager`  | 4/5 | Project Management, Jira, Scrum, Agile |
+| `sim_lawyer`           | 3/6 | Intellectual Property, Compliance, Contract Review |
+| `sim_graphic_designer` | 2/4 | Photoshop, Branding |
+| `sim_digital_marketer` | 1/5 | PPC |
+| `sim_psychologist`     | 1/5 | Patient Education |
+
+Ninguna simulación se descarta del catálogo: las 64 se puntúan siempre. Lo que
+se degrada es la señal de skills. El único caso realmente roto es
+`sim_ux_designer`, que con 0/5 slots activos se puntuaba **sólo** por sus
+features categóricas y continuas.
+
+**Hoy esto no afecta a nada en producción.** El endpoint `/api/v1/oracle` corre
+con `heuristic_bridge_v1`, que sí usa los IDs sintéticos (`GET /oracle/skills`
+devuelve 68 = 52 + 16). El problema sólo muerde cuando el Wide&Deep entre
+detrás de la misma interfaz.
+
+### Decisión: mapear a un skill de fallback dentro del vocabulario
+
+Decidido por Paúl el 2026-08-06. Los 16 OOV se mapean al skill más cercano de
+los 52 entrenados en lugar de descartarse:
+
+| Skill OOV | → Fallback | id |
+|---|---|---|
+| Photoshop | Adobe Creative Suite | 39 |
+| Figma | Adobe Creative Suite | 39 |
+| Branding | Brand Management | 41 |
+| Patient Education | Patient Care | 26 |
+| UI Design | Visual Design | 38 |
+| Wireframing | Visual Design | 38 |
+| UX Research | Research | 17 |
+| User Research | Research | 17 |
+| Project Management | Strategic Planning | 21 |
+| Jira | Strategic Planning | 21 |
+| Scrum | Strategic Planning | 21 |
+| Agile | Strategic Planning | 21 |
+| Intellectual Property | Legal Research | 49 |
+| Compliance | Legal Research | 49 |
+| Contract Review | Case Analysis | 50 |
+| PPC | Marketing | 18 |
+
+### Efecto medido del mapeo
+
+Slots activos en el multi-hot de 52 posiciones, antes → después:
+
+| Simulación | Antes | Después |
+|---|---|---|
+| `sim_ux_designer`      | 0 | **3** |
+| `sim_graphic_designer` | 2 | 3 |
+| `sim_project_manager`  | 1 | 2 |
+| `sim_digital_marketer` | 4 | 4 (sin cambio) |
+| `sim_lawyer`           | 3 | 3 (sin cambio) |
+| `sim_psychologist`     | 4 | 4 (sin cambio) |
+
+En 3 de las 6 el mapeo es un **no-op**: el fallback ya estaba activo por otro
+skill de la misma simulación (`sim_lawyer` ya tenía Legal Research y Case
+Analysis; `sim_psychologist` ya tenía Patient Care; `sim_digital_marketer` ya
+tenía Marketing). Es decir, el valor real de esta decisión es arreglar
+`sim_ux_designer` y, en menor medida, `sim_graphic_designer` y
+`sim_project_manager`.
+
+### Contrapartida aceptada explícitamente
+
+El mapeo **rompe la paridad train/serve a propósito**: se le presenta al modelo
+un skill que la simulación no tiene realmente, apoyándose en una equivalencia
+semántica que el modelo nunca aprendió. Es el mismo tipo de skew que ya está
+abierto en `sim_database_designer` (ver sección siguiente), y las
+equivalencias no son todas del mismo nivel de confianza:
+
+* **Casi exactas** — Photoshop→Adobe Creative Suite, Branding→Brand Management,
+  Patient Education→Patient Care.
+* **Gruesas** — Jira/Scrum/Agile→Strategic Planning colapsa cuatro skills
+  distintos en un solo slot; Figma→Adobe Creative Suite equipara dos
+  herramientas que no se parecen más allá de ser de diseño.
+
+Se asume el trade-off: cobertura de las 6 simulaciones por encima de la
+paridad estricta, para el piloto de agosto. La alternativa de raíz —
+regenerar el dataset con vocabulario 68 y reentrenar — invalidaría las métricas
+ya reportadas (AUC 0.7763) y no cabe en el timeline.
+
+### Cuándo se aplica
+
+**No implementado todavía.** El cambio vive en
+`inference.py::_skill_multihot()`, que hoy no está conectado al endpoint. Se
+implementa junto con el cableado del modelo en Semana 2, en el mismo commit,
+para que la featurización y el motor entren a la vez. Cuando se implemente,
+los skills mapeados deben seguir reportándose en
+`FeaturizationReport.oov_*` — mapear no debe convertirse en un descarte
+silencioso disfrazado.
+
+---
+
+## 2026-08-06 — Confirmación: train/serve skew de `sim_database_designer`
+
+**Estado: documentado, sin resolver, a propósito. No bloqueante hoy.**
+
+Registro completo en
+`oracle/recommendation/data/processed/CATALOG_FIXES.md`. Resumen:
+
+* **Detectado el 2026-08-04.** `sim_database_designer` estaba clasificada como
+  `Design` / `Creative & Design` con skills de diseño gráfico (`Research`,
+  `Visual Design`, `Adobe Creative Suite`) — muy probablemente un falso positivo
+  del pipeline por el token "designer" en `base_career`. Un perfil creativo la
+  recibía como recomendación #1 (0.6442), por encima de `sim_graphic_designer`.
+* **Corregido sólo en serving.** `simulation_catalog.csv` pasó a
+  `STEM` / `Technology` con skills `['SQL', 'MongoDB', 'Data Analysis',
+  'Requirements Gathering']`.
+* **NO corregido en entrenamiento.** `unified_training_dataset_v3.csv` mantiene
+  sus 287 filas como `Design` / `Creative & Design`, y los `.npy` no se
+  regeneraron.
+
+**Por qué no se resuelve todavía:** el endpoint corre con el bridge heurístico,
+que no usa el modelo, así que hoy la divergencia no tiene efecto observable. El
+skew sólo se materializa cuando el Wide&Deep entre en el endpoint: esa fila se
+featurizará en inferencia como `STEM`/`Technology` mientras el modelo la vio
+como `Design`/`Creative & Design` en entrenamiento.
+
+**Cómo se resuelve:** corrigiéndolo en el pipeline de origen y reentrenando, no
+parcheando el catálogo. Se aborda al conectar el modelo en Semana 2, junto con
+el mapeo de skills OOV de la sección anterior — son el mismo problema de fondo
+(catálogo de serving que ha derivado del dataset de entrenamiento) y conviene
+resolverlos de una sola vez.
