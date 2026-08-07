@@ -193,7 +193,7 @@ class TestLoaderCaching:
             attempts.append(1)
             raise FileNotFoundError("sin checkpoint")
 
-        monkeypatch.setattr(oracle_engine, "_resolve_model_dir", _fail)
+        monkeypatch.setattr(oracle_engine, "resolve_model_dir", _fail)
         assert oracle_engine.get_recommender() is None
         assert oracle_engine.get_recommender() is None
         assert len(attempts) == 1
@@ -230,8 +230,9 @@ PROFILE = {
 }
 
 
-def _recommend(client, headers):
-    response = client.post("/api/v1/oracle/recommend", json=PROFILE, headers=headers)
+def _recommend(client, headers, **overrides):
+    payload = {**PROFILE, **overrides}
+    response = client.post("/api/v1/oracle/recommend", json=payload, headers=headers)
     assert response.status_code == 200, response.text
     return response.json()
 
@@ -330,3 +331,148 @@ class TestEndpointContract:
         payload = _recommend(client, auth_headers)
         assert payload["engine"] == oracle_engine.ENGINE_HEURISTIC
         assert len(payload["recommendations"]) == PROFILE["top_n"]
+
+
+# ---------------------------------------------------------------------------
+# Coherencia del mapeo OOV entre catálogo y modelo
+# ---------------------------------------------------------------------------
+
+#: Skills del perfil que dispararon el caso: Research, Visual Design y Adobe
+#: Creative Suite. Son los tres a los que `sim_ux_designer` mapea sus cinco
+#: skills fuera de vocabulario (Figma, UI Design, UX Research, User Research,
+#: Wireframing), así que el solapamiento tiene que ser total.
+UX_PROFILE_SKILLS = ["Research", "Visual Design", "Adobe Creative Suite"]
+UX_SKILL_IDS = [17, 38, 39]
+
+
+class TestOovMappingCoherence:
+    """
+    Regresión del caso real: con el motor `wide_and_deep`, `sim_ux_designer`
+    llegaba al top de la respuesta con `matched_skills: []` y
+    `skill_overlap_score: 0.0`.
+
+    La causa era que el mapeo OOV sólo existía del lado del modelo: el
+    featurizador veía la simulación con sus skills traducidos y la subía al
+    primer puesto, mientras el heurístico —que llena los `scores` visibles—
+    seguía viendo IDs sintéticos ≥1000 sin resolver.
+    """
+
+    def test_catalog_resolves_ux_designer_to_trained_skills(self):
+        """Los cinco skills OOV colapsan en los tres entrenados."""
+        from app.services.oracle_catalog import get_catalog
+
+        catalog = get_catalog()
+        ux = next(s for s in catalog.simulations if s.simulation_id == "sim_ux_designer")
+        assert ux.simulation_skill_ids == UX_SKILL_IDS
+
+    def test_no_simulation_keeps_unmapped_synthetic_ids(self):
+        """Las 16 equivalencias están decididas: no debe sobrevivir ninguno."""
+        from app.services.oracle_catalog import EXTRA_SKILL_ID_OFFSET, get_catalog
+
+        catalog = get_catalog()
+        leftovers = {
+            sid
+            for sim in catalog.simulations
+            for sid in sim.simulation_skill_ids
+            if sid >= EXTRA_SKILL_ID_OFFSET
+        }
+        assert leftovers == set()
+
+    def test_user_skills_are_mapped_too(self):
+        """
+        Simetría con `inference.py`, que mapea los dos bloques. Quien escriba
+        "Figma" queda registrado con el ID de Adobe Creative Suite.
+        """
+        from app.services.oracle_catalog import get_catalog
+
+        catalog = get_catalog()
+        assert catalog.resolve_skill_names(["Figma"]) == [39]
+        # Y sigue sin ser un "no lo entiendo": nunca estuvo en unresolved.
+        assert catalog.unresolved_skill_names(["Figma"]) == []
+
+    def test_ux_designer_has_matched_skills_under_widedeep(
+        self, client, auth_headers, monkeypatch
+    ):
+        """
+        El caso reportado, end-to-end: perfil que resuelve a [17, 38, 39],
+        motor `wide_and_deep`, y `sim_ux_designer` empujada al primer puesto
+        por el modelo. Antes del mapeo llegaba con matched_skills vacío.
+        """
+        from app.services.oracle_catalog import get_catalog
+
+        catalog = get_catalog()
+        ux_index = next(
+            i for i, s in enumerate(catalog.simulations)
+            if s.simulation_id == "sim_ux_designer"
+        )
+
+        # Probabilidades que ponen a sim_ux_designer arriba, pase lo que pase
+        # con el resto: reproduce el ranking que dio el modelo real.
+        probabilities = [0.1] * len(catalog.simulations)
+        probabilities[ux_index] = 0.99
+
+        monkeypatch.setenv("ORACLE_ENGINE", "auto")
+        _use(monkeypatch, _FakeRecommender(probabilities))
+
+        payload = _recommend(client, auth_headers, skills=UX_PROFILE_SKILLS, top_n=5)
+
+        assert payload["engine"] == oracle_engine.ENGINE_WIDEDEEP
+        assert payload["resolved_skill_ids"] == UX_SKILL_IDS
+
+        top = payload["recommendations"][0]
+        assert top["simulation_id"] == "sim_ux_designer"
+        assert top["matched_skills"] != []
+        assert sorted(top["matched_skills"]) == sorted(
+            ["Research", "Visual Design", "Adobe Creative Suite"]
+        )
+        assert top["scores"]["skill_overlap_score"] > 0.0
+
+    def test_matched_skills_do_not_depend_on_the_engine(
+        self, client, auth_headers, monkeypatch
+    ):
+        """
+        El objetivo de fondo: `matched_skills` y `skill_overlap_score` describen
+        el catálogo, no el motor. Los dos caminos tienen que coincidir para la
+        misma simulación.
+        """
+        monkeypatch.setenv("ORACLE_ENGINE", "heuristic")
+        heuristic = _recommend(client, auth_headers, skills=UX_PROFILE_SKILLS, top_n=64)
+
+        monkeypatch.setenv("ORACLE_ENGINE", "auto")
+        _use(monkeypatch, _FakeRecommender())
+        model = _recommend(client, auth_headers, skills=UX_PROFILE_SKILLS, top_n=64)
+
+        assert heuristic["engine"] == oracle_engine.ENGINE_HEURISTIC
+        assert model["engine"] == oracle_engine.ENGINE_WIDEDEEP
+
+        def by_id(payload):
+            return {i["simulation_id"]: i for i in payload["recommendations"]}
+
+        left, right = by_id(heuristic), by_id(model)
+        assert left.keys() == right.keys()
+        for sim_id, item in left.items():
+            assert item["matched_skills"] == right[sim_id]["matched_skills"], sim_id
+            assert (
+                item["scores"]["skill_overlap_score"]
+                == right[sim_id]["scores"]["skill_overlap_score"]
+            ), sim_id
+
+    def test_published_vocabulary_still_has_68_names(self, client, auth_headers):
+        """
+        Mapear no debe reducir lo que el cliente puede ofrecer. Los 16 nombres
+        OOV siguen listados, apuntando al ID de su equivalente — que es el que
+        `resolve_skill_names` devuelve de verdad.
+        """
+        response = client.get("/api/v1/oracle/skills", headers=auth_headers)
+        assert response.status_code == 200, response.text
+        body = response.json()
+
+        assert body["count"] == 68
+        assert len(body["skills"]) == 68
+
+        names = {entry["name"] for entry in body["skills"]}
+        assert "Figma" in names
+        assert "Adobe Creative Suite" in names
+
+        by_name = {entry["name"]: entry["skill_id"] for entry in body["skills"]}
+        assert by_name["Figma"] == by_name["Adobe Creative Suite"] == 39

@@ -192,12 +192,18 @@ class TestSkillMapping:
 
 def _catalog_skill_ids(simulation_id):
     """
-    Resuelve los skill_ids de una simulación **igual que lo hace el backend**:
+    Resuelve los skill_ids de una simulación **sin** aplicar el mapeo OOV:
     nombres conocidos -> su skill_id, desconocidos -> 1000 + posición alfabética.
 
-    Se reimplementa aquí en vez de importar `app.services.oracle_catalog` porque
-    este módulo no depende de `backend/`. Si las dos implementaciones divergen,
-    `test_ux_designer_ids_match_backend_assignment` lo detecta.
+    Desde que `oracle_catalog` aplica `OOV_SKILL_FALLBACKS`, el backend ya no
+    manda estos IDs sintéticos por la ruta normal: manda los reales. Pero sigue
+    haciéndolo si el import de la tabla falla, en cuyo caso el catálogo degrada
+    a este comportamiento a propósito. Así que esta sigue siendo la entrada que
+    el featurizador tiene que saber tragar — es la red de seguridad, no la ruta
+    principal.
+
+    Se reimplementa aquí en vez de importar `app.services.oracle_catalog`
+    porque este módulo no depende de `backend/`.
     """
     data = Path(inference.__file__).resolve().parent / "data" / "processed"
     known = {
@@ -252,10 +258,12 @@ class TestOutOfVocabularySkills:
         assert report.oov_simulation_skill_ids == [1000, 1001]
         assert report.oov_user_skill_ids == []
 
-    def test_ux_designer_ids_match_backend_assignment(self):
+    def test_ux_designer_synthetic_ids_are_stable(self):
         """
-        Ancla del caso de abajo: los IDs que el backend le pasa al modelo para
-        sim_ux_designer son sus 5 skills, todos sintéticos.
+        Ancla del caso de abajo: la asignación sintética de sim_ux_designer son
+        sus 5 skills. Con el mapeo del catálogo activo el backend ya no manda
+        estos IDs, pero sí los manda cuando ese mapeo se cae, y la numeración
+        tiene que seguir siendo la que `_build_oov_map` reconstruye.
         """
         ids = _catalog_skill_ids("sim_ux_designer")
         assert ids == [1004, 1012, 1013, 1014, 1015]

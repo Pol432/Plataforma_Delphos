@@ -78,12 +78,15 @@ def get_mode() -> str:
     return raw
 
 
-def _resolve_model_dir() -> Path:
+def resolve_model_dir() -> Path:
     """
     Localiza `oracle/recommendation/` (donde viven inference.py y checkpoints/).
 
     Misma prioridad que `oracle_catalog._resolve_data_dir`: variable de entorno
     primero (lo que usa Docker), ruta relativa al repo después.
+
+    Pública porque `oracle_catalog` la reutiliza para importar la tabla de
+    mapeo OOV — duplicar la lógica de rutas era pedir que se desincronizaran.
     """
     candidates: List[Path] = []
     env_dir = os.getenv("ORACLE_MODEL_DIR")
@@ -142,7 +145,7 @@ def get_recommender(force: bool = False) -> Any:
         if _load_failed and not force:
             return None
         try:
-            model_dir = _resolve_model_dir()
+            model_dir = resolve_model_dir()
             if str(model_dir) not in sys.path:
                 sys.path.insert(0, str(model_dir))
 

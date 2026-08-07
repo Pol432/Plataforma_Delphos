@@ -210,10 +210,11 @@ se degrada es la señal de skills. El único caso realmente roto es
 `sim_ux_designer`, que con 0/5 slots activos se puntuaba **sólo** por sus
 features categóricas y continuas.
 
-**Hoy esto no afecta a nada en producción.** El endpoint `/api/v1/oracle` corre
-con `heuristic_bridge_v1`, que sí usa los IDs sintéticos (`GET /oracle/skills`
-devuelve 68 = 52 + 16). El problema sólo muerde cuando el Wide&Deep entre
-detrás de la misma interfaz.
+~~**Hoy esto no afecta a nada en producción.**~~ Desactualizado: desde el
+cableado del 2026-08-06 el endpoint corre con el Wide&Deep, así que el problema
+sí mordía. `GET /oracle/skills` sigue devolviendo 68 nombres (52 + 16), porque
+los 16 conservan su entrada en el vocabulario aunque ahora apunten al ID de su
+equivalente. Ver la addenda del 2026-08-07 al final de esta sección.
 
 ### Decisión: mapear a un skill de fallback dentro del vocabulario
 
@@ -300,6 +301,61 @@ equivalencia decidida se sigue descartando: no se inventa un fallback.
 Efecto verificado sobre las 64 simulaciones: 225 → 230 slots activos en total,
 la tabla de arriba se reproduce exactamente, y **ninguna simulación queda con 0
 slots**. Cubierto por `tests/test_inference.py::TestOutOfVocabularySkills`.
+
+### Addenda 2026-08-07 — el mapeo se extendió al heurístico
+
+Aplicarlo sólo del lado del modelo dejó a los dos motores leyendo el mismo
+catálogo de forma distinta, y se notaba en la respuesta al cliente:
+
+```
+"simulation_id": "sim_ux_designer",   <-- puesto #1, lo subió el modelo
+"matched_skills": [],                 <-- lo llenó el heurístico
+"skill_overlap_score": 0.0
+```
+
+El featurizador veía la simulación con sus skills traducidos y la rankeaba
+primera; `oracle_catalog` seguía viéndola con IDs sintéticos sin resolver y le
+calculaba solapamiento 0. La recomendación principal llegaba al frontend sin un
+solo skill en común.
+
+Desde el 2026-08-07 `oracle_catalog._build_skill_vocabulary` aplica la **misma**
+tabla, importada de `inference.py` — no copiada, porque dos copias se
+desincronizan. Se mapean los dos lados (skills de simulación y del usuario),
+igual que hace `_skill_multihot`.
+
+Consecuencias medidas:
+
+| | Antes | Después |
+|---|---|---|
+| `sim_ux_designer.simulation_skill_ids` | `[1004,1012,1013,1014,1015]` | `[17,38,39]` |
+| IDs sintéticos que sobreviven en el catálogo | 16 | **0** |
+| `resolve_skill_names(["Figma"])` | `[1004]` | `[39]` |
+| `unresolved_skill_names(["Figma"])` | `[]` | `[]` (sin cambio) |
+
+Dos cosas que esto **sí** cambia y conviene tener presentes:
+
+1. **Los `scores` de 6 de las 64 simulaciones se mueven**, en los dos motores
+   —incluido `ORACLE_ENGINE=heuristic`—, porque `skill_overlap_score` alimenta
+   `engagement_probability`. La *forma* de la respuesta no cambia; los valores
+   sí.
+2. **Quien escriba "Figma" verá "Adobe Creative Suite"** en `matched_skills`.
+   Es el precio de la simetría con el modelo, que mapea los dos bloques.
+
+Dos detalles de implementación que no son obvios:
+
+* El offset sintético se sigue calculando sobre **todos** los nombres
+  desconocidos, mapeados o no. `_build_oov_map` reconstruye esa numeración por
+  su cuenta; si el catálogo se saltara los mapeados al enumerar, las dos
+  asignaciones se desalinearían y el featurizador mapearía al skill equivocado
+  en silencio.
+* Si `oracle/recommendation/` no está disponible, el import falla, se registra
+  un warning y el catálogo **degrada al comportamiento anterior** (IDs
+  sintéticos) en vez de romper. `oracle_catalog` sirve todas las peticiones,
+  incluidas las del kill switch: no puede quedar rehén de la carpeta del
+  modelo.
+
+Cubierto por
+`backend/tests/oracle/test_oracle_engine_selection.py::TestOovMappingCoherence`.
 
 ---
 

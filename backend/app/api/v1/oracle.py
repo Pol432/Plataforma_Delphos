@@ -50,7 +50,7 @@ def get_simulation_catalog(current_user=Depends(get_current_user)):
 
     return {
         "count": len(catalog.simulations),
-        "skill_vocabulary_size": len(catalog.skill_name_by_id),
+        "skill_vocabulary_size": len(catalog.skill_name_by_id) + len(catalog.alias_skill_ids),
         "simulations": [
             {
                 "simulation_id": sim.simulation_id,
@@ -73,13 +73,20 @@ def get_skill_vocabulary(current_user=Depends(get_current_user)):
     except FileNotFoundError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
 
-    return {
-        "count": len(catalog.skill_name_by_id),
-        "skills": [
-            {"skill_id": sid, "name": name}
-            for sid, name in sorted(catalog.skill_name_by_id.items())
-        ],
-    }
+    # Los nombres OOV se publican con el ID de su equivalente entrenado, así
+    # que hay IDs repetidos: "Figma" y "Adobe Creative Suite" son el mismo 39.
+    # Es lo que de verdad devuelve `resolve_skill_names`, y omitirlos dejaría al
+    # cliente sin poder ofrecer 16 skills que el oráculo entiende igual.
+    vocabulary = [
+        {"skill_id": sid, "name": name}
+        for sid, name in catalog.skill_name_by_id.items()
+    ] + [
+        {"skill_id": sid, "name": name}
+        for name, sid in catalog.alias_skill_ids.items()
+    ]
+    vocabulary.sort(key=lambda entry: (entry["skill_id"], entry["name"]))
+
+    return {"count": len(vocabulary), "skills": vocabulary}
 
 
 @router.post("/recommend", response_model=RecommendationResponse)
