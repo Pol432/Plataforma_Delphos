@@ -123,6 +123,25 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 def root():
     return {"status": "online", "message": "Aurum API v1.0"}
 
+
+# =============================================================================
+# HEALTHCHECK
+# =============================================================================
+# El HEALTHCHECK del Dockerfile hace `curl -f http://localhost:8000/health`,
+# pero la ruta nunca llegó a existir: solo estaba `/`. Por eso /health devolvía
+# 404 y en la demo hubo que usar `/` como sustituto.
+#
+# Es una sonda de liveness a propósito: responde 200 mientras el proceso
+# atienda peticiones y NO consulta la base de datos. Si comprobara la DB, una
+# caída de PostgreSQL marcaría el contenedor como unhealthy y Docker lo
+# reiniciaría en bucle sin que el fallo esté en la API. La disponibilidad de la
+# DB es una comprobación de readiness aparte, si hace falta más adelante.
+
+
+@app.get("/health", tags=["infra"])
+def health():
+    return {"status": "ok", "service": app.title, "version": app.version}
+
 # =============================================================================
 # REGISTRO DE ROUTERS
 # =============================================================================
