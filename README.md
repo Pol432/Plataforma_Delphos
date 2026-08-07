@@ -136,18 +136,35 @@ detalle de notebooks y datos.
 
 Puntos verificados en un arranque limpio, útiles para no perder tiempo:
 
-- **`/health` devuelve 404.** El `HEALTHCHECK` del `Dockerfile` apunta ahí pero
-  la ruta no existe; el contenedor puede aparecer como *unhealthy* aunque la API
-  funcione. Usa `/` para comprobar que está viva.
+- ~~**`/health` devuelve 404.**~~ **Resuelto (2026-08-06).** La ruta no existía:
+  `main.py` sólo declaraba `/`. Añadida como sonda de *liveness* — responde 200
+  mientras el proceso atienda peticiones y no consulta la base de datos. El
+  `HEALTHCHECK` del `Dockerfile` ya pasa por ahí.
 - **Conflicto de nombres de contenedor.** El `docker-compose.yml` fija
   `container_name: aurum_postgres` / `aurum_api`. Si tienes otro proyecto con
   esos mismos nombres, el arranque falla con *"container name already in use"*.
   Solución sin borrar nada: `docker compose -p delphos up -d` junto con un
   override que renombre los contenedores.
-- **Tests del backend:** 271 pasan, pero ~149 fallan porque `app/db/base.py` no
-  importa todos los modelos, así que `Base.metadata.create_all` no crea tablas
-  como `empresas` o `content_categories` en la SQLite de test (*no such table*).
-  Es un fallo del arnés de tests, no de la aplicación.
+- ~~**Tests del backend: ~149 fallan por imports faltantes en `app/db/base.py`.**~~
+  **Resuelto (2026-08-06).** El diagnóstico era incorrecto: no falta ningún
+  import. Los 18 modelos comparten un único `Base` y `app/models/__init__.py`
+  los importa todos. El síntoma real es que la suite no llega ni a colectarse si
+  no hay una base de datos accesible, porque `app/main.py` ejecuta
+  `create_all()` contra el engine real en tiempo de import.
+
+  **Estado actual: 408 passed, 19 skipped, 0 failed**, verificado tanto contra
+  SQLite como contra el PostgreSQL del compose. La suite usa SQLite por defecto;
+  para validarla contra Postgres real:
+
+      docker compose exec \
+        -e TEST_DATABASE_URL=postgresql://postgres:postgres@db:5432/aurum_test \
+        web pytest
+
+  Conviene hacerlo antes de cerrar cualquier hito: SQLite oculta fallos reales.
+  Al habilitarlo aparecieron 2 tests que sólo pasaban por artefactos suyos
+  (comparación de datetimes naive contra columnas `timezone=True`, y un id de
+  usuario fijo que asumía que las secuencias vuelven atrás con el rollback —
+  en PostgreSQL no lo hacen). Ambos corregidos.
 - **`skill_graph` no corre end-to-end:** `checkpoints/task_eval_model.ckpt` no
   existe en el repo ni en su historial. El código no falla — cae a **pesos
   aleatorios**, así que sus predicciones no significan nada hasta que aparezca

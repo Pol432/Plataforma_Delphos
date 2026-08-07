@@ -318,3 +318,31 @@ parcheando el catálogo. Se aborda al conectar el modelo en Semana 2, junto con
 el mapeo de skills OOV de la sección anterior — son el mismo problema de fondo
 (catálogo de serving que ha derivado del dataset de entrenamiento) y conviene
 resolverlos de una sola vez.
+
+---
+
+## 2026-08-06 — La suite se valida contra PostgreSQL real
+
+Hasta hoy la suite del backend corría siempre sobre SQLite: `tests/conftest.py`
+tenía la URL hardcodeada, así que ejecutarla dentro del contenedor tampoco la
+llevaba a Postgres. Ahora acepta `TEST_DATABASE_URL` (SQLite sigue siendo el
+default):
+
+    docker compose exec \
+      -e TEST_DATABASE_URL=postgresql://postgres:postgres@db:5432/aurum_test \
+      web pytest
+
+**Resultado: 408 passed, 19 skipped, 0 failed** en ambos motores.
+
+Habilitarlo destapó 2 tests que sólo pasaban por artefactos de SQLite —
+comparación de datetimes naive contra columnas `DateTime(timezone=True)`, y un
+id de usuario fijo que daba por hecho que las secuencias vuelven atrás con el
+rollback (en PostgreSQL no: `nextval` no es transaccional). Ninguno era un
+fallo de la aplicación, pero el segundo hacía que un test de autorización
+recibiera 404 y nunca ejerciera la regla que dice cubrir. Ambos corregidos.
+
+Relevante para el oráculo: el flujo `[0]-[6]` de la demo se verificó de punta a
+punta contra este mismo stack (Postgres + `delphos_api`), con resultados
+idénticos a los de SQLite — `catalog_size=64`, vocabulario de 68 skills,
+`engine=heuristic_bridge_v1`. Las decisiones de datos registradas arriba no
+cambian con el motor real.
