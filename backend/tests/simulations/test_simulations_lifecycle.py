@@ -4,7 +4,7 @@ Meta: +40 tests para alcanzar >200 totales
 """
 import pytest
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 class TestSimulationSpots:
@@ -142,8 +142,12 @@ class TestSimulationDates:
         from app.models.simulations import Simulation
         
         uid = uuid.uuid4().hex[:8]
-        past = datetime.utcnow() - timedelta(days=30)
-        
+        # Aware a propósito: `start_date` es `DateTime(timezone=True)`, y un
+        # datetime naive lo interpreta PostgreSQL según el TimeZone de la
+        # sesión, no como UTC. Con `utcnow()` la fecha guardada dependía de la
+        # zona del servidor.
+        past = datetime.now(timezone.utc) - timedelta(days=30)
+
         sim = Simulation(
             company_id=sim_base["company_id"],
             category_id=sim_base["category_id"],
@@ -157,8 +161,17 @@ class TestSimulationDates:
         db_session.add(sim)
         db_session.commit()
         db_session.refresh(sim)
-        
-        assert sim.start_date < datetime.utcnow()
+
+        # PostgreSQL devuelve el valor con tzinfo; SQLite no tiene tipo con
+        # zona horaria y lo devuelve naive. Comparar sin normalizar reventaba
+        # contra Postgres con "can't compare offset-naive and offset-aware
+        # datetimes" — el fallo no se veía en SQLite. Se asume UTC cuando viene
+        # naive, que es lo que se guardó.
+        start_date = sim.start_date
+        if start_date.tzinfo is None:
+            start_date = start_date.replace(tzinfo=timezone.utc)
+
+        assert start_date < datetime.now(timezone.utc)
 
 
 class TestSimulationStates:

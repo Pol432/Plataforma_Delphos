@@ -273,8 +273,8 @@ class TestUserCRUD:
         """PUT /api/v1/users/{id} - Prevent updating other users"""
         # Create two users
         client.post("/api/v1/register", json=VALID_USER_DATA)
-        client.post("/api/v1/register", json=VALID_USER_DATA_2)
-        
+        otro_usuario = client.post("/api/v1/register", json=VALID_USER_DATA_2).json()
+
         # Login as first user
         login_response = client.post(
             "/api/v1/token",
@@ -285,13 +285,18 @@ class TestUserCRUD:
         )
         token = login_response.json()["access_token"]
         
-        # Try to update second user (ID 2)
+        # Se usa el id que devuelve el registro, no un 2 fijo. Las secuencias de
+        # PostgreSQL no son transaccionales: `nextval` se consume aunque el test
+        # haga rollback, así que tras los tests previos estos usuarios ya no son
+        # el 1 y el 2. El endpoint respondía 404 (usuario inexistente) en vez de
+        # 403 y el test dejaba de ejercer la regla de autorización. En SQLite
+        # colaba porque el rowid sí vuelve atrás con el rollback.
         response = client.put(
-            "/api/v1/users/2",
+            f"/api/v1/users/{otro_usuario['id']}",
             json={"full_name": "Hacked Name"},
             headers={"Authorization": f"Bearer {token}"}
         )
-        
+
         assert response.status_code == 403
     
     def test_list_users_requires_auth(self, client):
