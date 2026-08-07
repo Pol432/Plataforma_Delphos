@@ -181,8 +181,8 @@ recalibrar no arregla un modelo que generaliza a 0.77.
 
 ## 2026-08-06 — DECISIÓN TOMADA: skills fuera de vocabulario (IDs ≥1000)
 
-**Estado: decidido. Ya no es un riesgo abierto.** Implementación pendiente para
-Semana 2 (ver "Cuándo se aplica" al final de esta sección).
+**Estado: decidido e IMPLEMENTADO el 2026-08-06.** Ver "Cuándo se aplica" al
+final de esta sección.
 
 ### El problema, con números
 
@@ -278,13 +278,26 @@ ya reportadas (AUC 0.7763) y no cabe en el timeline.
 
 ### Cuándo se aplica
 
-**No implementado todavía.** El cambio vive en
-`inference.py::_skill_multihot()`, que hoy no está conectado al endpoint. Se
-implementa junto con el cableado del modelo en Semana 2, en el mismo commit,
-para que la featurización y el motor entren a la vez. Cuando se implemente,
-los skills mapeados deben seguir reportándose en
-`FeaturizationReport.oov_*` — mapear no debe convertirse en un descarte
-silencioso disfrazado.
+**Implementado el 2026-08-06** en `inference.py::_skill_multihot()`, en un commit
+propio, previo al cableado del modelo al endpoint.
+
+Detalle de implementación que importa: la tabla `OOV_SKILL_FALLBACKS` está
+indexada **por nombre de skill, no por ID sintético**. Los IDs ≥1000 no son
+estables — `oracle_catalog._build_skill_vocabulary` los asigna como
+`1000 + posición alfabética` sobre el conjunto de nombres desconocidos, así que
+si el catálogo gana o pierde un skill todos los posteriores se desplazan. El
+featurizador reconstruye esa misma asignación desde los CSV
+(`WideDeepFeaturizer._build_oov_map`) y la compone con la tabla de nombres. Una
+tabla con 1000..1015 hardcodeados habría empezado a mapear al skill equivocado
+en silencio en cuanto el catálogo cambiara.
+
+Los skills mapeados siguen reportándose en `FeaturizationReport.oov_*`, y además
+en `FeaturizationReport.mapped_skill_ids` con su destino. Un ID sintético sin
+equivalencia decidida se sigue descartando: no se inventa un fallback.
+
+Efecto verificado sobre las 64 simulaciones: 225 → 230 slots activos en total,
+la tabla de arriba se reproduce exactamente, y **ninguna simulación queda con 0
+slots**. Cubierto por `tests/test_inference.py::TestOutOfVocabularySkills`.
 
 ---
 

@@ -5,7 +5,7 @@ Qué se valida aquí:
   * que la featurización reproduce la del entrenamiento (test de paridad
     contra muestras reales del dataset y sus vectores de skills),
   * la forma y los rangos de lo que entra al modelo,
-  * que los skills fuera de vocabulario se descartan Y se reportan,
+  * que los skills fuera de vocabulario se mapean al más cercano Y se reportan,
   * la forma de MatchingOutput.
 
 Qué NO se valida: que el número coincida con la heurística del backend. Son
@@ -14,9 +14,14 @@ modelos distintos; esa comparación no significaría nada.
 Los tests que necesitan MindSpore se saltan solos: el framework sólo tiene
 wheels hasta Python 3.11 y esta máquina corre 3.13.
 """
+import ast
+import csv
+from pathlib import Path
+
 import numpy as np
 import pytest
 
+import inference
 from inference import (
     DEFAULT_THRESHOLD,
     EDUCATION_ALIASES,
@@ -182,41 +187,114 @@ class TestSkillMapping:
 
 
 # ---------------------------------------------------------------------------
-# Skills fuera de vocabulario (la decisión: descartar Y reportar)
+# Skills fuera de vocabulario (la decisión: mapear al más cercano Y reportar)
 # ---------------------------------------------------------------------------
 
+def _catalog_skill_ids(simulation_id):
+    """
+    Resuelve los skill_ids de una simulación **igual que lo hace el backend**:
+    nombres conocidos -> su skill_id, desconocidos -> 1000 + posición alfabética.
+
+    Se reimplementa aquí en vez de importar `app.services.oracle_catalog` porque
+    este módulo no depende de `backend/`. Si las dos implementaciones divergen,
+    `test_ux_designer_ids_match_backend_assignment` lo detecta.
+    """
+    data = Path(inference.__file__).resolve().parent / "data" / "processed"
+    known = {
+        inference._slugify_skill(r["skill_name"]): int(r["skill_id"])
+        for r in csv.DictReader(open(data / "skills_catalog.csv", newline="", encoding="utf-8"))
+    }
+    rows = list(csv.DictReader(open(data / "simulation_catalog.csv", newline="", encoding="utf-8")))
+
+    unknown = sorted({
+        name
+        for row in rows
+        for name in ast.literal_eval(row["simulation_required_skills"] or "[]")
+        if inference._slugify_skill(name) not in known
+    })
+    synthetic = {n: inference.EXTRA_SKILL_ID_OFFSET + i for i, n in enumerate(unknown)}
+
+    row = next(r for r in rows if r["simulation_id"] == simulation_id)
+    names = ast.literal_eval(row["simulation_required_skills"] or "[]")
+    return sorted({known.get(inference._slugify_skill(n)) or synthetic[n] for n in names})
+
+
 class TestOutOfVocabularySkills:
-    def test_synthetic_ids_are_dropped(self, featurizer, sample_input):
+    def test_synthetic_ids_are_mapped_not_dropped(self, featurizer, sample_input):
+        # 1004 = Figma -> Adobe Creative Suite (39), 1015 = Wireframing -> Visual Design (38)
         sample_input.user_features.user_skill_ids = [6, 1004, 1015]
         _, vals, _ = featurizer.featurize(sample_input)
-        assert list(np.nonzero(vals[11:63])[0]) == [5]
+        assert list(np.nonzero(vals[11:63])[0]) == [5, 37, 38]  # ids 6, 38, 39
 
-    def test_synthetic_ids_are_reported(self, featurizer, sample_input):
+    def test_mapped_ids_are_still_reported_as_oov(self, featurizer, sample_input):
         sample_input.user_features.user_skill_ids = [6, 1004, 1015]
         _, _, report = featurizer.featurize(sample_input)
         assert report.oov_user_skill_ids == [1004, 1015]
-        assert report.n_user_skills_in_vocab == 1
+        assert report.mapped_skill_ids == [(1004, 39), (1015, 38)]
+        # Mapear no es descartar en silencio: la muestra sigue sin ser "limpia".
         assert not report.is_clean
 
+    def test_unmappable_id_is_still_dropped(self, featurizer, sample_input):
+        """Un ID sintético sin equivalencia decidida no se inventa: se descarta."""
+        orphan = inference.EXTRA_SKILL_ID_OFFSET + 500
+        assert orphan not in featurizer.oov_skill_map
+        sample_input.user_features.user_skill_ids = [6, orphan]
+        _, vals, report = featurizer.featurize(sample_input)
+        assert list(np.nonzero(vals[11:63])[0]) == [5]
+        assert report.oov_user_skill_ids == [orphan]
+        assert report.mapped_skill_ids == []
+
     def test_simulation_oov_reported_separately(self, featurizer, sample_input):
+        # 1000 = Agile -> Strategic Planning (21), 1001 = Branding -> Brand Management (41)
         sample_input.simulation_features.simulation_skill_ids = [1000, 1001]
         _, vals, report = featurizer.featurize(sample_input)
-        assert vals[63:].sum() == 0.0
+        assert list(np.nonzero(vals[63:])[0]) == [20, 40]
         assert report.oov_simulation_skill_ids == [1000, 1001]
         assert report.oov_user_skill_ids == []
 
-    def test_ux_designer_case_produces_valid_tensors(self, featurizer, sample_input):
+    def test_ux_designer_ids_match_backend_assignment(self):
         """
-        sim_ux_designer tiene sus 5 skills fuera de vocabulario. Debe seguir
-        produciendo tensores válidos, puntuados sólo por el resto de features.
+        Ancla del caso de abajo: los IDs que el backend le pasa al modelo para
+        sim_ux_designer son sus 5 skills, todos sintéticos.
         """
-        sample_input.simulation_features.simulation_skill_ids = [1004, 1009, 1013, 1015, 1014]
+        ids = _catalog_skill_ids("sim_ux_designer")
+        assert ids == [1004, 1012, 1013, 1014, 1015]
+
+    def test_ux_designer_stops_having_zero_active_slots(self, featurizer, sample_input):
+        """
+        EL caso que motivó la decisión. sim_ux_designer tiene sus 5/5 skills
+        fuera de vocabulario: antes del mapeo se puntuaba con 0 slots activos,
+        es decir sólo por sus features categóricas y continuas.
+
+        Tras el mapeo quedan 3 slots (no 5: dos pares colapsan —
+        UI Design + Wireframing -> Visual Design, UX Research + User Research ->
+        Research), que es lo registrado en README_CHECKPOINT_STATUS.md.
+        """
+        sample_input.simulation_features.simulation_skill_ids = _catalog_skill_ids("sim_ux_designer")
         sample_input.simulation_features.simulation_categoria = "Design"
+        sample_input.simulation_features.simulation_industria = "Creative & Design"
+
         ids, vals, report = featurizer.featurize(sample_input)
+        sim_block = vals[63:]
+
+        assert sim_block.sum() > 0.0, "sim_ux_designer sigue con 0 slots activos"
+        assert sim_block.sum() == 3.0
+        assert list(np.nonzero(sim_block)[0]) == [16, 37, 38]  # Research 17, Visual Design 38, Adobe CS 39
+        assert report.n_simulation_skills_in_vocab == 3
+
+        # sigue produciendo tensores válidos
         assert ids.shape == (115,) and vals.shape == (115,)
         assert ids.max() < featurizer.vocab_size
-        assert vals[63:].sum() == 0.0
+        # y los 5 originales siguen reportados
         assert len(report.oov_simulation_skill_ids) == 5
+        assert len(report.mapped_skill_ids) == 5
+
+    def test_every_decided_fallback_resolves(self, featurizer):
+        """Las 16 equivalencias apuntan a skills que existen en los 52."""
+        assert len(inference.OOV_SKILL_FALLBACKS) == 16
+        assert len(featurizer.oov_skill_map) == 16
+        for target in featurizer.oov_skill_map.values():
+            assert 1 <= target <= N_SKILL_SLOTS
 
     def test_clean_input_reports_clean(self, featurizer, sample_input):
         _, _, report = featurizer.featurize(sample_input)
