@@ -303,7 +303,8 @@ slots**. Cubierto por `tests/test_inference.py::TestOutOfVocabularySkills`.
 
 ## 2026-08-06 — Confirmación: train/serve skew de `sim_database_designer`
 
-**Estado: documentado, sin resolver, a propósito. No bloqueante hoy.**
+**Estado: el DATASET quedó corregido el 2026-08-06 (ver addenda al final de esta
+sección). El SKEW SIGUE VIVO** — está en los pesos del checkpoint, no en el CSV.
 
 Registro completo en
 `oracle/recommendation/data/processed/CATALOG_FIXES.md`. Resumen:
@@ -331,6 +332,42 @@ parcheando el catálogo. Se aborda al conectar el modelo en Semana 2, junto con
 el mapeo de skills OOV de la sección anterior — son el mismo problema de fondo
 (catálogo de serving que ha derivado del dataset de entrenamiento) y conviene
 resolverlos de una sola vez.
+
+### Addenda 2026-08-06 — dataset de entrenamiento corregido
+
+Se corrigieron las 287 filas, en las **dos** mitades (los skills no viven en el
+CSV, viven en el `.npy` indexado por fila — corregir sólo el CSV habría dejado
+la mitad del desfase):
+
+| Artefacto | Campo | Antes | Después |
+|---|---|---|---|
+| `unified_training_dataset_v3.csv` | `simulation_categoria` (+`_encoded`) | `Design` (1) | `STEM` (7) |
+| `unified_training_dataset_v3.csv` | `simulation_industria` (+`_encoded`) | `Creative & Design` (1) | `Technology` (7) |
+| `simulation_skill_vectors.npy` | vector de skills | `['Research']` | `['SQL','MongoDB','Data Analysis','Requirements Gathering']` |
+
+Sin cambios en `label`, `engagement_probability`, `nivel_dificultad`,
+`duracion_horas` ni en `user_skill_vectors.npy`. El diff toca exactamente 287
+líneas y 287 vectores, nada más. Dataset y catálogo de serving ya coinciden para
+esta fila.
+
+**Esto NO elimina el skew, y es importante no leerlo como que sí.** El
+checkpoint ya está entrenado: sus pesos vieron `Design`/`Creative & Design`.
+Corregir el dataset alinea el *registro* con el catálogo, pero el modelo sigue
+puntuando esa simulación con lo que aprendió. El skew sólo desaparece
+reentrenando.
+
+**Efecto sobre las métricas reproducidas.** 94 de las 287 filas caen en el split
+de test, así que los números de la sección "Métricas reproducidas localmente"
+dejan de reproducirse tal cual:
+
+| Métrica | Dataset anterior | Dataset corregido |
+|---|---|---|
+| AUC-ROC (n=3584) | 0.776371 | **0.776250** |
+| Accuracy @0.65 | 83.6496 % | **84.1797 %** |
+
+El AUC baja 0.0001 y la accuracy sube 0.53 pp. La diferencia es despreciable,
+pero si alguien reevalúa y no obtiene 0.776371, ésta es la razón — no una
+regresión.
 
 ---
 

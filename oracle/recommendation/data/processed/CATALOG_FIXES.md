@@ -12,16 +12,21 @@ Sin cambios en `simulation_id`, `simulation_title`, `nivel_dificultad`,
 `duracion_horas` ni `base_career`.
 
 > **Nota para Paúl — divergencia con el dataset de entrenamiento.**
-> Solo se tocó `simulation_catalog.csv`, que es lo único que lee el endpoint
-> (`backend/app/services/oracle_catalog.py`). `unified_training_dataset_v3.csv`
-> mantiene sus 287 filas de `sim_database_designer` como `Design` /
-> `Creative & Design`, y los `.npy` no se regeneraron.
+> ~~Solo se tocó `simulation_catalog.csv`~~ **RESUELTO PARCIALMENTE el 2026-08-06.**
 >
-> Para el bridge heurístico actual da igual (no usa el modelo). Pero cuando entre
-> el Wide&Deep detrás de la misma interfaz, esta fila se featurizará en inferencia
-> como `STEM`/`Technology` mientras el modelo la vio como `Design`/`Creative & Design`
-> en entrenamiento: skew train/serve para esa simulación. Lo correcto sería
-> corregirlo en el pipeline de origen y reentrenar, no aquí.
+> El dataset de entrenamiento quedó alineado con el catálogo: las 287 filas de
+> `sim_database_designer` en `unified_training_dataset_v3.csv` pasaron a
+> `STEM` / `Technology` (con sus columnas `*_encoded`), y sus vectores en
+> `simulation_skill_vectors.npy` pasaron de `['Research']` a
+> `['SQL','MongoDB','Data Analysis','Requirements Gathering']`.
+>
+> **El skew train/serve NO desapareció.** Vive en los pesos del checkpoint, que
+> se entrenó viendo `Design`/`Creative & Design`. Corregir el dataset alinea el
+> registro, no el modelo. Sólo se cierra reentrenando.
+>
+> Efecto secundario a tener en cuenta: 94 de esas 287 filas caen en el split de
+> test, así que las métricas reproducidas pasan de AUC 0.776371 / 83.6496 % a
+> 0.776250 / 84.1797 %. Detalle en `README_CHECKPOINT_STATUS.md`.
 >
 > Verificado tras el cambio: `pytest tests/oracle tests/ml_engine` en el backend
 > pasa (17 passed); ningún test lee `simulation_catalog.csv` directamente.
