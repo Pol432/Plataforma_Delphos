@@ -61,13 +61,30 @@ class UserFeaturesInput(BaseModel):
     linguistic_score: int = Field(..., ge=0, le=100)
     hands_on_score: int = Field(..., ge=0, le=100)
     
-    @field_validator('user_skill_ids')
+    @field_validator('user_skill_ids', mode='before')
     @classmethod
-    def validate_skill_ids(cls, v: List[int]) -> List[int]:
-        if any(skill_id <= 0 for skill_id in v):
-            raise ValueError("All skill IDs must be positive integers")
-        return list(set(v)) # Deduplicate
-    
+    def validate_skill_ids(cls, v):
+        if v is None:
+            return []
+        if not isinstance(v, list):
+            raise TypeError("user_skill_ids must be a list of positive integers")
+
+        cleaned = []
+        seen = set()
+        for item in v:
+            if item is None:
+                continue
+            try:
+                skill_id = int(item)
+            except (TypeError, ValueError):
+                raise ValueError("All skill IDs must be integers")
+            if skill_id <= 0:
+                raise ValueError("All skill IDs must be positive integers")
+            if skill_id not in seen:
+                seen.add(skill_id)
+                cleaned.append(skill_id)
+        return cleaned
+
     @field_validator('field_of_study')
     @classmethod
     def sanitize_field_of_study(cls, v: str) -> str:
@@ -94,12 +111,29 @@ class SimulationFeaturesInput(BaseModel):
     simulation_industria: str = Field(..., min_length=1, max_length=200)
     simulation_skill_ids: List[int] = Field(..., min_length=1, max_length=50)
     
-    @field_validator('simulation_skill_ids')
+    @field_validator('simulation_skill_ids', mode='before')
     @classmethod
-    def validate_simulation_skills(cls, v: List[int]) -> List[int]:
-        if any(skill_id <= 0 for skill_id in v):
-            raise ValueError("All simulation skill IDs must be positive")
-        return list(set(v))
+    def validate_simulation_skills(cls, v):
+        if v is None:
+            return []
+        if not isinstance(v, list):
+            raise TypeError("simulation_skill_ids must be a list of positive integers")
+
+        cleaned = []
+        seen = set()
+        for item in v:
+            if item is None:
+                continue
+            try:
+                skill_id = int(item)
+            except (TypeError, ValueError):
+                raise ValueError("All simulation skill IDs must be integers")
+            if skill_id <= 0:
+                raise ValueError("All simulation skill IDs must be positive")
+            if skill_id not in seen:
+                seen.add(skill_id)
+                cleaned.append(skill_id)
+        return cleaned
     
     @field_validator('simulation_id')
     @classmethod
@@ -164,6 +198,20 @@ class OracleProfileInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
 
+class LearningPathItem(BaseModel):
+    path_id: int
+    name: str
+    slug: str
+    category: str
+    difficulty_level: Optional[str] = None
+    duration_hours: float
+    matched_skills: List[str] = []
+    missing_skills: List[str] = []
+    relevance_score: float = 0.0
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class RecommendationItem(BaseModel):
     simulation_id: str
     title: str
@@ -173,6 +221,20 @@ class RecommendationItem(BaseModel):
     duracion_horas: float
     matched_skills: List[str] = []
     scores: MatchingOutput
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class FullProfileResponse(BaseModel):
+    user_id: int
+    engine: str = Field(..., description="Motor usado: 'heuristic_bridge_v1' o 'wide_and_deep'")
+    catalog_size: int
+    resolved_skill_ids: List[int] = []
+    unresolved_skills: List[str] = Field(
+        default=[], description="Skills enviados que no existen en el catálogo del oráculo"
+    )
+    recommendations: List[RecommendationItem]
+    learning_paths: List[LearningPathItem]
 
     model_config = ConfigDict(from_attributes=True)
 

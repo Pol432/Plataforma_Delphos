@@ -8,7 +8,10 @@ from typing import List
 
 from app.api.deps import get_db, get_current_active_user
 from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate, UserOut
+from app.models.skill import Skill
+from app.models.catalog import SkillCatalog
+from app.models.progress import UserSkill
+from app.schemas.user import UserCreate, UserUpdate, UserOut, UserStatsOut
 from app.services.user_service import UserService
 
 router = APIRouter()
@@ -79,6 +82,50 @@ def get_my_profile(
         UserOut: User profile
     """
     return current_user
+
+
+@router.get("/me/stats", response_model=UserStatsOut)
+def get_my_stats(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Return mastery percentage by skill category for the authenticated user.
+    """
+    user_skills = (
+        db.query(UserSkill)
+        .join(Skill, Skill.id == UserSkill.skill_id, isouter=True)
+        .join(SkillCatalog, SkillCatalog.id == Skill.catalog_skill_id, isouter=True)
+        .filter(UserSkill.user_id == current_user.id)
+        .all()
+    )
+
+    categories = {}
+    for user_skill in user_skills:
+        category = (
+            user_skill.skill.catalog_skill.category
+            if user_skill.skill and user_skill.skill.catalog_skill
+            else "uncategorized"
+        )
+        mastery = float(user_skill.porcentaje_nivel_actual)
+        categories.setdefault(category, []).append(mastery)
+
+    category_mastery = [
+        {
+            "category": category,
+            "average_mastery": round(sum(values) / len(values), 2),
+            "skill_count": len(values),
+        }
+        for category, values in categories.items()
+    ]
+
+    category_mastery.sort(key=lambda item: item["average_mastery"], reverse=True)
+
+    return UserStatsOut(
+        user_id=current_user.id,
+        total_skills=len(user_skills),
+        category_mastery=category_mastery,
+    )
 
 
 @router.get("/{user_id}", response_model=UserOut)

@@ -52,6 +52,7 @@ def setup_test_db():
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
+    engine.dispose()
     if IS_SQLITE and os.path.exists(TEST_DB_FILE):
         os.remove(TEST_DB_FILE)
 

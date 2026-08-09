@@ -6,11 +6,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from app.db.session import SessionLocal
 from app.models.catalog import ContentCategory, SkillCatalog
+from app.models.learning_path import LearningPath, LearningPathSkill
 from app.models.simulations import Simulation, SimulationModule, ModuleTask
 from app.models.user import User
 from app.models.empresa import Empresa
 from app.models.oracle import Archetype
 from app.core.security import get_password_hash
+from app.db.seed_learning_paths import seed_learning_paths
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -64,6 +66,13 @@ def seed_master(db):
     skills = [("python", "Python", "technical"), ("react", "React", "technical"), ("aws", "AWS", "technical"), ("figma", "Figma", "tool")]
     for slug, name, cat in skills:
         get_or_create(db, SkillCatalog, "slug", slug, name=name, category=cat, is_active=True)
+
+    # 2.5. RUTAS DE APRENDIZAJE
+    try:
+        seed_learning_paths(db)
+        logger.info("✅ Learning paths seeded successfully.")
+    except Exception as e:
+        logger.warning(f"No se pudieron sembrar rutas de aprendizaje: {e}")
 
     # 3. MISIONES (CORTAS Y LARGAS)
     default_company = get_or_create(db, Empresa, 'nombre_empresa', 'Delphos Academy', slug='delphos-academy', tipo_empresa='educacion', industria='Tecnología', pais='Global', esta_activo=True)

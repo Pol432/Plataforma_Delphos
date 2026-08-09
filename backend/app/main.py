@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -18,6 +20,7 @@ import app.models.empresa
 import app.models.usuarios_empresa
 import app.models.simulations
 import app.models.skill
+import app.models.learning_path
 import app.models.user_progress
 
 # Imports de Routers (¡Comunidad añadida al final!)
@@ -28,8 +31,13 @@ from app.db.session import get_db
 # =============================================================================
 # INICIALIZACIÓN DE TABLAS (LLAVE MAESTRA)
 # =============================================================================
-# Esto crea las tablas en PostgreSQL si aún no existen al arrancar la app
-user_model.Base.metadata.create_all(bind=engine)
+# Esto crea las tablas en PostgreSQL si aún no existen al arrancar la app.
+# Si la base de datos no está disponible en el momento de importar la app,
+# no abortamos el arranque para permitir entornos de tests y desarrollo.
+try:
+    user_model.Base.metadata.create_all(bind=engine)
+except Exception as exc:
+    logging.warning("Unable to create DB tables during app import: %s", exc)
 
 class Token(BaseModel):
     access_token: str
