@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime, date
 
 class Token(BaseModel):
@@ -48,6 +48,20 @@ class UserOut(UserBase):
     birth_date: Optional[date] = None
     city_id: Optional[int] = None
     avatar_url: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CategoryMastery(BaseModel):
+    category: str
+    average_mastery: float = Field(..., ge=0.0, le=100.0)
+    skill_count: int = Field(..., ge=0)
+
+
+class UserStatsOut(BaseModel):
+    user_id: int
+    total_skills: int
+    category_mastery: List[CategoryMastery] = []
 
     model_config = ConfigDict(from_attributes=True)
 

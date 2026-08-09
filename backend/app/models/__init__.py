@@ -9,6 +9,7 @@ from app.models.empresa import Empresa
 from app.models.usuarios_empresa import CompanyUser
 from app.models.simulations import Simulation, SimulationModule, ModuleTask, TaskResource, ModelAnswer
 from app.models.skill import Skill
+from app.models.learning_path import LearningPath, LearningPathSkill
 from app.models.user_progress import UserSimulationProgress
 from app.models.ai import RecomendacionIA
 from app.models.oracle import Archetype, OracleQuestion, QuestionOption, OracleSession, UserOracleAnswer

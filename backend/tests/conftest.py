@@ -36,6 +36,7 @@ def setup_test_db():
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
+    engine.dispose()
     if os.path.exists(TEST_DB_FILE):
         os.remove(TEST_DB_FILE)
 
