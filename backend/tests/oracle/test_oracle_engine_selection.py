@@ -215,6 +215,9 @@ SCORE_FIELDS = {
 RESPONSE_FIELDS = {
     "user_id", "engine", "catalog_size", "resolved_skill_ids",
     "unresolved_skills", "recommendations",
+    # Procedencia explícita: `engine` solo decía quién ordenó, y se leía como
+    # si los números fueran del modelo. Ver RecommendationResponse.
+    "scored_by", "ranked_by",
 }
 
 PROFILE = {
@@ -256,8 +259,20 @@ class TestEndpointContract:
         assert heuristic["engine"] == oracle_engine.ENGINE_HEURISTIC
         assert model["engine"] == oracle_engine.ENGINE_WIDEDEEP
 
+        # `ranked_by` es el alias explícito de `engine`: mismo valor en los dos
+        # caminos, incluido el fallback. Si divergieran, uno de los dos estaría
+        # mintiendo sobre qué motor ordenó.
+        assert heuristic["ranked_by"] == oracle_engine.ENGINE_HEURISTIC
+        assert model["ranked_by"] == oracle_engine.ENGINE_WIDEDEEP
+
+        # Lo que este cambio existe para dejar por escrito: los números son del
+        # heurístico SIEMPRE, también cuando el Wide&Deep ordenó.
+        assert heuristic["scored_by"] == oracle_engine.ENGINE_HEURISTIC
+        assert model["scored_by"] == oracle_engine.ENGINE_HEURISTIC
+
         for payload in (heuristic, model):
             assert set(payload) == RESPONSE_FIELDS
+            assert payload["engine"] == payload["ranked_by"]
             assert payload["catalog_size"] == 64
             assert len(payload["recommendations"]) == PROFILE["top_n"]
             for item in payload["recommendations"]:

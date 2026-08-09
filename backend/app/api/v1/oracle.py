@@ -181,7 +181,15 @@ def recommend_simulations(
 
     return RecommendationResponse(
         user_id=current_user.id,
+        # `engine` se mantiene tal cual estaba: el motor que ordenó. `ranked_by`
+        # es su alias explícito y sale de la MISMA variable, así que los dos
+        # reflejan siempre el mismo camino de fallback; no hay semántica nueva.
         engine=engine,
+        ranked_by=engine,
+        # Los `scores` los llena `_service.predict()` en el bucle de arriba, sin
+        # excepción y sin depender del motor que ordene. Es constante a
+        # propósito: refleja el estado real, no una condición.
+        scored_by=oracle_engine.ENGINE_HEURISTIC,
         catalog_size=len(catalog.simulations),
         resolved_skill_ids=resolved_ids,
         unresolved_skills=unresolved,

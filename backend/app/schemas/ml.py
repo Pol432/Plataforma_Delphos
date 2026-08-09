@@ -240,8 +240,45 @@ class FullProfileResponse(BaseModel):
 
 
 class RecommendationResponse(BaseModel):
+    """
+    Respuesta de /oracle/recommend.
+
+    Procedencia de los números
+    --------------------------
+    Dos motores intervienen y NO hacen lo mismo, así que un único campo `engine`
+    no alcanzaba para decir de dónde sale cada cosa:
+
+    * `scored_by` — quién calculó los valores de `recommendations[].scores`.
+    * `ranked_by` — quién decidió el ORDEN de `recommendations`.
+
+    Que `ranked_by` sea 'wide_and_deep' NO significa que los números vengan del
+    modelo: vienen de `scored_by`. Ambos campos son de nivel respuesta porque
+    describen la lista entera — todos los items se puntúan con el mismo motor y
+    el orden es una propiedad de la lista, no de un item.
+    """
     user_id: int
+
+    #: Alias histórico de `ranked_by`: mismo valor, mismo significado de siempre
+    #: (el motor que ORDENÓ). Se mantiene intacto para no romper a quien ya lo
+    #: lea; en código nuevo preferir `ranked_by`/`scored_by`, que distinguen
+    #: cuál de las dos cosas hizo cada motor.
     engine: str = Field(..., description="Motor usado: 'heuristic_bridge_v1' o 'wide_and_deep'")
+    scored_by: str = Field(
+        ...,
+        description=(
+            "Motor que produjo los valores de `recommendations[].scores` "
+            "(engagement_probability, confidence_interval, etc.). Hoy siempre "
+            "'heuristic_bridge_v1': la probabilidad cruda del Wide&Deep no se "
+            "publica porque su calibración está sin resolver."
+        ),
+    )
+    ranked_by: str = Field(
+        ...,
+        description=(
+            "Motor que decidió el orden de `recommendations`: 'wide_and_deep', "
+            "o 'heuristic_bridge_v1' si hubo fallback. Mismo valor que `engine`."
+        ),
+    )
     catalog_size: int
     resolved_skill_ids: List[int] = []
     unresolved_skills: List[str] = Field(
