@@ -45,9 +45,10 @@ start_backend() {
   say "Backend: PostgreSQL + API (Docker)"
   docker compose -f "$BACKEND/docker-compose.yml" up -d --build db web
 
-  # OJO: /health devuelve 404 (el HEALTHCHECK del Dockerfile apunta a una ruta
-  # que no existe), así que el contenedor puede figurar como "unhealthy".
-  # Se comprueba contra "/" que sí responde.
+  # Se espera contra "/" a propósito: basta con que el proceso atienda, y así
+  # este bucle no depende del HEALTHCHECK del contenedor.
+  # (La ruta /health existe desde 17e8cd3 y responde 200; el contenedor sí
+  # figura como "healthy". Antes no era así y aquí había un aviso al respecto.)
   printf '  esperando a la API'
   for _ in $(seq 1 60); do
     if curl -fsS -m 2 "$API_URL/" >/dev/null 2>&1; then
