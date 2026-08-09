@@ -40,16 +40,26 @@ posición en el vector = skill_id - 1). El catálogo de simulaciones referencia
 asigna IDs sintéticos ≥ 1000; el modelo nunca los vio y no tienen fila en la
 tabla de embeddings.
 
-Decisión: **se descartan y se reportan**. Descartar mantiene la featurización
-de inferencia idéntica a la de entrenamiento, que es la propiedad que hace
-fiable a un wrapper de inferencia. Reportarlos (`FeaturizationReport.oov_*`)
-evita que sea un descarte silencioso.
+Decisión (Paúl, 2026-08-06, ver README_CHECKPOINT_STATUS.md): **se mapean al
+skill más cercano dentro de los 52 entrenados, y se siguen reportando**. La
+tabla de equivalencias es `OOV_SKILL_FALLBACKS`, indexada por nombre — no por
+ID — porque los IDs sintéticos los asigna el backend enumerando en orden
+alfabético los nombres desconocidos, y ese orden cambia si el catálogo cambia.
+El featurizador reconstruye la misma asignación desde los CSV
+(`_build_oov_map`), así que la tabla no depende de que 1000..1015 sigan
+significando lo mismo.
 
-Consecuencia conocida: 6 de las 64 simulaciones tienen algún skill fuera de
-vocabulario y `sim_ux_designer` los tiene todos fuera (0/5), así que se puntúa
-sólo por sus features categóricas y continuas. La heurística del backend SÍ usa
-los IDs sintéticos, de modo que ambos motores discrepan justamente en
-diseño/UX. Es esperado, no un defecto.
+Mapear rompe la paridad train/serve a propósito: se le presenta al modelo un
+skill que la simulación no tiene realmente. Se acepta el trade-off para el
+piloto — la alternativa de raíz (vocabulario de 68 y reentrenar) invalidaría
+las métricas ya reportadas. Los skills mapeados siguen apareciendo en
+`FeaturizationReport.oov_*` y, con su destino, en `.mapped_skill_ids`: mapear
+no debe convertirse en un descarte silencioso disfrazado.
+
+Efecto: 6 de las 64 simulaciones tenían algún skill fuera de vocabulario.
+`sim_ux_designer` pasa de 0/5 slots activos a 3; `sim_graphic_designer` de 2 a
+3; `sim_project_manager` de 1 a 2. En las otras tres el mapeo es un no-op
+porque el skill de destino ya estaba activo por otra vía.
 
 --------------------------------------------------------------------------
 Limitaciones registradas
@@ -78,8 +88,11 @@ Limitaciones registradas
 """
 from __future__ import annotations
 
+import ast
+import csv
 import json
 import pickle
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, List, Optional, Sequence, Tuple
@@ -116,6 +129,46 @@ EDUCATION_ALIASES = {
 #: Son las modas del dataset de entrenamiento (unified_training_dataset_v3.csv).
 FALLBACK_EDUCATION_LEVEL = "Bachelor's"
 FALLBACK_FIELD_OF_STUDY = "Finance"
+
+#: Equivalencias de los 16 skills que el catálogo de serving referencia pero el
+#: modelo nunca vio. Nombre OOV -> nombre dentro de los 52 entrenados. Los IDs
+#: de destino (39, 41, 26, 38, 17, 21, 49, 50, 18) se resuelven desde
+#: skills_catalog.csv en tiempo de carga; escribirlos aquí a mano sería fijar
+#: dos veces la misma verdad.
+#:
+#: No todas tienen el mismo nivel de confianza. Casi exactas: Photoshop,
+#: Branding, Patient Education. Gruesas: Jira/Scrum/Agile/Project Management
+#: colapsan cuatro skills en un solo slot, y Figma->Adobe Creative Suite
+#: equipara dos herramientas que sólo se parecen en ser de diseño.
+OOV_SKILL_FALLBACKS = {
+    "Photoshop": "Adobe Creative Suite",
+    "Figma": "Adobe Creative Suite",
+    "Branding": "Brand Management",
+    "Patient Education": "Patient Care",
+    "UI Design": "Visual Design",
+    "Wireframing": "Visual Design",
+    "UX Research": "Research",
+    "User Research": "Research",
+    "Project Management": "Strategic Planning",
+    "Jira": "Strategic Planning",
+    "Scrum": "Strategic Planning",
+    "Agile": "Strategic Planning",
+    "Intellectual Property": "Legal Research",
+    "Compliance": "Legal Research",
+    "Contract Review": "Case Analysis",
+    "PPC": "Marketing",
+}
+
+#: Offset de los IDs sintéticos que asigna `app/services/oracle_catalog.py`.
+#: Duplicado a propósito: este módulo no importa desde `backend/`.
+EXTRA_SKILL_ID_OFFSET = 1000
+
+_SLUG_INVALID = re.compile(r"[^a-zA-Z0-9_-]+")
+
+
+def _slugify_skill(name: str) -> str:
+    """Misma normalización que `oracle_catalog._slugify_skill` del backend."""
+    return _SLUG_INVALID.sub("_", name.strip().lower()).strip("_")
 
 
 # --------------------------------------------------------------------------
@@ -175,6 +228,11 @@ class FeaturizationReport:
     n_user_skills_in_vocab: int = 0
     n_simulation_skills_in_vocab: int = 0
 
+    #: Pares `(id_oov, id_dentro_de_vocabulario)` que sí encontraron equivalente
+    #: en `OOV_SKILL_FALLBACKS`. Los IDs OOV que no lo encontraron aparecen en
+    #: `oov_*` pero no aquí: ésos sí se descartan.
+    mapped_skill_ids: List[Tuple[int, int]] = field(default_factory=list)
+
     @property
     def is_clean(self) -> bool:
         """True si nada se descartó ni se sustituyó."""
@@ -216,7 +274,10 @@ class WideDeepFeaturizer:
         self.root = Path(root) if root else Path(__file__).resolve().parent
         self.config = self._load_training_config()
         self.encoders = self._load_encoders()
-        self.n_skills = self._load_skill_count()
+        self.skill_id_by_slug = self._load_skill_catalog()
+        self.n_skills = len(self.skill_id_by_slug)
+        #: id sintético (>=1000) -> id dentro de los 52 entrenados
+        self.oov_skill_map = self._build_oov_map()
 
         self.cat_offsets: List[int] = list(self.config["cat_offsets"])
         self.cat_vocab_sizes: List[int] = list(self.config["cat_vocab_sizes"])
@@ -260,13 +321,65 @@ class WideDeepFeaturizer:
         with open(path, "rb") as fh:
             return pickle.load(fh)
 
-    def _load_skill_count(self) -> int:
-        """Cuenta los skills del vocabulario entrenado sin necesitar pandas."""
+    def _load_skill_catalog(self) -> dict:
+        """`slug -> skill_id` de los 52 skills del vocabulario entrenado."""
         path = self.root / "data" / "processed" / "skills_catalog.csv"
         if not path.is_file():
             raise FileNotFoundError(f"Falta skills_catalog.csv en {path}")
-        with open(path, encoding="utf-8") as fh:
-            return sum(1 for _ in fh) - 1  # menos la cabecera
+        with open(path, newline="", encoding="utf-8") as fh:
+            return {
+                _slugify_skill(row["skill_name"]): int(row["skill_id"])
+                for row in csv.DictReader(fh)
+            }
+
+    def _build_oov_map(self) -> dict:
+        """
+        Reconstruye la asignación de IDs sintéticos del backend y la compone con
+        `OOV_SKILL_FALLBACKS` para obtener `id_sintético -> id_entrenado`.
+
+        El backend (`oracle_catalog._build_skill_vocabulary`) recorre
+        `simulation_catalog.csv`, junta los nombres de skill que no están en
+        `skills_catalog.csv` y les asigna `1000 + posición` **en orden
+        alfabético**. Se replica ese algoritmo aquí en vez de fijar 1000..1015 a
+        mano: si el catálogo gana o pierde un skill, los IDs se desplazan y una
+        tabla hardcodeada empezaría a mapear al skill equivocado en silencio.
+        """
+        path = self.root / "data" / "processed" / "simulation_catalog.csv"
+        if not path.is_file():
+            raise FileNotFoundError(f"Falta simulation_catalog.csv en {path}")
+
+        with open(path, newline="", encoding="utf-8") as fh:
+            rows = list(csv.DictReader(fh))
+
+        unknown = set()
+        for row in rows:
+            raw = row.get("simulation_required_skills") or "[]"
+            try:
+                parsed = ast.literal_eval(raw)
+            except (ValueError, SyntaxError):
+                continue
+            if not isinstance(parsed, list):
+                continue
+            for name in parsed:
+                if _slugify_skill(str(name)) not in self.skill_id_by_slug:
+                    unknown.add(str(name))
+
+        mapping = {}
+        for offset, name in enumerate(sorted(unknown)):
+            synthetic_id = EXTRA_SKILL_ID_OFFSET + offset
+            fallback_name = OOV_SKILL_FALLBACKS.get(name)
+            if fallback_name is None:
+                # Skill OOV nuevo, sin equivalencia decidida. No se inventa una:
+                # cae al comportamiento anterior (descartar y reportar).
+                continue
+            fallback_id = self.skill_id_by_slug.get(_slugify_skill(fallback_name))
+            if fallback_id is None:
+                raise ValueError(
+                    f"OOV_SKILL_FALLBACKS mapea '{name}' a '{fallback_name}', "
+                    f"que no existe en skills_catalog.csv"
+                )
+            mapping[synthetic_id] = fallback_id
+        return mapping
 
     def _validate_layout(self) -> None:
         """
@@ -345,12 +458,20 @@ class WideDeepFeaturizer:
         )
 
     def _skill_multihot(
-        self, skill_ids: Iterable[int], oov_sink: List[int]
+        self,
+        skill_ids: Iterable[int],
+        oov_sink: List[int],
+        report: FeaturizationReport,
     ) -> np.ndarray:
         """
         Multi-hot de 52 posiciones. `position = skill_id - 1` (verificado contra
-        los vectores de entrenamiento). Todo ID fuera de 1..52 — incluidos los
-        sintéticos ≥1000 del backend — se descarta y se anota en `oov_sink`.
+        los vectores de entrenamiento).
+
+        Un ID fuera de 1..52 — los sintéticos ≥1000 del backend — se resuelve
+        contra `oov_skill_map`: si tiene equivalente, activa el slot de ese
+        equivalente; si no, se descarta. En ambos casos el ID original se anota
+        en `oov_sink`, y los que sí se mapearon quedan además en
+        `report.mapped_skill_ids` con su destino.
         """
         vec = np.zeros(N_SKILL_SLOTS, dtype=np.float32)
         for raw in skill_ids or ():
@@ -358,8 +479,16 @@ class WideDeepFeaturizer:
             position = skill_id - 1
             if 0 <= position < N_SKILL_SLOTS:
                 vec[position] = 1.0
-            else:
-                oov_sink.append(skill_id)
+                continue
+
+            oov_sink.append(skill_id)
+            fallback_id = self.oov_skill_map.get(skill_id)
+            if fallback_id is None:
+                continue
+            fallback_position = fallback_id - 1
+            if 0 <= fallback_position < N_SKILL_SLOTS:
+                vec[fallback_position] = 1.0
+                report.mapped_skill_ids.append((skill_id, fallback_id))
         return vec
 
     # --- API pública ---
@@ -393,9 +522,11 @@ class WideDeepFeaturizer:
             dtype=np.int32,
         )
 
-        user_vec = self._skill_multihot(user.user_skill_ids, report.oov_user_skill_ids)
+        user_vec = self._skill_multihot(
+            user.user_skill_ids, report.oov_user_skill_ids, report
+        )
         sim_vec = self._skill_multihot(
-            sim.simulation_skill_ids, report.oov_simulation_skill_ids
+            sim.simulation_skill_ids, report.oov_simulation_skill_ids, report
         )
         report.n_user_skills_in_vocab = int(user_vec.sum())
         report.n_simulation_skills_in_vocab = int(sim_vec.sum())

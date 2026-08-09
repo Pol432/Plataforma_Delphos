@@ -1,9 +1,17 @@
 """
 Oracle Router — recomendación de simulaciones.
 
-Puente heurístico (`RecommendationService`) sobre el catálogo real del oráculo.
-El Wide&Deep entrenado entra después detrás de esta misma interfaz: el contrato
-del endpoint no cambia, solo el valor de `engine`.
+Dos motores detrás de la misma interfaz. El contrato del endpoint no cambia,
+solo el valor de `engine`:
+
+* El puente heurístico (`RecommendationService`) produce SIEMPRE los valores de
+  `scores` que viajan en la respuesta.
+* El Wide&Deep entrenado, cuando está disponible, decide sólo el ORDEN de la
+  lista. Su probabilidad cruda no se publica: la calibración está sin resolver
+  (ver `app/services/oracle_engine.py`).
+
+Si el modelo no carga, falla, o devuelve scores degenerados, se cae al
+heurístico y `engine` lo refleja.
 
 Nota: este router NO es el cuestionario vocacional (app/models/oracle.py); ese
 sigue sin exponerse.
@@ -20,12 +28,14 @@ from app.schemas.ml import (
     RecommendationResponse,
     UserFeaturesInput,
 )
+from app.services import oracle_engine
 from app.services.oracle_catalog import get_catalog
 from app.services.recommendation_service import RecommendationService
 
 router = APIRouter()
 
-ENGINE_NAME = "heuristic_bridge_v1"
+#: Se conserva el nombre por compatibilidad con lo que ya importaba este módulo.
+ENGINE_NAME = oracle_engine.ENGINE_HEURISTIC
 
 _service = RecommendationService()
 
@@ -40,7 +50,7 @@ def get_simulation_catalog(current_user=Depends(get_current_user)):
 
     return {
         "count": len(catalog.simulations),
-        "skill_vocabulary_size": len(catalog.skill_name_by_id),
+        "skill_vocabulary_size": len(catalog.skill_name_by_id) + len(catalog.alias_skill_ids),
         "simulations": [
             {
                 "simulation_id": sim.simulation_id,
@@ -63,13 +73,20 @@ def get_skill_vocabulary(current_user=Depends(get_current_user)):
     except FileNotFoundError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
 
-    return {
-        "count": len(catalog.skill_name_by_id),
-        "skills": [
-            {"skill_id": sid, "name": name}
-            for sid, name in sorted(catalog.skill_name_by_id.items())
-        ],
-    }
+    # Los nombres OOV se publican con el ID de su equivalente entrenado, así
+    # que hay IDs repetidos: "Figma" y "Adobe Creative Suite" son el mismo 39.
+    # Es lo que de verdad devuelve `resolve_skill_names`, y omitirlos dejaría al
+    # cliente sin poder ofrecer 16 skills que el oráculo entiende igual.
+    vocabulary = [
+        {"skill_id": sid, "name": name}
+        for sid, name in catalog.skill_name_by_id.items()
+    ] + [
+        {"skill_id": sid, "name": name}
+        for name, sid in catalog.alias_skill_ids.items()
+    ]
+    vocabulary.sort(key=lambda entry: (entry["skill_id"], entry["name"]))
+
+    return {"count": len(vocabulary), "skills": vocabulary}
 
 
 @router.post("/recommend", response_model=RecommendationResponse)
@@ -78,8 +95,10 @@ def recommend_simulations(
     current_user=Depends(get_current_user),
 ):
     """
-    Puntúa las 64 simulaciones del catálogo contra el perfil y devuelve el top-N
-    ordenado por probabilidad de engagement.
+    Puntúa las 64 simulaciones del catálogo contra el perfil y devuelve el top-N.
+
+    Los `scores` de cada item los produce siempre el heurístico. El orden lo
+    decide el Wide&Deep si está disponible; si no, la probabilidad heurística.
     """
     try:
         catalog = get_catalog()
@@ -103,10 +122,18 @@ def recommend_simulations(
     scored: List[RecommendationItem] = []
     user_skill_set = set(resolved_ids)
 
-    for sim in catalog.simulations:
+    # Un MatchingInput por simulación, en orden de catálogo. La misma lista
+    # alimenta al heurístico (que llena `scores`) y al modelo (que ordena), así
+    # que los índices de `model_ranking()` indexan directamente `scored`.
+    matching_inputs = [
+        MatchingInput(user_features=user_features, simulation_features=sim)
+        for sim in catalog.simulations
+    ]
+
+    for sim, matching_input in zip(catalog.simulations, matching_inputs):
         # calculate_skill_overlap levanta ValueError si ambas listas están vacías;
         # las simulaciones siempre traen >=1 skill, así que solo aplica al perfil.
-        result = _service.predict(MatchingInput(user_features=user_features, simulation_features=sim))
+        result = _service.predict(matching_input)
 
         matched = [
             catalog.skill_name_by_id[sid]
@@ -126,11 +153,17 @@ def recommend_simulations(
             )
         )
 
-    scored.sort(key=lambda item: item.scores.engagement_probability, reverse=True)
+    order = oracle_engine.model_ranking(matching_inputs)
+    if order is not None:
+        engine = oracle_engine.ENGINE_WIDEDEEP
+        scored = [scored[i] for i in order]
+    else:
+        engine = oracle_engine.ENGINE_HEURISTIC
+        scored.sort(key=lambda item: item.scores.engagement_probability, reverse=True)
 
     return RecommendationResponse(
         user_id=current_user.id,
-        engine=ENGINE_NAME,
+        engine=engine,
         catalog_size=len(catalog.simulations),
         resolved_skill_ids=resolved_ids,
         unresolved_skills=unresolved,

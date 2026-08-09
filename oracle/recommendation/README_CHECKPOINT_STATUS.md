@@ -121,8 +121,10 @@ saturación no es memoria de las filas vistas: ocurre igual sobre datos nuevos.
 
 ## RIESGO ABIERTO — Calibración del modelo
 
-**Estado: documentado, sin arreglar. No bloqueante hoy** — el endpoint
-`/api/v1/oracle` corre con la heurística de puente, no con este checkpoint.
+**Estado: documentado, sin arreglar.** Desde el cableado del 2026-08-06 el
+endpoint SÍ usa este checkpoint, pero sigue sin ser bloqueante: el modelo sólo
+decide el orden y su probabilidad cruda no se publica, justamente porque la
+calibración no está resuelta. Ver la sección "Cableado al endpoint" al final.
 
 ### Qué se midió
 
@@ -181,8 +183,8 @@ recalibrar no arregla un modelo que generaliza a 0.77.
 
 ## 2026-08-06 — DECISIÓN TOMADA: skills fuera de vocabulario (IDs ≥1000)
 
-**Estado: decidido. Ya no es un riesgo abierto.** Implementación pendiente para
-Semana 2 (ver "Cuándo se aplica" al final de esta sección).
+**Estado: decidido e IMPLEMENTADO el 2026-08-06.** Ver "Cuándo se aplica" al
+final de esta sección.
 
 ### El problema, con números
 
@@ -208,10 +210,11 @@ se degrada es la señal de skills. El único caso realmente roto es
 `sim_ux_designer`, que con 0/5 slots activos se puntuaba **sólo** por sus
 features categóricas y continuas.
 
-**Hoy esto no afecta a nada en producción.** El endpoint `/api/v1/oracle` corre
-con `heuristic_bridge_v1`, que sí usa los IDs sintéticos (`GET /oracle/skills`
-devuelve 68 = 52 + 16). El problema sólo muerde cuando el Wide&Deep entre
-detrás de la misma interfaz.
+~~**Hoy esto no afecta a nada en producción.**~~ Desactualizado: desde el
+cableado del 2026-08-06 el endpoint corre con el Wide&Deep, así que el problema
+sí mordía. `GET /oracle/skills` sigue devolviendo 68 nombres (52 + 16), porque
+los 16 conservan su entrada en el vocabulario aunque ahora apunten al ID de su
+equivalente. Ver la addenda del 2026-08-07 al final de esta sección.
 
 ### Decisión: mapear a un skill de fallback dentro del vocabulario
 
@@ -278,19 +281,88 @@ ya reportadas (AUC 0.7763) y no cabe en el timeline.
 
 ### Cuándo se aplica
 
-**No implementado todavía.** El cambio vive en
-`inference.py::_skill_multihot()`, que hoy no está conectado al endpoint. Se
-implementa junto con el cableado del modelo en Semana 2, en el mismo commit,
-para que la featurización y el motor entren a la vez. Cuando se implemente,
-los skills mapeados deben seguir reportándose en
-`FeaturizationReport.oov_*` — mapear no debe convertirse en un descarte
-silencioso disfrazado.
+**Implementado el 2026-08-06** en `inference.py::_skill_multihot()`, en un commit
+propio, previo al cableado del modelo al endpoint.
+
+Detalle de implementación que importa: la tabla `OOV_SKILL_FALLBACKS` está
+indexada **por nombre de skill, no por ID sintético**. Los IDs ≥1000 no son
+estables — `oracle_catalog._build_skill_vocabulary` los asigna como
+`1000 + posición alfabética` sobre el conjunto de nombres desconocidos, así que
+si el catálogo gana o pierde un skill todos los posteriores se desplazan. El
+featurizador reconstruye esa misma asignación desde los CSV
+(`WideDeepFeaturizer._build_oov_map`) y la compone con la tabla de nombres. Una
+tabla con 1000..1015 hardcodeados habría empezado a mapear al skill equivocado
+en silencio en cuanto el catálogo cambiara.
+
+Los skills mapeados siguen reportándose en `FeaturizationReport.oov_*`, y además
+en `FeaturizationReport.mapped_skill_ids` con su destino. Un ID sintético sin
+equivalencia decidida se sigue descartando: no se inventa un fallback.
+
+Efecto verificado sobre las 64 simulaciones: 225 → 230 slots activos en total,
+la tabla de arriba se reproduce exactamente, y **ninguna simulación queda con 0
+slots**. Cubierto por `tests/test_inference.py::TestOutOfVocabularySkills`.
+
+### Addenda 2026-08-07 — el mapeo se extendió al heurístico
+
+Aplicarlo sólo del lado del modelo dejó a los dos motores leyendo el mismo
+catálogo de forma distinta, y se notaba en la respuesta al cliente:
+
+```
+"simulation_id": "sim_ux_designer",   <-- puesto #1, lo subió el modelo
+"matched_skills": [],                 <-- lo llenó el heurístico
+"skill_overlap_score": 0.0
+```
+
+El featurizador veía la simulación con sus skills traducidos y la rankeaba
+primera; `oracle_catalog` seguía viéndola con IDs sintéticos sin resolver y le
+calculaba solapamiento 0. La recomendación principal llegaba al frontend sin un
+solo skill en común.
+
+Desde el 2026-08-07 `oracle_catalog._build_skill_vocabulary` aplica la **misma**
+tabla, importada de `inference.py` — no copiada, porque dos copias se
+desincronizan. Se mapean los dos lados (skills de simulación y del usuario),
+igual que hace `_skill_multihot`.
+
+Consecuencias medidas:
+
+| | Antes | Después |
+|---|---|---|
+| `sim_ux_designer.simulation_skill_ids` | `[1004,1012,1013,1014,1015]` | `[17,38,39]` |
+| IDs sintéticos que sobreviven en el catálogo | 16 | **0** |
+| `resolve_skill_names(["Figma"])` | `[1004]` | `[39]` |
+| `unresolved_skill_names(["Figma"])` | `[]` | `[]` (sin cambio) |
+
+Dos cosas que esto **sí** cambia y conviene tener presentes:
+
+1. **Los `scores` de 6 de las 64 simulaciones se mueven**, en los dos motores
+   —incluido `ORACLE_ENGINE=heuristic`—, porque `skill_overlap_score` alimenta
+   `engagement_probability`. La *forma* de la respuesta no cambia; los valores
+   sí.
+2. **Quien escriba "Figma" verá "Adobe Creative Suite"** en `matched_skills`.
+   Es el precio de la simetría con el modelo, que mapea los dos bloques.
+
+Dos detalles de implementación que no son obvios:
+
+* El offset sintético se sigue calculando sobre **todos** los nombres
+  desconocidos, mapeados o no. `_build_oov_map` reconstruye esa numeración por
+  su cuenta; si el catálogo se saltara los mapeados al enumerar, las dos
+  asignaciones se desalinearían y el featurizador mapearía al skill equivocado
+  en silencio.
+* Si `oracle/recommendation/` no está disponible, el import falla, se registra
+  un warning y el catálogo **degrada al comportamiento anterior** (IDs
+  sintéticos) en vez de romper. `oracle_catalog` sirve todas las peticiones,
+  incluidas las del kill switch: no puede quedar rehén de la carpeta del
+  modelo.
+
+Cubierto por
+`backend/tests/oracle/test_oracle_engine_selection.py::TestOovMappingCoherence`.
 
 ---
 
 ## 2026-08-06 — Confirmación: train/serve skew de `sim_database_designer`
 
-**Estado: documentado, sin resolver, a propósito. No bloqueante hoy.**
+**Estado: el DATASET quedó corregido el 2026-08-06 (ver addenda al final de esta
+sección). El SKEW SIGUE VIVO** — está en los pesos del checkpoint, no en el CSV.
 
 Registro completo en
 `oracle/recommendation/data/processed/CATALOG_FIXES.md`. Resumen:
@@ -319,6 +391,42 @@ el mapeo de skills OOV de la sección anterior — son el mismo problema de fond
 (catálogo de serving que ha derivado del dataset de entrenamiento) y conviene
 resolverlos de una sola vez.
 
+### Addenda 2026-08-06 — dataset de entrenamiento corregido
+
+Se corrigieron las 287 filas, en las **dos** mitades (los skills no viven en el
+CSV, viven en el `.npy` indexado por fila — corregir sólo el CSV habría dejado
+la mitad del desfase):
+
+| Artefacto | Campo | Antes | Después |
+|---|---|---|---|
+| `unified_training_dataset_v3.csv` | `simulation_categoria` (+`_encoded`) | `Design` (1) | `STEM` (7) |
+| `unified_training_dataset_v3.csv` | `simulation_industria` (+`_encoded`) | `Creative & Design` (1) | `Technology` (7) |
+| `simulation_skill_vectors.npy` | vector de skills | `['Research']` | `['SQL','MongoDB','Data Analysis','Requirements Gathering']` |
+
+Sin cambios en `label`, `engagement_probability`, `nivel_dificultad`,
+`duracion_horas` ni en `user_skill_vectors.npy`. El diff toca exactamente 287
+líneas y 287 vectores, nada más. Dataset y catálogo de serving ya coinciden para
+esta fila.
+
+**Esto NO elimina el skew, y es importante no leerlo como que sí.** El
+checkpoint ya está entrenado: sus pesos vieron `Design`/`Creative & Design`.
+Corregir el dataset alinea el *registro* con el catálogo, pero el modelo sigue
+puntuando esa simulación con lo que aprendió. El skew sólo desaparece
+reentrenando.
+
+**Efecto sobre las métricas reproducidas.** 94 de las 287 filas caen en el split
+de test, así que los números de la sección "Métricas reproducidas localmente"
+dejan de reproducirse tal cual:
+
+| Métrica | Dataset anterior | Dataset corregido |
+|---|---|---|
+| AUC-ROC (n=3584) | 0.776371 | **0.776250** |
+| Accuracy @0.65 | 83.6496 % | **84.1797 %** |
+
+El AUC baja 0.0001 y la accuracy sube 0.53 pp. La diferencia es despreciable,
+pero si alguien reevalúa y no obtiene 0.776371, ésta es la razón — no una
+regresión.
+
 ---
 
 ## 2026-08-06 — La suite se valida contra PostgreSQL real
@@ -346,3 +454,115 @@ punta contra este mismo stack (Postgres + `delphos_api`), con resultados
 idénticos a los de SQLite — `catalog_size=64`, vocabulario de 68 skills,
 `engine=heuristic_bridge_v1`. Las decisiones de datos registradas arriba no
 cambian con el motor real.
+
+---
+
+## 2026-08-06 — Cableado al endpoint `/api/v1/oracle/recommend`
+
+El Wide&Deep ya no está desconectado: `POST /api/v1/oracle/recommend` lo usa.
+Verificado de punta a punta contra el usuario demo (`user_id` 134) sobre el
+stack real (Postgres + `delphos_api`).
+
+### Qué hace exactamente el modelo — y qué NO hace
+
+**El modelo sólo decide el ORDEN de la lista.** Los valores de `scores`
+(`engagement_probability`, `skill_overlap_score`, `difficulty_match_score`,
+`label`, `confidence_interval`) los sigue produciendo `heuristic_bridge_v1`,
+exactamente como antes.
+
+La probabilidad cruda del modelo **no se publica**. Motivo: la calibración está
+sin resolver (AUC 0.9928 train / 0.7740 test; 85.6 % de las probabilidades fuera
+de [0.01, 0.99]; un 25 % son exactamente 0.0 por underflow de sigmoid).
+Publicarla en un campo llamado `engagement_probability` la presentaría como algo
+que no es, y mostraría "0 %" en varias tarjetas de la demo. El orden relativo,
+en cambio, sí es utilizable: AUC 0.7764.
+
+**Consecuencia visible que conviene conocer:** como el orden lo pone el modelo y
+el número lo pone el heurístico, la lista devuelta **no está ordenada de forma
+monótona por `engagement_probability`**. En la validación, el #2 mostraba 0.4155
+y el #3, 0.6058. No es un bug. Si el frontend asume monotonía para algo (barras,
+"score decreciente"), hay que mirarlo.
+
+El orden viene de `inference.py::rank_candidates()`: probabilidad primero y, en
+los empates de la cola saturada, desempate por solapamiento de skills y luego
+alineación de dificultad. No se desempata con el logit a propósito (AUC 0.2129
+dentro de la cola, peor que el azar).
+
+### El contrato JSON no cambia
+
+Mismos campos y mismo shape en los dos caminos. Lo único que cambia es `engine`,
+que refleja **qué motor ordenó de verdad** — sin eso, un fallback silencioso
+sería indistinguible de un modelo funcionando, que es justo lo que había que
+poder comprobar. Cubierto por
+`backend/tests/oracle/test_oracle_engine_selection.py::TestEndpointContract`.
+
+### Motor y fallback (`app/services/oracle_engine.py`)
+
+`ORACLE_ENGINE` controla el motor:
+
+| Valor | Comportamiento |
+|---|---|
+| `auto` (default) | Intenta el Wide&Deep; cae al heurístico ante cualquier problema. |
+| `heuristic` | Kill switch. Ni siquiera importa MindSpore. Apaga el modelo sin redeploy. |
+| `widedeep` | Exige el modelo y propaga los errores. Para tests y diagnóstico. |
+
+En `auto` se cae al heurístico si: el modelo no carga (falta MindSpore, falta el
+checkpoint, no encaja con la arquitectura), la inferencia lanza una excepción, o
+la salida es **degenerada**. Degenerada = las 64 con el mismo score, todas
+saturadas en el mismo extremo, o algún NaN/infinito. Que *muchas* empaten a 0.0
+NO es degenerado: es el comportamiento conocido del checkpoint y
+`rank_candidates()` lo desempata; sólo se rechaza si empata el catálogo entero.
+
+Un fallo de carga se recuerda y no se reintenta por petición — si no, un problema
+de arranque se convertiría en un timeout en cada request.
+
+### Despliegue
+
+* `mindspore==2.6.0`, `numpy<2` y `scikit-learn~=1.3.0` entran en
+  `backend/requirements.txt`. La imagen es `python:3.11-slim` y MindSpore 2.6.0
+  publica wheel `cp311`. La imagen pasa de ~565 MB a ~3.45 GB.
+* `docker-compose.yml` monta `../oracle/recommendation:/opt/oracle:ro` y define
+  `ORACLE_MODEL_DIR`. El montaje anterior de `data/processed` se mantiene:
+  `oracle_catalog` usa su propia variable y no tiene por qué saber del modelo.
+* Si las dependencias faltan, el endpoint **sigue funcionando**: cae al
+  heurístico. No es un despliegue de todo-o-nada.
+
+### Validación end-to-end (usuario demo, `user_id` 134)
+
+Mismo perfil, antes y después:
+
+| # | Antes (`heuristic_bridge_v1`) | Después (`wide_and_deep`) |
+|---|---|---|
+| 1 | `sim_artist` | `sim_artist` |
+| 2 | `sim_embedded_systems_engineer` | `sim_ux_designer` |
+| 3 | `sim_automation_engineer` | `sim_graphic_designer` |
+| 4 | `sim_nlp_engineer` | `sim_fashion_designer` |
+| 5 | `sim_front-end_developer` | `sim_database_designer` |
+
+**9 de 10 posiciones cambian** — el modelo se está usando de verdad, no se está
+ignorando en silencio. El shape de la respuesta es idéntico y los `scores` de
+cada simulación coinciden exactamente entre ambas ejecuciones, como debe ser.
+
+`sim_ux_designer` en el puesto #2 es evidencia directa del mapeo de skills OOV:
+con 0 slots activos no podía llegar ahí.
+
+Fallbacks probados con fallos reales, no simulados:
+
+| Escenario | Resultado |
+|---|---|
+| Checkpoint retirado del disco | HTTP 200, `heuristic_bridge_v1`, aviso en log |
+| `ORACLE_ENGINE=heuristic` | HTTP 200, `heuristic_bridge_v1` |
+| Todo en su sitio | HTTP 200, `wide_and_deep` |
+
+Latencia: ~3 s la primera petición (construye el grafo de MindSpore una vez),
+~18 ms las siguientes.
+
+Suites: **436 passed / 19 skipped** en el backend, **56 passed** en
+`oracle/recommendation`.
+
+### Lo que sigue abierto
+
+* La calibración (sección "RIESGO ABIERTO"). Mitigada, no resuelta: se evita
+  publicar la probabilidad, pero el modelo sigue generalizando a 0.77.
+* El skew de `sim_database_designer` en los pesos, y la paridad train/serve que
+  el mapeo de OOV rompe a propósito. Las dos se cierran reentrenando.
