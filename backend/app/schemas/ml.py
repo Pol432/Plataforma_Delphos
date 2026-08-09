@@ -226,8 +226,42 @@ class RecommendationItem(BaseModel):
 
 
 class FullProfileResponse(BaseModel):
+    """
+    Respuesta de /oracle/full_profile.
+
+    Procedencia de los números
+    --------------------------
+    Mismos campos que en `RecommendationResponse` y por el mismo motivo: `engine`
+    solo no distingue quién puntuó de quién ordenó.
+
+    * `scored_by` — quién calculó los valores de `recommendations[].scores`.
+    * `ranked_by` — quién decidió el ORDEN de `recommendations`.
+
+    A diferencia de /recommend, aquí los dos son SIEMPRE 'heuristic_bridge_v1':
+    este endpoint no hace selección de motor — no llama a `oracle_engine`, así
+    que el Wide&Deep no interviene ni para ordenar. No es una copia de la lógica
+    condicional de /recommend, es el estado real de este endpoint.
+    """
     user_id: int
+
+    #: Alias histórico de `ranked_by`: mismo valor y mismo significado de
+    #: siempre. Se mantiene intacto; en código nuevo preferir `ranked_by` y
+    #: `scored_by`.
     engine: str = Field(..., description="Motor usado: 'heuristic_bridge_v1' o 'wide_and_deep'")
+    scored_by: str = Field(
+        ...,
+        description=(
+            "Motor que produjo los valores de `recommendations[].scores`. "
+            "En este endpoint siempre 'heuristic_bridge_v1'."
+        ),
+    )
+    ranked_by: str = Field(
+        ...,
+        description=(
+            "Motor que decidió el orden de `recommendations`. En este endpoint "
+            "siempre 'heuristic_bridge_v1': no hay selección de motor."
+        ),
+    )
     catalog_size: int
     resolved_skill_ids: List[int] = []
     unresolved_skills: List[str] = Field(

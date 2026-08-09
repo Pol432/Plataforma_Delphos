@@ -287,7 +287,14 @@ def full_profile(
 
     return FullProfileResponse(
         user_id=current_user.id,
+        # Este endpoint no llama a `oracle_engine`: puntúa con el heurístico y
+        # ordena por esa misma probabilidad. Así que los tres campos son el
+        # heurístico, y `ranked_by` no es condicional como en /recommend —
+        # reflejarlo con la lógica de allí sería copiar una selección de motor
+        # que aquí no existe.
         engine=ENGINE_NAME,
+        scored_by=ENGINE_NAME,
+        ranked_by=ENGINE_NAME,
         catalog_size=len(catalog.simulations),
         resolved_skill_ids=resolved_ids,
         unresolved_skills=unresolved,
