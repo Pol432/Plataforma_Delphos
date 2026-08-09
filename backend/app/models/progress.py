@@ -64,6 +64,8 @@ class UserSkill(Base):
     xp_total = Column(Integer, default=0, nullable=False)
     nivel = Column(Integer, default=1, nullable=False)
     
+    skill = relationship("Skill")
+
     __table_args__ = (UniqueConstraint('user_id', 'skill_id', name='uq_user_skill'),)
     
     @property
