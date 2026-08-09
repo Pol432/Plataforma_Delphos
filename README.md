@@ -173,6 +173,15 @@ Puntos verificados en un arranque limpio, útiles para no perder tiempo:
   inferencia, pero el AUC 0.7763 de `evaluation_results.json` no se puede
   reconfirmar porque el MindRecord de test no está versionado. Ver
   `oracle/recommendation/README_CHECKPOINT_STATUS.md`.
+- **Los números de `/api/v1/oracle/recommend` no son del modelo.** Aunque la
+  respuesta diga `"engine": "wide_and_deep"`, el Wide&Deep sólo decide el
+  ORDEN de la lista. Todos los valores visibles —`engagement_probability`,
+  `skill_overlap_score`, `difficulty_match_score` y `confidence_interval`— los
+  calcula el heurístico `heuristic_bridge_v1`, porque la calibración del modelo
+  está sin resolver y su probabilidad cruda no se publica. Al demostrar el
+  endpoint, no atribuir esos números al modelo entrenado.
+  `confidence_interval`, además, no estima incertidumbre: es una banda fija de
+  +/-0.1 alrededor del score heurístico.
 
 ## Notas
 

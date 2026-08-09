@@ -13,6 +13,18 @@ solo el valor de `engine`:
 Si el modelo no carga, falla, o devuelve scores degenerados, se cae al
 heurístico y `engine` lo refleja.
 
+Cómo se lee mal `engine`
+------------------------
+`engine: "wide_and_deep"` significa "el modelo ORDENÓ esta lista", NO "estos
+números salieron del modelo". Los números son siempre del heurístico. Es una
+confusión fácil y ya se ha dado: al narrar una demo o al leer el JSON, no
+atribuir `engagement_probability` ni `confidence_interval` al Wide&Deep.
+
+`confidence_interval` merece mención aparte: lo rellena el heurístico como una
+banda fija de +/-0.1 alrededor de su propio score (ancho constante 0.2, punto
+medio igual a la probabilidad). No es una estimación de incertidumbre de nadie
+— ni del modelo, que deja el campo en None a propósito.
+
 Nota: este router NO es el cuestionario vocacional (app/models/oracle.py); ese
 sigue sin exponerse.
 """
@@ -102,7 +114,8 @@ def recommend_simulations(
     """
     Puntúa las 64 simulaciones del catálogo contra el perfil y devuelve el top-N.
 
-    Los `scores` de cada item los produce siempre el heurístico. El orden lo
+    Los `scores` de cada item —incluido `confidence_interval`— los produce
+    siempre el heurístico, cualquiera que sea el motor que ordene. El orden lo
     decide el Wide&Deep si está disponible; si no, la probabilidad heurística.
     """
     try:

@@ -1,18 +1,36 @@
 """
-Recommendation Service
-ML-powered matching algorithm for user-simulation engagement prediction.
+Recommendation Service — `heuristic_bridge_v1`.
+
+Rule-based scoring for user-simulation matching. This is NOT a machine
+learning model: it is a fixed weighted ensemble of four hand-tuned components
+(see `RecommendationService`). No parameter here was learned from data.
+
+Why that distinction matters
+----------------------------
+This service produces EVERY number the client sees in `/api/v1/oracle/recommend`
+— `engagement_probability`, `skill_overlap_score`, `difficulty_match_score` and
+`confidence_interval`. The trained Wide&Deep model does not supply any of them;
+when it is available it only reorders the list (see `app/services/oracle_engine.py`).
+
+So a response carrying `"engine": "wide_and_deep"` still shows numbers computed
+here. Do not describe those numbers as model output, in docs or in a demo.
 """
 from typing import Dict, List, Set
 from app.schemas.ml import MatchingInput, MatchingOutput, UserFeaturesInput, SimulationFeaturesInput
 
 class RecommendationService:
     """
-    Recommendation engine for matching users to simulations.
-    Algorithm:
+    Rule-based matching engine (`heuristic_bridge_v1`).
+
+    Weighted ensemble of four deterministic components — the weights below are
+    hand-picked constants, not fitted parameters:
     1. Skill overlap (Jaccard similarity)
     2. Psychometric profile matching
     3. Difficulty alignment
     4. Duration preference
+
+    Its output is what the oracle endpoints display, regardless of which engine
+    ordered the results.
     """
     
     # Weights for scoring components
@@ -117,7 +135,13 @@ class RecommendationService:
             return max(0.0, 1.0 - (gap / 20.0))
 
     def predict(self, matching_input: MatchingInput) -> MatchingOutput:
-        """Main prediction pipeline"""
+        """
+        Score one (user, simulation) pair with the rule-based ensemble.
+
+        `engagement_probability` is a weighted sum of the four components below,
+        NOT a calibrated probability and NOT a model output. It is the number
+        the client displays.
+        """
         user = matching_input.user_features
         sim = matching_input.simulation_features
         
@@ -142,5 +166,12 @@ class RecommendationService:
             engagement_probability=round(prob, 4),
             skill_overlap_score=round(skill_score, 4),
             difficulty_match_score=round(diff_score, 4),
+            # OJO: esto NO es un intervalo de confianza. Es una banda fija de
+            # +/-0.1 alrededor del propio score: ancho constante 0.2 y punto
+            # medio siempre igual a `engagement_probability`. No estima
+            # incertidumbre y no lleva información por item — el wrapper del
+            # modelo (`oracle/recommendation/inference.py`) deja este campo en
+            # None precisamente por no inventarlo. Documentado, no corregido:
+            # cambiar el valor es decisión aparte (ver informe de procedencia).
             confidence_interval=(max(0.0, prob - 0.1), min(1.0, prob + 0.1))
         )
