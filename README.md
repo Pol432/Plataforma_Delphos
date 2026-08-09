@@ -128,6 +128,29 @@ la arquitectura se reconstruye con los valores de
 `checkpoints/training_config.json`. Ver `README.md` de la carpeta para el
 detalle de notebooks y datos.
 
+*Sobre `.venv`:* es local y está en `.gitignore` — no se versiona, así que
+nunca hay que "arreglarlo" en el repo: se borra y se rehace. Un venv deja de
+funcionar si el Python del sistema se actualiza por debajo (típico en Arch):
+`bin/python` pasa a apuntar al intérprete nuevo mientras los paquetes siguen
+en `lib/python3.X/site-packages` de la versión vieja, y entonces *nada* es
+importable aunque los binarios estén ahí (`pytest` existe pero falta
+`_pytest`). Se reconoce comparando `pyvenv.cfg` con
+`.venv/bin/python --version`. Solución: `rm -rf .venv` y rehacerlo.
+
+Si no tienes un Python <=3.11 a mano, MindSpore no se puede instalar y el
+motor no corre en local — para eso está el contenedor. Aun así puedes correr
+la mayor parte de los tests, que son numpy puro y se saltan solos los que
+piden el framework:
+
+```bash
+cd oracle/recommendation
+python3 -m venv .venv && .venv/bin/pip install pytest numpy pandas scikit-learn
+.venv/bin/python -m pytest tests/ -q      # 47 passed, 9 skipped
+```
+
+`setup_env.sh` **no** sirve para esto: es el script del contenedor (escribe
+symlinks en `/usr/bin` y da por hecho `/workspace`), no crea ningún venv.
+
 **`skill_graph`** — grafo temporal. Requiere una base PostgreSQL propia
 (`DATABASE_URL` en un `.env`) y aplicar `db/migrations/*.sql`. Ver
 `oracle/README.md`.
