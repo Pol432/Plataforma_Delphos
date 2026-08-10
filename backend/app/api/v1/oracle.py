@@ -18,12 +18,13 @@ Cómo se lee mal `engine`
 `engine: "wide_and_deep"` significa "el modelo ORDENÓ esta lista", NO "estos
 números salieron del modelo". Los números son siempre del heurístico. Es una
 confusión fácil y ya se ha dado: al narrar una demo o al leer el JSON, no
-atribuir `engagement_probability` ni `confidence_interval` al Wide&Deep.
+atribuir `engagement_probability` al Wide&Deep.
 
-`confidence_interval` merece mención aparte: lo rellena el heurístico como una
-banda fija de +/-0.1 alrededor de su propio score (ancho constante 0.2, punto
-medio igual a la probabilidad). No es una estimación de incertidumbre de nadie
-— ni del modelo, que deja el campo en None a propósito.
+`confidence_interval` va siempre a null: ninguno de los dos motores estima
+incertidumbre. El heurístico lo rellenaba con una banda fija de +/-0.1 sobre su
+propio score —ancho constante, punto medio igual a la probabilidad, cero
+información por item— y se retiró por eso. El campo sigue en el contrato como
+Optional: se devuelve null, no se ha eliminado.
 
 Nota: este router NO es el cuestionario vocacional (app/models/oracle.py); ese
 sigue sin exponerse.
@@ -114,9 +115,10 @@ def recommend_simulations(
     """
     Puntúa las 64 simulaciones del catálogo contra el perfil y devuelve el top-N.
 
-    Los `scores` de cada item —incluido `confidence_interval`— los produce
-    siempre el heurístico, cualquiera que sea el motor que ordene. El orden lo
-    decide el Wide&Deep si está disponible; si no, la probabilidad heurística.
+    Los `scores` de cada item los produce siempre el heurístico, cualquiera que
+    sea el motor que ordene (`confidence_interval` es null: nadie lo estima). El
+    orden lo decide el Wide&Deep si está disponible; si no, la probabilidad
+    heurística.
     """
     try:
         catalog = get_catalog()

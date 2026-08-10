@@ -279,6 +279,11 @@ class TestEndpointContract:
                 assert set(item) == ITEM_FIELDS
                 assert set(item["scores"]) == SCORE_FIELDS
                 assert 0.0 <= item["scores"]["engagement_probability"] <= 1.0
+                # El campo sigue en el contrato, pero nadie estima
+                # incertidumbre: va siempre a null. Se fija aquí porque
+                # SCORE_FIELDS solo comprueba que la clave exista, y antes
+                # llevaba una banda inventada de (prob-0.1, prob+0.1).
+                assert item["scores"]["confidence_interval"] is None
 
     def test_model_changes_the_order(self, client, auth_headers, monkeypatch):
         """Si el orden no cambiara, el modelo estaría siendo ignorado."""

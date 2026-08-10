@@ -8,9 +8,12 @@ learning model: it is a fixed weighted ensemble of four hand-tuned components
 Why that distinction matters
 ----------------------------
 This service produces EVERY number the client sees in `/api/v1/oracle/recommend`
-— `engagement_probability`, `skill_overlap_score`, `difficulty_match_score` and
-`confidence_interval`. The trained Wide&Deep model does not supply any of them;
-when it is available it only reorders the list (see `app/services/oracle_engine.py`).
+— `engagement_probability`, `skill_overlap_score` and `difficulty_match_score`.
+The trained Wide&Deep model does not supply any of them; when it is available it
+only reorders the list (see `app/services/oracle_engine.py`).
+
+`confidence_interval` is the exception: it is always None. Neither engine
+estimates uncertainty, so neither one fills it.
 
 So a response carrying `"engine": "wide_and_deep"` still shows numbers computed
 here. Do not describe those numbers as model output, in docs or in a demo.
@@ -166,12 +169,18 @@ class RecommendationService:
             engagement_probability=round(prob, 4),
             skill_overlap_score=round(skill_score, 4),
             difficulty_match_score=round(diff_score, 4),
-            # OJO: esto NO es un intervalo de confianza. Es una banda fija de
-            # +/-0.1 alrededor del propio score: ancho constante 0.2 y punto
-            # medio siempre igual a `engagement_probability`. No estima
-            # incertidumbre y no lleva información por item — el wrapper del
-            # modelo (`oracle/recommendation/inference.py`) deja este campo en
-            # None precisamente por no inventarlo. Documentado, no corregido:
-            # cambiar el valor es decisión aparte (ver informe de procedencia).
-            confidence_interval=(max(0.0, prob - 0.1), min(1.0, prob + 0.1))
+            # None a propósito: este motor no estima incertidumbre.
+            #
+            # Antes se rellenaba con (prob-0.1, prob+0.1): una banda de ancho
+            # constante 0.2 centrada en el propio score. No era un intervalo de
+            # confianza — no salía de ninguna varianza ni de ningún remuestreo,
+            # y al derivarse mecánicamente de `engagement_probability` no
+            # aportaba ni un bit de información por item. Publicarlo invitaba a
+            # leerlo como una medida de incertidumbre real.
+            #
+            # El wrapper del modelo (`oracle/recommendation/inference.py`) ya
+            # dejaba este campo en None por el mismo motivo; ahora los dos
+            # motores coinciden. El campo sigue existiendo y sigue siendo
+            # Optional: se devuelve null, no se elimina.
+            confidence_interval=None,
         )
