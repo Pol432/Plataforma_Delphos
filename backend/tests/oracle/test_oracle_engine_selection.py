@@ -496,3 +496,49 @@ class TestOovMappingCoherence:
 
         by_name = {entry["name"]: entry["skill_id"] for entry in body["skills"]}
         assert by_name["Figma"] == by_name["Adobe Creative Suite"] == 39
+
+    def test_canonical_name_distinguishes_aliases_from_canonical_skills(
+        self, client, auth_headers
+    ):
+        """
+        `skill_id` no basta para saber qué nombre es el canónico: los alias se
+        publican con el ID de su equivalente, así que 'Adobe Creative Suite',
+        'Figma' y 'Photoshop' comparten el 39. `canonical_name` es lo que deja
+        al cliente separarlos con `name != canonical_name`.
+
+        Un campo con el ID canónico no habría servido: sería igual a `skill_id`
+        en las 68 entradas. Se comprueba justamente eso, para que no se
+        reintroduzca como si aportara algo.
+        """
+        response = client.get("/api/v1/oracle/skills", headers=auth_headers)
+        assert response.status_code == 200, response.text
+        skills = response.json()["skills"]
+
+        # Todas las entradas lo traen, y siempre apunta a un nombre real del
+        # vocabulario entrenado (nunca a otro alias).
+        trained_names = {
+            e["name"] for e in skills if e["name"] == e["canonical_name"]
+        }
+        assert len(trained_names) == 52
+        for entry in skills:
+            assert "canonical_name" in entry, entry
+            assert entry["canonical_name"] in trained_names, entry
+
+        by_name = {e["name"]: e for e in skills}
+
+        # No aliasado: es su propio canónico.
+        adobe = by_name["Adobe Creative Suite"]
+        assert adobe["skill_id"] == 39
+        assert adobe["canonical_name"] == "Adobe Creative Suite"
+        assert adobe["name"] == adobe["canonical_name"]
+
+        # Aliasado: mismo skill_id, pero el canónico lo identifica.
+        for alias in ("Figma", "Photoshop"):
+            entry = by_name[alias]
+            assert entry["skill_id"] == 39
+            assert entry["canonical_name"] == "Adobe Creative Suite"
+            assert entry["name"] != entry["canonical_name"]
+
+        # Exactamente 16 alias, que es lo que mapea OOV_SKILL_FALLBACKS.
+        aliases = [e for e in skills if e["name"] != e["canonical_name"]]
+        assert len(aliases) == 16

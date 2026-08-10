@@ -85,7 +85,21 @@ def get_simulation_catalog(current_user=Depends(get_current_user)):
 
 @router.get("/skills")
 def get_skill_vocabulary(current_user=Depends(get_current_user)):
-    """Vocabulario de skills que entiende el oráculo (para que el cliente lo use)."""
+    """
+    Vocabulario de skills que entiende el oráculo (para que el cliente lo use).
+
+    Cada entrada trae `canonical_name`: el nombre del skill entrenado al que
+    resuelve. En los 52 entrenados es su propio nombre; en los 16 alias OOV es
+    el de su equivalente. La regla para el cliente es directa:
+
+        es_alias = (name != canonical_name)
+
+    Hace falta porque los alias se publican con el ID de su equivalente, así
+    que `skill_id` no distingue: "Adobe Creative Suite", "Figma" y "Photoshop"
+    son los tres el 39. Un campo con el ID canónico no habría servido de nada
+    —sería igual a `skill_id` en las 68 entradas—; lo que faltaba era saber
+    CUÁL de los nombres que comparten ID es el canónico, y cómo se llama.
+    """
     try:
         catalog = get_catalog()
     except FileNotFoundError as exc:
@@ -96,10 +110,19 @@ def get_skill_vocabulary(current_user=Depends(get_current_user)):
     # Es lo que de verdad devuelve `resolve_skill_names`, y omitirlos dejaría al
     # cliente sin poder ofrecer 16 skills que el oráculo entiende igual.
     vocabulary = [
-        {"skill_id": sid, "name": name}
+        {"skill_id": sid, "name": name, "canonical_name": name}
         for sid, name in catalog.skill_name_by_id.items()
     ] + [
-        {"skill_id": sid, "name": name}
+        # `mapped_skill_names` ya guarda alias -> nombre entrenado, construido
+        # en el mismo sitio que `alias_skill_ids`, así que las dos vistas del
+        # mapeo no pueden desincronizarse. El `.get(name, name)` es defensivo:
+        # si algún día hubiera un alias sin destino registrado, se publicaría
+        # como canónico de sí mismo en vez de reventar el endpoint.
+        {
+            "skill_id": sid,
+            "name": name,
+            "canonical_name": catalog.mapped_skill_names.get(name, name),
+        }
         for name, sid in catalog.alias_skill_ids.items()
     ]
     vocabulary.sort(key=lambda entry: (entry["skill_id"], entry["name"]))
