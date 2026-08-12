@@ -75,7 +75,7 @@ export default function Screen8Profile({ onNavigate, onLogout }) {
                         <User2 size={64} color="var(--text-muted)" strokeWidth={1} />
                     </div>
                     <div>
-                        <h1 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '2.5rem', color: 'var(--text-bright)', marginBottom: '8px' }}>
+                        <h1 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '2.5rem', color: 'var(--text-bright)', marginBottom: '8px' }}>
                             {user?.username || 'Estudiante'}
                         </h1>
                         <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
@@ -124,7 +124,7 @@ export default function Screen8Profile({ onNavigate, onLogout }) {
 
                     {/* Competencies Grid */}
                     <div style={{ marginBottom: '48px' }}>
-                        <h2 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '24px' }}>
+                        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '24px' }}>
                             Desarrollo de Competencias
                         </h2>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>

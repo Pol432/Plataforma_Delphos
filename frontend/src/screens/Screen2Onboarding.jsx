@@ -1,35 +1,29 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Folder, Radio, FlaskConical, ArrowRight, CheckCircle2, ChevronRight } from 'lucide-react'
+import { ArrowRight, CheckCircle2, ChevronRight, Users, Briefcase, Target } from 'lucide-react'
 
 const QUESTIONS = [
     {
-        text: 'El equipo no se pone de acuerdo sobre la fecha. ¿Qué haces?',
-        answers: ['Analizar datos y proponer fechas', 'Organizar una reunión para alinear al equipo'],
-        icon: Folder,
-        color: 'var(--accent)',
-        glow: 'var(--accent-glow)',
+        text: 'El equipo no se pone de acuerdo sobre la fecha de entrega. ¿Cuál es tu plan de acción?',
+        answers: ['Analizar datos y proponer una fecha basada en evidencia', 'Organizar una reunión de alineación con los stakeholders'],
+        icon: Users,
     },
     {
-        text: 'Un cliente pide un cambio de último minuto. ¿Cuál es tu respuesta?',
-        answers: ['Evaluar el impacto y proponer solución', 'Escuchar al cliente y gestionar expectativas'],
-        icon: Radio,
-        color: 'var(--primary)',
-        glow: 'var(--primary-glow)',
+        text: 'Un cliente clave solicita un cambio de alcance de último minuto. ¿Cuál es tu respuesta inicial?',
+        answers: ['Evaluar el impacto técnico y proponer una solución', 'Escuchar al cliente y gestionar las expectativas del proyecto'],
+        icon: Briefcase,
     },
     {
-        text: 'Te asignan un proyecto ambiguo sin instrucciones claras. ¿Cómo arrancas?',
-        answers: ['Definir alcance y pedir claridad', 'Explorar ideas con el equipo'],
-        icon: FlaskConical,
-        color: 'var(--gold)',
-        glow: 'var(--primary-glow)', // fallback to primary glow or similar
+        text: 'Te asignan liderar un proyecto ambiguo sin instrucciones claras. ¿Cómo decides arrancar?',
+        answers: ['Definir un alcance preliminar y solicitar validación', 'Explorar ideas y posibles enfoques con el equipo central'],
+        icon: Target,
     },
 ]
 
 const FEEDBACK = [
-    ['¡Buen criterio! Avanza con confianza.', '¡Interesante perspectiva! Sigue adelante.'],
-    ['¡Excelente enfoque! Un paso más cerca.', '¡Buena elección! Tu camino se despeja.'],
-    ['¡Último desafío superado! Estás listo.', '¡Gran instinto profesional! Vamos.'],
+    ['Enfoque analítico sólido. Avanza al siguiente caso.', 'Excelente enfoque colaborativo. Sigue adelante.'],
+    ['Buena priorización técnica. Un paso más cerca.', 'Gran manejo de relaciones. Tu perfil se define.'],
+    ['Liderazgo estructurado. Estás listo.', 'Proactividad destacada. Excelente.'],
 ]
 
 export default function Screen2Onboarding({ onNext }) {
@@ -68,165 +62,173 @@ export default function Screen2Onboarding({ onNext }) {
         <div style={{
             minHeight: '100vh', background: 'var(--bg)',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            padding: '24px', position: 'relative',
+            padding: '40px 24px', position: 'relative',
         }}>
-            {/* Warm glow */}
-            <div style={{
-                position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%,-50%)',
-                width: '600px', height: '400px', borderRadius: '50%',
-                background: 'radial-gradient(circle, var(--primary-glow) 0%, transparent 70%)',
-                pointerEvents: 'none'
-            }} />
-
-            {/* Inline feedback banner — replaces XP toast */}
+            {/* Inline feedback banner */}
             <AnimatePresence>
                 {feedback && (
                     <motion.div
                         key="feedback"
-                        initial={{ opacity: 0, y: -14, scale: 0.95 }}
+                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -14, scale: 0.95 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
                         transition={{ duration: 0.3 }}
                         style={{
-                            position: 'fixed', top: '28px', left: '50%',
+                            position: 'fixed', top: '40px', left: '50%',
                             transform: 'translateX(-50%)',
                             zIndex: 9999,
-                            background: 'var(--card)',
-                            border: '1px solid var(--border-accent)',
-                            borderLeft: '3px solid var(--accent)',
-                            borderRadius: '10px',
-                            padding: '12px 22px',
-                            display: 'flex', alignItems: 'center', gap: '10px',
-                            boxShadow: '0 4px 24px var(--accent-glow), 0 8px 32px rgba(0,0,0,0.5)',
+                            background: '#fff',
+                            border: '1px solid var(--border)',
+                            borderLeft: '4px solid var(--primary)',
+                            borderRadius: '8px',
+                            padding: '16px 24px',
+                            display: 'flex', alignItems: 'center', gap: '12px',
+                            boxShadow: 'var(--shadow-md)',
                             whiteSpace: 'nowrap',
                         }}
                     >
-                        <CheckCircle2 size={16} color="var(--accent)" strokeWidth={2.5} />
+                        <CheckCircle2 size={20} color="var(--primary)" strokeWidth={2.5} />
                         <span style={{
                             fontFamily: 'Inter, sans-serif', fontWeight: 600,
-                            fontSize: '0.85rem', color: 'var(--text)',
+                            fontSize: '1rem', color: 'var(--text-bright)',
                         }}>
                             {feedback.text}
                         </span>
-                        <ArrowRight size={14} color="var(--accent)" strokeWidth={2.5} />
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Progress header */}
-            <div style={{ width: '100%', maxWidth: '480px', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            {/* Header & Progress */}
+            <div style={{ width: '100%', maxWidth: '800px', marginBottom: '40px' }}>
+                <h1 style={{ 
+                    fontFamily: 'Outfit, sans-serif', 
+                    fontSize: '2.5rem', 
+                    fontWeight: 700, 
+                    color: 'var(--text-bright)', 
+                    textAlign: 'center', 
+                    marginBottom: '12px' 
+                }}>
+                    Evaluación de Competencias
+                </h1>
+                <p style={{
+                    fontFamily: 'Inter, sans-serif', 
+                    fontSize: '1.1rem', 
+                    color: 'var(--text-muted)', 
+                    textAlign: 'center', 
+                    marginBottom: '32px'
+                }}>
+                    Paso {cardIndex + 1} de {QUESTIONS.length} — Analizando tu perfil profesional
+                </p>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <span style={{
                         fontFamily: 'Inter, sans-serif', fontWeight: 700,
-                        fontSize: '0.65rem', color: 'var(--accent)', letterSpacing: '0.14em', textTransform: 'uppercase'
-                    }}>&gt; ENERGÍA DEL ORÁCULO</span>
-                    <span style={{ fontFamily: 'Inter, sans-serif', color: 'var(--primary)', fontSize: '0.9rem', fontWeight: 700 }}>{progress}%</span>
+                        fontSize: '0.8rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase'
+                    }}>PROGRESO</span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', color: 'var(--primary)', fontSize: '1rem', fontWeight: 700 }}>{progress}%</span>
                 </div>
-                <div style={{ background: 'var(--bg2)', borderRadius: '9999px', overflow: 'hidden', height: '7px', border: '1px solid var(--border)' }}>
+                <div style={{ background: 'var(--border)', borderRadius: '9999px', overflow: 'hidden', height: '8px' }}>
                     <motion.div
                         animate={{ width: `${progress}%` }}
                         transition={{ duration: 0.6, ease: 'easeOut' }}
                         style={{
-                            height: '7px', borderRadius: '9999px',
-                            background: 'linear-gradient(90deg, var(--primary), var(--accent))',
-                            boxShadow: '0 0 8px var(--accent-glow)'
+                            height: '100%', borderRadius: '9999px',
+                            background: 'var(--primary)'
                         }}
                     />
                 </div>
-                <p style={{
-                    textAlign: 'center', marginTop: '12px',
-                    fontFamily: 'Inter, sans-serif', fontWeight: 600,
-                    fontSize: '0.72rem', color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase'
-                }}>
-                    Pregunta {cardIndex + 1} / {QUESTIONS.length} — El Oráculo te evalúa
-                </p>
             </div>
 
-            {/* Card */}
-            <div style={{ width: '100%', maxWidth: '440px', position: 'relative', height: '300px' }}>
-                <AnimatePresence mode="wait">
-                    <motion.div key={cardIndex}
-                        initial={{ opacity: 0, y: 40, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, x: exitDirection > 0 ? 300 : -300, rotate: exitDirection > 0 ? 10 : -10, scale: 0.87 }}
-                        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-                        style={{
-                            position: 'absolute', inset: 0,
-                            background: 'var(--card)',
-                            border: '1px solid var(--border)',
-                            borderTop: `2px solid ${q.color}`,
-                            borderRadius: '12px',
-                            boxShadow: `0 0 24px ${q.glow}, 0 12px 40px rgba(0,0,0,0.6)`,
-                            overflow: 'hidden',
-                            display: 'flex', flexDirection: 'column',
-                        }}
-                    >
-                        {/* Illustration area — icon instead of emoji */}
-                        <div style={{
-                            flex: '1', margin: '18px 18px 0',
-                            border: '1px solid var(--border)', borderRadius: '8px',
-                            background: q.glow,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            position: 'relative', overflow: 'hidden'
-                        }}>
-                            <div style={{
+            {/* Main Content Area */}
+            <div style={{ width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                
+                {/* Question Card */}
+                <div style={{ position: 'relative', minHeight: '280px' }}>
+                    <AnimatePresence mode="wait">
+                        <motion.div key={cardIndex}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: exitDirection > 0 ? 50 : -50 }}
+                            transition={{ duration: 0.4, ease: "easeInOut" }}
+                            style={{
                                 position: 'absolute', inset: 0,
-                                backgroundImage: `linear-gradient(${q.glow} 1px, transparent 1px), linear-gradient(90deg, ${q.glow} 1px, transparent 1px)`,
-                                backgroundSize: '20px 20px'
-                            }} />
-                            {/* Soft glow ring */}
-                            <div style={{
-                                position: 'absolute',
-                                width: '90px', height: '90px', borderRadius: '50%',
-                                background: `radial-gradient(circle, ${q.glow} 0%, transparent 70%)`,
-                                pointerEvents: 'none'
-                            }} />
-                            <div style={{
-                                width: '52px', height: '52px', borderRadius: '14px',
-                                background: q.glow,
-                                border: `1.5px solid ${q.glow}`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                position: 'relative', zIndex: 1,
-                            }}>
-                                <QuestionIcon size={26} color={q.color} strokeWidth={1.8} />
+                                background: '#fff',
+                                border: '1px solid var(--border)',
+                                borderRadius: '16px',
+                                boxShadow: 'var(--shadow-md)',
+                                display: 'flex', flexDirection: 'column',
+                                overflow: 'hidden'
+                            }}
+                        >
+                            {/* Accent Top Bar */}
+                            <div style={{ height: '6px', background: 'var(--primary)', width: '100%' }} />
+                            
+                            <div style={{ padding: '48px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '24px' }}>
+                                <div style={{ 
+                                    width: '64px', height: '64px', 
+                                    background: '#F0F4FF', 
+                                    borderRadius: '16px', 
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                                }}>
+                                    <QuestionIcon size={32} color="var(--primary)" strokeWidth={2} />
+                                </div>
+                                <h2 style={{ 
+                                    fontSize: '1.6rem', 
+                                    lineHeight: '1.4', 
+                                    color: 'var(--text-bright)', 
+                                    fontFamily: 'Inter, sans-serif', 
+                                    fontWeight: 600,
+                                    textAlign: 'center',
+                                    maxWidth: '600px'
+                                }}>
+                                    {q.text}
+                                </h2>
                             </div>
-                        </div>
-                        {/* Question */}
-                        <div style={{ padding: '16px 22px 20px', textAlign: 'center' }}>
-                            <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text)', fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-                                {q.text}
-                            </p>
-                        </div>
-                    </motion.div>
-                </AnimatePresence>
-            </div>
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
 
-            {/* Answer Buttons */}
-            <div style={{ width: '100%', maxWidth: '440px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginTop: '22px' }}>
-                {[
-                    { color: 'var(--accent)', bg: 'var(--accent-glow)', shadow: 'var(--accent-glow)', dir: -1 },
-                    { color: 'var(--primary)', bg: 'var(--primary-glow)', shadow: 'var(--primary-glow)', dir: 1 }
-                ].map(({ color, bg, shadow, dir }, i) => (
-                    <motion.button key={i}
-                        style={{
-                            background: bg, color: color,
-                            border: `1px solid ${color}`,
-                            borderRadius: '10px', padding: '16px 14px',
-                            fontFamily: 'Inter, sans-serif', fontWeight: 600,
-                            fontSize: '0.8rem', textAlign: 'center', lineHeight: '1.5',
-                            cursor: disabled ? 'default' : 'pointer',
-                            boxShadow: `0 0 10px ${shadow}`,
-                            opacity: disabled ? 0.5 : 1,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                        }}
-                        whileHover={disabled ? {} : { boxShadow: `0 0 18px ${shadow}`, scale: 1.03 }}
-                        whileTap={disabled ? {} : { scale: 0.95 }}
-                        onClick={() => handleAnswer(i, dir)}
-                    >
-                        {q.answers[i]}
-                        <ChevronRight size={14} strokeWidth={2.5} style={{ flexShrink: 0, opacity: 0.7 }} />
-                    </motion.button>
-                ))}
+                {/* Answer Buttons */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', width: '100%' }}>
+                    {[
+                        { color: '#fff', bg: 'var(--text-bright)', border: 'var(--text-bright)', hoverBg: 'var(--text)', dir: -1 },
+                        { color: '#fff', bg: 'var(--primary)', border: 'var(--primary)', hoverBg: 'var(--primary-dim)', dir: 1 }
+                    ].map(({ color, bg, border, hoverBg, dir }, i) => (
+                        <motion.button key={i}
+                            style={{
+                                background: bg, 
+                                color: color,
+                                border: `1px solid ${border}`,
+                                borderRadius: '12px', 
+                                padding: '24px 32px',
+                                fontFamily: 'Inter, sans-serif', 
+                                fontWeight: 600,
+                                fontSize: '1.1rem', 
+                                textAlign: 'left', 
+                                lineHeight: '1.5',
+                                cursor: disabled ? 'default' : 'pointer',
+                                boxShadow: 'var(--shadow-sm)',
+                                opacity: disabled ? 0.6 : 1,
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
+                                transition: 'background-color 0.2s'
+                            }}
+                            whileHover={disabled ? {} : { scale: 1.02, backgroundColor: hoverBg }}
+                            whileTap={disabled ? {} : { scale: 0.98 }}
+                            onClick={() => handleAnswer(i, dir)}
+                        >
+                            <span style={{ flex: 1 }}>{q.answers[i]}</span>
+                            <div style={{ 
+                                width: '32px', height: '32px', 
+                                background: 'rgba(255,255,255,0.2)', 
+                                borderRadius: '50%', 
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0
+                            }}>
+                                <ChevronRight size={18} strokeWidth={2.5} />
+                            </div>
+                        </motion.button>
+                    ))}
+                </div>
             </div>
         </div>
     )

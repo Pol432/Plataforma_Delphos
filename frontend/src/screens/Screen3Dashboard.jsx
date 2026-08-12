@@ -175,7 +175,7 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
             }}>
 
                 <div style={{ marginBottom: '40px' }}>
-                    <h2 style={{ fontSize: '2.5rem', fontFamily: 'Playfair Display', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '8px' }}>Mi Aprendizaje</h2>
+                    <h2 style={{ fontSize: '2.5rem', fontFamily: 'Outfit, sans-serif', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '8px' }}>Mi Aprendizaje</h2>
                     <p style={{ fontFamily: 'Inter', fontSize: '1rem', color: 'var(--text-muted)' }}>Continúa donde lo dejaste y alcanza tus metas profesionales.</p>
                 </div>
 
@@ -191,7 +191,7 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
                     {activeModule ? (
                         <motion.div key="active" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
                             
-                            <h3 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '24px' }}>
+                            <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '24px' }}>
                                 Curso Actual
                             </h3>
                             
@@ -227,7 +227,7 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
                                 <BookOpen size={40} color="var(--text-muted)" strokeWidth={1.5} />
                             </div>
                             <div style={{ textAlign: 'center' }}>
-                                <h3 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '12px' }}>Ningún curso en progreso</h3>
+                                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '12px' }}>Ningún curso en progreso</h3>
                                 <p style={{ fontSize: '1rem', color: 'var(--text-muted)', fontFamily: 'Inter', maxWidth: '400px', lineHeight: '1.6' }}>Explora nuestro catálogo para encontrar la ruta de aprendizaje que mejor se adapte a tus metas.</p>
                             </div>
                             <button style={{ marginTop: '24px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '4px', padding: '14px 28px', fontFamily: 'Inter', fontWeight: 600, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.2s' }}

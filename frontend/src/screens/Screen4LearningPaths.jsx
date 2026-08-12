@@ -197,7 +197,7 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
     return (
         <div style={{ minHeight: '100vh', background: '#f8f9fa', padding: '48px 48px 120px 48px', position: 'relative' }}>
             <div style={{ marginBottom: '40px' }}>
-                <h1 style={{ fontSize: '2.5rem', fontFamily: 'Playfair Display', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '12px' }}>Catálogo de Aprendizaje</h1>
+                <h1 style={{ fontSize: '2.5rem', fontFamily: 'Outfit, sans-serif', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '12px' }}>Catálogo de Aprendizaje</h1>
                 <p style={{ fontFamily: 'Inter', fontSize: '1.1rem', color: 'var(--text-muted)' }}>Explora nuestras rutas formativas y comienza a desarrollar habilidades clave.</p>
             </div>
 
@@ -283,7 +283,7 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
                                         </div>
                                         <div>
                                             <span style={{ fontFamily: 'Inter', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>{selectedModule.category?.toUpperCase() || 'GENERAL'}</span>
-                                            <h2 style={{ fontFamily: 'Playfair Display', fontSize: '2rem', fontWeight: 700, color: 'var(--text-bright)', lineHeight: 1.2, marginBottom: '12px' }}>{selectedModule.title}</h2>
+                                            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2rem', fontWeight: 700, color: 'var(--text-bright)', lineHeight: 1.2, marginBottom: '12px' }}>{selectedModule.title}</h2>
                                             <p style={{ fontFamily: 'Inter', fontSize: '1rem', color: 'var(--text-muted)' }}>{selectedModule.subtitle}</p>
                                         </div>
                                     </div>

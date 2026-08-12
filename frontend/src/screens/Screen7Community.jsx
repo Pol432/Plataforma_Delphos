@@ -191,7 +191,7 @@ export default function Screen7Community({ onNavigate }) {
                 <div style={{ padding: '20px 32px', borderBottom: '1px solid var(--border)', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <Hash size={24} color={activeServer ? activeServer.color : 'var(--primary)'} />
-                        <h2 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '1.5rem', color: 'var(--text-bright)' }}>{activeChannel ? activeChannel.name : 'Bienvenido'}</h2>
+                        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.5rem', color: 'var(--text-bright)' }}>{activeChannel ? activeChannel.name : 'Bienvenido'}</h2>
                     </div>
                     
                     {activeServer && (
@@ -216,7 +216,7 @@ export default function Screen7Community({ onNavigate }) {
                             <div style={{ width: '96px', height: '96px', borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                                 <Users size={48} color="var(--primary)" />
                             </div>
-                            <h3 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '2rem', color: 'var(--text-bright)', marginBottom: '16px' }}>Bienvenido a la Comunidad</h3>
+                            <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '2rem', color: 'var(--text-bright)', marginBottom: '16px' }}>Bienvenido a la Comunidad</h3>
                             <p style={{ fontFamily: 'Inter', color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '400px', lineHeight: 1.6 }}>Únete a nuestras comunidades para compartir conocimientos, resolver dudas y conectar con otros profesionales.</p>
                         </div>
                     ) : (
