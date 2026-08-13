@@ -155,6 +155,18 @@ symlinks en `/usr/bin` y da por hecho `/workspace`), no crea ningún venv.
 (`DATABASE_URL` en un `.env`) y aplicar `db/migrations/*.sql`. Ver
 `oracle/README.md`.
 
+#### Probarlo todo de una vez
+
+```bash
+./oracle/test_oracle.sh          # monta los entornos y corre lo que se pueda
+./oracle/test_oracle.sh api      # sólo los endpoints /api/v1/oracle/*
+./oracle/test_oracle.sh --help
+```
+
+Corre los tres subsistemas, los endpoints del oráculo y los tests de `oracle`
+del backend, e informa de lo que se salta y por qué. Un `SKIP` no es un
+`PASS`. Detalle en `oracle/README.md`.
+
 ## Estado conocido
 
 Puntos verificados en un arranque limpio, útiles para no perder tiempo:
