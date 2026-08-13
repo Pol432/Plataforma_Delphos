@@ -158,9 +158,13 @@ class TestUsersMassAssignment:
         }
         res = client.post("/api/v1/users", json=payload)
         assert res.status_code in [201, 422]
-        data = res.json()
-        assert data["xp_total"] == 0
-        assert data["level_current"] == 1
+        # Con `extra="forbid"` en UserCreate el payload se rechaza de plano (422),
+        # que es la protección más fuerte. Si algún día se vuelve a aceptar, los
+        # campos privilegiados tienen que seguir ignorándose.
+        if res.status_code == 201:
+            data = res.json()
+            assert data["xp_total"] == 0
+            assert data["level_current"] == 1
 
     def test_inject_is_active_false(self, client):
         """Mass Assignment: Create deactivated user"""
@@ -173,4 +177,6 @@ class TestUsersMassAssignment:
         }
         res = client.post("/api/v1/users", json=payload)
         assert res.status_code in [201, 422]
-        assert res.json()["is_active"] == True
+        # Ver nota en test_inject_xp_total_on_registration: 422 = rechazado.
+        if res.status_code == 201:
+            assert res.json()["is_active"] == True

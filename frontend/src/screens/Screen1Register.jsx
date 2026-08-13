@@ -216,13 +216,16 @@ function RegisterPanel({ onNext, onGoLogin }) {
         if (!step2Valid) return;
         setLoading(true);
         try {
+            // TEMPORAL: `role` y `country` se recogen en el paso 1 pero no se envían.
+            // El backend (UserCreate, `extra="forbid"`) los rechaza con 422 porque
+            // todavía no existen como columnas. NO volver a añadirlos aquí hasta que
+            // esté hecha la migración descrita en TODO_MATIAS_SCHEMA.md.
+            // `birth_year` sí se manda: el backend ya lo mapea a `birth_date`.
             const payload = {
                 email: form.email,
                 password: form.password,
                 full_name: `${form.firstName} ${form.lastName}`,
                 username: form.email.split('@')[0],
-                role: form.role,
-                country: form.country,
                 birth_year: parseInt(form.birthYear) || 2000
             };
             await api.post('/api/v1/register', payload);

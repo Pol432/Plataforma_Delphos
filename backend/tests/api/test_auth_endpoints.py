@@ -4,48 +4,63 @@ Comprehensive test suite for authentication and user management
 """
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from app.db.base import Base
 from app.main import app
-from app.api.deps import get_db
+from app.api.deps import get_db as deps_get_db
+from app.db.session import get_db as session_get_db
 
 
 # ============================================================================
 # TEST DATABASE SETUP
 # ============================================================================
-
-SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///./test.db"
-engine = create_engine(
-    SQLALCHEMY_TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def override_get_db():
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_db] = override_get_db
-
-
-@pytest.fixture(scope="function")
-def test_db():
-    """Create fresh database for each test"""
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
+#
+# Las tablas las crea una sola vez `setup_test_db` en tests/conftest.py, sobre
+# el mismo fichero `test.db`. Este módulo NO debe crear su propio engine ni
+# llamar a `drop_all`: al compartir el fichero, borraba las tablas para todos
+# los módulos que se recolectan después de `tests/api/` (empresas, content,
+# simulations, ...) y los hacía fallar con "no such table".
+#
+# Los routers de auth/users/community dependen de `app.api.deps.get_db`,
+# mientras que el resto usa `app.db.session.get_db`. El `client` de la raíz
+# solo sobreescribe el segundo, así que aquí sobreescribimos ambos contra la
+# misma sesión transaccional.
 
 
 @pytest.fixture
-def client(test_db):
-    """FastAPI test client"""
-    return TestClient(app)
+def seed_location(db_session):
+    """Región → provincia → ciudad que referencia VALID_USER_DATA["city_id"].
+
+    El engine de tests activa `PRAGMA foreign_keys=ON`, así que `city_id` tiene
+    que existir de verdad; antes estos tests pasaban solo porque el engine
+    propio de este módulo no activaba el pragma y la FK no se comprobaba.
+    """
+    from app.models.catalog import Region, Province, City
+
+    region = Region(name="Sierra Test", code="SRT")
+    db_session.add(region)
+    db_session.flush()
+
+    province = Province(region_id=region.id, name="Pichincha Test", code="PCT")
+    db_session.add(province)
+    db_session.flush()
+
+    city = City(id=1, province_id=province.id, name="Quito Test")
+    db_session.add(city)
+    db_session.flush()
+    return city
+
+
+@pytest.fixture
+def client(db_session, seed_location):
+    """FastAPI test client sobre la sesión transaccional de tests/conftest.py"""
+    def override_get_db():
+        yield db_session
+
+    previous = dict(app.dependency_overrides)
+    app.dependency_overrides[deps_get_db] = override_get_db
+    app.dependency_overrides[session_get_db] = override_get_db
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides = previous
 
 
 # ============================================================================
@@ -258,8 +273,8 @@ class TestUserCRUD:
         """PUT /api/v1/users/{id} - Prevent updating other users"""
         # Create two users
         client.post("/api/v1/register", json=VALID_USER_DATA)
-        client.post("/api/v1/register", json=VALID_USER_DATA_2)
-        
+        otro_usuario = client.post("/api/v1/register", json=VALID_USER_DATA_2).json()
+
         # Login as first user
         login_response = client.post(
             "/api/v1/token",
@@ -270,13 +285,18 @@ class TestUserCRUD:
         )
         token = login_response.json()["access_token"]
         
-        # Try to update second user (ID 2)
+        # Se usa el id que devuelve el registro, no un 2 fijo. Las secuencias de
+        # PostgreSQL no son transaccionales: `nextval` se consume aunque el test
+        # haga rollback, así que tras los tests previos estos usuarios ya no son
+        # el 1 y el 2. El endpoint respondía 404 (usuario inexistente) en vez de
+        # 403 y el test dejaba de ejercer la regla de autorización. En SQLite
+        # colaba porque el rowid sí vuelve atrás con el rollback.
         response = client.put(
-            "/api/v1/users/2",
+            f"/api/v1/users/{otro_usuario['id']}",
             json={"full_name": "Hacked Name"},
             headers={"Authorization": f"Bearer {token}"}
         )
-        
+
         assert response.status_code == 403
     
     def test_list_users_requires_auth(self, client):
