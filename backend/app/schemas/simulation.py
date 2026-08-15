@@ -2,7 +2,7 @@
 Simulation Schemas - Complete hierarchy validation
 """
 from pydantic import BaseModel, Field, ConfigDict, field_validator
-from typing import Optional, List
+from typing import Optional, List, Dict, Literal
 from datetime import datetime
 
 
@@ -16,6 +16,11 @@ class SimulationBase(BaseModel):
     short_description: str = Field(..., min_length=1)  # CRITICAL: Required
     company_id: int
     category_id: int
+    lore_context: Optional[str] = None
+    scaffolding_phase: Optional[Literal['Guided','Intermediate','Final Challenge']] = Field(default='Guided')
+    real_world_constraints: Optional[List[str]] = Field(default_factory=list)
+    immediate_feedback: Optional[Dict[str, object]] = Field(default_factory=dict)
+    skills_metrics_weights: Optional[Dict[str, float]] = Field(default_factory=dict)
 
 
 class SimulationCreate(SimulationBase):
@@ -75,6 +80,11 @@ class TaskBase(BaseModel):
     module_id: int
     order: int = Field(..., ge=1)
     task_type: str = Field(..., pattern="^(video|quiz|pdf|text|code)$")
+    lore_context: Optional[str] = None
+    scaffolding_phase: Optional[Literal['Guided','Intermediate','Final Challenge']] = Field(default='Guided')
+    real_world_constraints: Optional[List[str]] = Field(default_factory=list)
+    immediate_feedback: Optional[Dict[str, object]] = Field(default_factory=dict)
+    skills_metrics_weights: Optional[Dict[str, float]] = Field(default_factory=dict)
 
 
 class TaskCreate(TaskBase):

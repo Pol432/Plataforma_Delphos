@@ -16,6 +16,14 @@ SIMULATION_DATA = [
             "difficulty_level": "advanced",
             "estimated_hours": 6.5,
             "xp_reward": 1500,
+            "lore_context": "Eres el ingeniero de datos senior contratado por Skywork AI para solucionar un cuello de botella crítico en un pipeline de ingestión de sensores en producción. Tendrás que equilibrar velocidad, costo y seguridad de los datos mientras trabajas contra el reloj.",
+            "scaffolding_phase": "Guided",
+            "real_world_constraints": ["presupuesto reducido", "ventana de despliegue nocturna", "dependencia de servicios legacy"],
+            "immediate_feedback": {
+                "on_failure_explanation": "Si tu solución introduce inconsistencias, revisa la sección 'Transactions & Batch Writes' en la documentación; evita escrituras sin commit y usa índices apropiados.",
+                "links": ["https://docs.python.org/3/", "https://www.postgresql.org/docs/current/ddl-partitioning.html", "https://docs.sqlalchemy.org/"]
+            },
+            "skills_metrics_weights": {"Problem Solving": 0.5, "System Design": 0.3, "SQL": 0.2},
             "state": "published"
         },
         "modules": [
@@ -36,7 +44,12 @@ SIMULATION_DATA = [
                             "instructor_name": "Dra. Aris Thorne",
                             "instructor_role": "Principal Data Architect, Skywork AI",
                             "estimated_minutes": 75,
-                            "xp_reward": 150
+                            "xp_reward": 150,
+                            "lore_context": "Revisa los logs, los scripts de ingestión y plantea hipótesis; documenta el pipeline propuesto en 600-800 palabras.",
+                            "scaffolding_phase": "Guided",
+                            "real_world_constraints": ["picos de carga impredecibles", "dependencia de proveedores externos"],
+                            "immediate_feedback": {"on_failure_explanation": "Chequea los patrones anti-patrón de uso de pandas en streaming; prioriza operaciones vectorizadas.", "links": ["https://pandas.pydata.org/docs/", "https://docs.python.org/3/library/concurrent.futures.html"]},
+                            "skills_metrics_weights": {"Problem Solving": 0.6, "Python": 0.25, "Data Engineering": 0.15}
                         },
                         "resources": [
                             {"name": "Código Fuente: ingest_sensor_data.py", "resource_type": "file", "url": "/resources/simulations/skywork/ingest_sensor_data.py"},
@@ -62,7 +75,12 @@ SIMULATION_DATA = [
                             "instructor_name": "Dra. Aris Thorne",
                             "instructor_role": "Principal Data Architect, Skywork AI",
                             "estimated_minutes": 75,
-                            "xp_reward": 200
+                            "xp_reward": 200,
+                            "lore_context": "Optimiza la consulta para permitir dashboards en tiempo real; explica los trade-offs de índice vs partición.",
+                            "scaffolding_phase": "Intermediate",
+                            "real_world_constraints": ["ventana de mantenimiento corta", "limites de I/O"],
+                            "immediate_feedback": {"on_failure_explanation": "Si la consulta sigue siendo lenta, instrumenta con EXPLAIN ANALYZE y busca scans secuenciales; considera materialized views.", "links": ["https://www.postgresql.org/docs/current/using-explain.html"]},
+                            "skills_metrics_weights": {"SQL": 0.7, "Performance Tuning": 0.3}
                         },
                         "resources": [
                             {"name": "Consulta SQL Lenta: get_sensor_summary.sql", "resource_type": "file", "url": "/resources/simulations/skywork/get_sensor_summary.sql"},
@@ -93,6 +111,11 @@ SIMULATION_DATA = [
             "difficulty_level": "intermediate",
             "estimated_hours": 5.0,
             "xp_reward": 1200,
+            "lore_context": "Eres un asesor estratégico encargado por el CEO para recuperar la reputación de Apex y redefinir KPIs que equilibren rendimiento financiero y bienestar humano.",
+            "scaffolding_phase": "Guided",
+            "real_world_constraints": ["recortes presupuestarios", "resistencia al cambio interno"],
+            "immediate_feedback": {"on_failure_explanation": "Si tu cuadro de mando no recibe aceptación, vincula KPIs a objetivos financieros y presenta ROI estimado; revisa plantillas GRI.", "links": ["https://www.globalreporting.org/", "https://hbr.org/"]},
+            "skills_metrics_weights": {"Strategic Thinking": 0.5, "Data Analysis": 0.3, "Communication": 0.2},
             "state": "published"
         },
         "modules": [
@@ -113,7 +136,12 @@ SIMULATION_DATA = [
                             "instructor_name": "John Maxwell",
                             "instructor_role": "Fundador y CEO, Apex Leadership Group",
                             "estimated_minutes": 90,
-                            "xp_reward": 200
+                            "xp_reward": 200,
+                            "lore_context": "Interpreta el dashboard ejecutivo y prepara un memorando ejecutivo claro y accionable destinado al CEO y al board.",
+                            "scaffolding_phase": "Guided",
+                            "real_world_constraints": ["política interna", "plazos trimestrales"],
+                            "immediate_feedback": {"on_failure_explanation": "Si tu diagnóstico carece de evidencia, incluye visualizaciones y referencias a métricas concretas; revisa ejemplos de memorandos ejecutivos.", "links": ["https://hbr.org/", "https://www.mckinsey.com/"]},
+                            "skills_metrics_weights": {"Communication": 0.6, "Data Analysis": 0.4}
                         },
                         "resources": [
                             {"name": "Acceso al Dashboard Directivo (Interactivo)", "resource_type": "dashboard", "url": "/resources/simulations/apex/executive_dashboard.pbix"},
@@ -137,7 +165,12 @@ SIMULATION_DATA = [
                             "instructor_name": "John Maxwell",
                             "instructor_role": "Fundador y CEO, Apex Leadership Group",
                             "estimated_minutes": 90,
-                            "xp_reward": 250
+                            "xp_reward": 250,
+                            "lore_context": "Diseña KPIs prácticos y defendibles para medidas de sostenibilidad que el board pueda implementar en 12 meses.",
+                            "scaffolding_phase": "Intermediate",
+                            "real_world_constraints": ["datos incompletos", "métricas no estandarizadas"],
+                            "immediate_feedback": {"on_failure_explanation": "Si tus KPIs son difíciles de medir, agrega métricas proxy y una ruta de instrumentación; revisa estándares GRI.", "links": ["https://www.globalreporting.org/standards/"]},
+                            "skills_metrics_weights": {"Strategic Thinking": 0.5, "ESG": 0.3, "Measurement": 0.2}
                         },
                         "resources": [
                             {"name": "Guía sobre Cuadros de Mando Integral (Kaplan & Norton)", "resource_type": "document", "url": "/resources/simulations/apex/balanced_scorecard_guide.pdf"},
@@ -167,6 +200,11 @@ SIMULATION_DATA = [
             "difficulty_level": "advanced",
             "estimated_hours": 4.0,
             "xp_reward": 1600,
+            "lore_context": "Eres el residente de urgencias encargado del primer triage; toma decisiones basadas en probabilidad, priorizando intervenciones con mayor impacto en supervivencia.",
+            "scaffolding_phase": "Guided",
+            "real_world_constraints": ["recursos limitados", "presión de tiempo"],
+            "immediate_feedback": {"on_failure_explanation": "Si pasas por alto un diagnóstico crítico, revisa el algoritmo ABCDE y protocolos locales; consulta guías de la AHA.", "links": ["https://www.ahajournals.org/", "https://www.who.int/"]},
+            "skills_metrics_weights": {"Clinical Reasoning": 0.6, "Decision Making": 0.3, "Communication": 0.1},
             "state": "published"
         },
         "modules": [
@@ -187,7 +225,12 @@ SIMULATION_DATA = [
                             "instructor_name": "Dra. Elena Rivas",
                             "instructor_role": "Jefa de Medicina de Urgencias, H.C. San Lucas",
                             "estimated_minutes": 60,
-                            "xp_reward": 250
+                            "xp_reward": 250,
+                            "lore_context": "Estructura una nota clínica SOAP concisa que priorice hallazgos y decisiones inmediatas; considera recursos de sala de urgencias.",
+                            "scaffolding_phase": "Guided",
+                            "real_world_constraints": ["camilla ocupada", "personal limitado"],
+                            "immediate_feedback": {"on_failure_explanation": "Si tu SOAP carece de prioridades, enfócate en 'must-do' actions y medidas inmediatas; revisa guías locales.", "links": ["https://www.ncbi.nlm.nih.gov/pmc/"]},
+                            "skills_metrics_weights": {"Clinical Reasoning": 0.7, "Documentation": 0.3}
                         },
                         "resources": [
                             {"name": "Historia Clínica del Paciente: Juan Pérez", "resource_type": "document", "url": "/resources/simulations/sanlucas/historia_clinica_jp.pdf"},
@@ -211,7 +254,12 @@ SIMULATION_DATA = [
                             "instructor_name": "Dra. Elena Rivas",
                             "instructor_role": "Jefa de Medicina de Urgencias, H.C. San Lucas",
                             "estimated_minutes": 60,
-                            "xp_reward": 300
+                            "xp_reward": 300,
+                            "lore_context": "Solicita solo pruebas esenciales justificadas por probabilidad pre-test; prioriza tests con mayor valor diagnóstico inmediato.",
+                            "scaffolding_phase": "Final Challenge",
+                            "real_world_constraints": ["tiempo crítico", "disponibilidad limitada de imagen"],
+                            "immediate_feedback": {"on_failure_explanation": "Si solicitas pruebas innecesarias, justificar el riesgo y costo; revisa guías de urgencias.", "links": ["https://www.ncbi.nlm.nih.gov/pmc/"]},
+                            "skills_metrics_weights": {"Decision Making": 0.6, "Clinical Knowledge": 0.4}
                         },
                         "resources": [
                             {"name": "Formulario de Solicitud de Pruebas del Hospital", "resource_type": "form", "url": "/resources/simulations/sanlucas/lab_request_form.html"}
@@ -230,3 +278,207 @@ SIMULATION_DATA = [
         ]
     }
 ]
+
+# Vocational simulations focused on Generation Z career guidance
+NEW_VOCATIONAL_SIMULATIONS = [
+    {"simulation": {
+        "title": "Marketing Digital: Campaña de Lanzamiento Viral",
+        "slug": "marketing-digital-campana-lanzamiento-viral",
+        "short_description": "Diseña y ejecuta una estrategia de lanzamiento digital para una marca emergente enfocada en audiencias Z.",
+        "company_id": 4,
+        "category_id": 4,
+        "lore_context": "Eres el estratega digital contratado por una start-up de moda sostenible que busca volverse viral sin presupuesto de medios. Debes crear una campaña orgánica que genere impacto y métricas reales en 30 días.",
+        "scaffolding_phase": "Guided",
+        "real_world_constraints": ["presupuesto recortado", "algoritmo de plataforma cambiante"],
+        "immediate_feedback": {"links": ["https://learndigital.withgoogle.com/","https://support.facebook.com/business/"], "on_failure_explanation": "Si la campaña no genera tracción, revisa los A/B tests del mensaje y el CTA; prioriza contenido generado por usuarios y microinfluencers con métricas de engagement claras."},
+        "skills_metrics_weights": {"Content Strategy": 0.4, "Analytics": 0.3, "Community Engagement": 0.3}
+    }},
+    {"simulation": {
+        "title": "Derecho: Defensa en Simulación de Audiencia Pública",
+        "slug": "derecho-defensa-simulacion-audiencia",
+        "short_description": "Prepara la defensa legal para un caso de uso público complejo con énfasis en argumento y ética profesional.",
+        "company_id": 5,
+        "category_id": 5,
+        "lore_context": "Asumes el rol de abogado defensor en una audiencia pública donde debes equilibrar derecho, ética y opinión pública para proteger los derechos de tu cliente.",
+        "scaffolding_phase": "Intermediate",
+        "real_world_constraints": ["presión mediática", "tiempo limitado para pruebas"],
+        "immediate_feedback": {"links": ["https://www.icj-cij.org/","https://www.brookings.edu/"], "on_failure_explanation": "Si tus argumentos fallan en la audiencia, documenta las lagunas probatorias y propone medidas remediales; revisa doctrina y precedentes relevantes."},
+        "skills_metrics_weights": {"Argumentation": 0.45, "Legal Research": 0.35, "Ethical Reasoning": 0.2}
+    }},
+    {"simulation": {
+        "title": "Psicología: Intervención en Crisis Juvenil",
+        "slug": "psicologia-intervencion-crisis-juvenil",
+        "short_description": "Atiende una sesión de intervención para un joven con riesgo de aislamiento social y de rendimiento académico decreciente.",
+        "company_id": 6,
+        "category_id": 6,
+        "lore_context": "Eres psicólogo clínico en un centro universitario; debes evaluar, intervenir y diseñar un plan breve de seguimiento para un estudiante en crisis.",
+        "scaffolding_phase": "Guided",
+        "real_world_constraints": ["recursos limitados del centro", "resistencia del paciente"],
+        "immediate_feedback": {"links": ["https://www.apa.org/","https://www.who.int/mental_health"], "on_failure_explanation": "Si la intervención no reduce riesgo percibido, considera derivación a servicios especializados y revisa estrategias de motivación y alianza terapéutica."},
+        "skills_metrics_weights": {"Clinical Assessment": 0.4, "Communication": 0.35, "Crisis Management": 0.25}
+    }},
+    {"simulation": {
+        "title": "Arquitectura: Propuesta de Rehabilitación Urbana",
+        "slug": "arquitectura-propuesta-rehabilitacion-urbana",
+        "short_description": "Diseña una intervención arquitectónica para revitalizar una plaza pública con enfoque sostenible y comunitario.",
+        "company_id": 7,
+        "category_id": 7,
+        "lore_context": "Eres el arquitecto a cargo de rehabilitar una plaza deteriorada; debes integrar diseño, viabilidad y participación ciudadana en una propuesta ejecutable.",
+        "scaffolding_phase": "Intermediate",
+        "real_world_constraints": ["normativas municipales", "presupuesto comunitario"],
+        "immediate_feedback": {"links": ["https://www.archdaily.com/","https://www.un.org/sustainabledevelopment/"], "on_failure_explanation": "Si la propuesta no obtiene aceptación, ajusta el diseño para cumplir regulaciones locales y prioriza intervenciones de alto impacto social con bajo costo."},
+        "skills_metrics_weights": {"Design": 0.45, "Regulation Knowledge": 0.25, "Community Engagement": 0.3}
+    }},
+    {"simulation": {
+        "title": "Administración: Plan de Recuperación Operativa",
+        "slug": "administracion-plan-recuperacion-operativa",
+        "short_description": "Elabora un plan operativo para recuperar la eficiencia tras una caída de productividad en una PYME familiar.",
+        "company_id": 8,
+        "category_id": 8,
+        "lore_context": "Eres gerente de operaciones llamado para recuperar la productividad de una PYME con problemas de procesos y moral del equipo.",
+        "scaffolding_phase": "Guided",
+        "real_world_constraints": ["conflictos familiares internos", "recursos humanos limitados"],
+        "immediate_feedback": {"links": ["https://www.mckinsey.com/","https://hbr.org/"], "on_failure_explanation": "Si las medidas no mejoran productividad, documenta cuellos de botella y propone cambios incrementales priorizados por ROI; incluye plan de comunicación."},
+        "skills_metrics_weights": {"Process Improvement": 0.4, "Change Management": 0.35, "Stakeholder Communication": 0.25}
+    }},
+    {"simulation": {
+        "title": "Finanzas: Modelado Financiero para Startups",
+        "slug": "finanzas-modelado-financiero-startups",
+        "short_description": "Construye un modelo financiero que permita tomar decisiones de inversión y estimar runway para una startup tecnológica.",
+        "company_id": 9,
+        "category_id": 9,
+        "lore_context": "Eres analista financiero en una VC y debes modelar escenarios de ingresos, costos y runway para evaluar una ronda seed.",
+        "scaffolding_phase": "Intermediate",
+        "real_world_constraints": ["incertidumbre de mercado", "datos históricos limitados"],
+        "immediate_feedback": {"links": ["https://www.investopedia.com/","https://www.cfainstitute.org/"], "on_failure_explanation": "Si el modelo falla, revisa supuestos de crecimiento y sensibilidad; crea escenarios pesimista/realista/optimista y documenta hipótesis."},
+        "skills_metrics_weights": {"Financial Modeling": 0.5, "Scenario Analysis": 0.3, "Presentation": 0.2}
+    }},
+    {"simulation": {
+        "title": "Diseño Gráfico: Identidad Visual para Marca Emerging",
+        "slug": "diseno-grafico-identidad-visual",
+        "short_description": "Desarrolla una identidad visual y manual de marca para una microempresa de productos artesanales.",
+        "company_id": 10,
+        "category_id": 10,
+        "lore_context": "Eres diseñador(a) gráfico contratado para crear la identidad visual de una marca que combina tradición y modernidad.",
+        "scaffolding_phase": "Guided",
+        "real_world_constraints": ["plazos ajustados", "presupuesto de producción"],
+        "immediate_feedback": {"links": ["https://www.behance.net/","https://www.adobe.com/creativecloud.html"], "on_failure_explanation": "Si la identidad no comunica el posicionamiento, revisa target audience y realiza prototipos de packaging con usuarios; ajusta paleta y tipografía."},
+        "skills_metrics_weights": {"Visual Design": 0.5, "Brand Strategy": 0.3, "UX": 0.2}
+    }},
+    {"simulation": {
+        "title": "Ingeniería Industrial: Optimización de Línea de Producción",
+        "slug": "ingenieria-industrial-optimizacion-linea-produccion",
+        "short_description": "Rediseña una línea de producción para reducir tiempos muertos y aumentar rendimiento con mínima inversión.",
+        "company_id": 11,
+        "category_id": 11,
+        "lore_context": "Eres ingeniero industrial contratado para optimizar una planta con equipos obsoletos y alta variabilidad en eficiencia.",
+        "scaffolding_phase": "Intermediate",
+        "real_world_constraints": ["paradas no planificadas", "limitaciones de stock"],
+        "immediate_feedback": {"links": ["https://asq.org/","https://lean.org/"], "on_failure_explanation": "Si las mejoras no reducen tiempos muertos, realiza un mapeo de flujo de valor más detallado y prioriza cambios con mayor impacto por bajo costo."},
+        "skills_metrics_weights": {"Process Optimization": 0.45, "Lean Tools": 0.3, "Data Analysis": 0.25}
+    }},
+    {"simulation": {
+        "title": "Ciencias de la Computación: Arquitectura de Microservicios",
+        "slug": "cs-arquitectura-microservicios",
+        "short_description": "Diseña la arquitectura de microservicios para una aplicación de alto tráfico con necesidades de escalado y resiliencia.",
+        "company_id": 12,
+        "category_id": 12,
+        "lore_context": "Eres arquitecto backend encargado de migrar un monolito crítico a microservicios manteniendo SLAs y minimizando downtime.",
+        "scaffolding_phase": "Guided",
+        "real_world_constraints": ["compatibilidad retroactiva", "limites de infraestructura"],
+        "immediate_feedback": {"links": ["https://microservices.io/","https://docs.kubernetes.io/"], "on_failure_explanation": "Si la migración introduce regresiones, instrumenta trazas distribuidas y reduce el blast radius; implementa pruebas contractuales entre servicios."},
+        "skills_metrics_weights": {"System Design": 0.5, "Reliability Engineering": 0.3, "API Design": 0.2}
+    }},
+    {"simulation": {
+        "title": "Ingeniería Civil: Evaluación de Riesgo Estructural",
+        "slug": "ingenieria-civil-evaluacion-riesgo-estructural",
+        "short_description": "Evalúa la seguridad de un puente urbano y propone intervenciones preventivas priorizadas.",
+        "company_id": 13,
+        "category_id": 13,
+        "lore_context": "Eres ingeniero civil en una inspección urgente tras reportes de fisuras; debes valorar riesgo y presentar un plan de mitigación.",
+        "scaffolding_phase": "Final Challenge",
+        "real_world_constraints": ["tránsito crítico", "presupuesto municipal limitado"],
+        "immediate_feedback": {"links": ["https://www.asce.org/","https://www.fhwa.dot.gov/"], "on_failure_explanation": "Si tu evaluación subestima riesgo, incorpora inspecciones instrumentadas y modelado estructural más detallado; prioriza seguridad pública."},
+        "skills_metrics_weights": {"Risk Assessment": 0.5, "Structural Analysis": 0.3, "Project Planning": 0.2}
+    }},
+    {"simulation": {
+        "title": "Medicina: Triage y Manejo en Unidad de Urgencias",
+        "slug": "medicina-triage-manejo-urgencias",
+        "short_description": "Realiza triage y maneja un caso crítico en urgencias optimizando tiempos y recursos en un hospital regional.",
+        "company_id": 14,
+        "category_id": 14,
+        "lore_context": "Eres médico de urgencias en turno nocturno; llega un paciente con signos vitales inestables y debes priorizar acciones que salven vida.",
+        "scaffolding_phase": "Final Challenge",
+        "real_world_constraints": ["recursos limitados", "alta ocupación de camas"],
+        "immediate_feedback": {"links": ["https://www.who.int/","https://www.nejm.org/"], "on_failure_explanation": "Si tu manejo inicial no estabiliza al paciente, revisa algoritmos ABC, ordena pruebas prioritarias y considera transferencias; documenta decisiones."},
+        "skills_metrics_weights": {"Clinical Decision Making": 0.5, "Acute Management": 0.3, "Documentation": 0.2}
+    }},
+    {"simulation": {
+        "title": "Biología: Diseño Experimental en Laboratorio",
+        "slug": "biologia-diseno-experimental-laboratorio",
+        "short_description": "Diseña un experimento controlado para evaluar efecto de un tratamiento sobre cultivo celular.",
+        "company_id": 15,
+        "category_id": 15,
+        "lore_context": "Eres investigador junior liderando un experimento donde debes definir controles, replicación y análisis estadístico con recursos de laboratorio limitados.",
+        "scaffolding_phase": "Intermediate",
+        "real_world_constraints": ["reactivos limitados", "variabilidad biológica"],
+        "immediate_feedback": {"links": ["https://www.ncbi.nlm.nih.gov/","https://www.protocols.io/"], "on_failure_explanation": "Si el experimento falla, revisa diseño estadístico, aumente replicación y verifica calidad de reactivos; documenta pasos reproducibles."},
+        "skills_metrics_weights": {"Experimental Design": 0.45, "Data Analysis": 0.35, "Lab Techniques": 0.2}
+    }},
+    {"simulation": {
+        "title": "Comunicación Social: Gestión de Crisis en Medios",
+        "slug": "comunicacion-gestion-crisis-medios",
+        "short_description": "Maneja la comunicación y reputación de una organización durante una crisis mediática emergente.",
+        "company_id": 16,
+        "category_id": 16,
+        "lore_context": "Eres el responsable de comunicaciones durante una crisis pública; debes definir mensajes, canales y plan de respuesta para mitigar impacto reputacional.",
+        "scaffolding_phase": "Guided",
+        "real_world_constraints": ["difusión viral", "opinión pública polarizada"],
+        "immediate_feedback": {"links": ["https://www.cision.com/","https://www.prsa.org/"], "on_failure_explanation": "Si la respuesta empeora la crisis, evalúa tono y timming; prioriza transparencia y acciones concretas; ajusta mensaje según audiencia."},
+        "skills_metrics_weights": {"Message Strategy": 0.4, "Channel Management": 0.3, "Crisis Analysis": 0.3}
+    }},
+    {"simulation": {
+        "title": "Relaciones Internacionales: Negociación Multilateral",
+        "slug": "relaciones-internacionales-negociacion-multilateral",
+        "short_description": "Participa en una negociación multilateral para alcanzar un acuerdo regional sobre comercio sostenible.",
+        "company_id": 17,
+        "category_id": 17,
+        "lore_context": "Eres delegado en una cumbre regional; debes negociar cláusulas que equilibren desarrollo económico y sostenibilidad entre países con intereses contrapuestos.",
+        "scaffolding_phase": "Intermediate",
+        "real_world_constraints": ["presión diplomática", "plazos de cumbre"],
+        "immediate_feedback": {"links": ["https://www.un.org/","https://www.wto.org/"], "on_failure_explanation": "Si la negociación fracasa, documenta puntos de fricción y propone concesiones climáticas o económicas equivalentes; prioriza gobernanza y seguimiento."},
+        "skills_metrics_weights": {"Negotiation": 0.45, "Policy Analysis": 0.35, "Diplomacy": 0.2}
+    }},
+    {"simulation": {
+        "title": "Ingeniería Ambiental: Plan de Remediación Local",
+        "slug": "ingenieria-ambiental-plan-remediacion-local",
+        "short_description": "Diseña un plan de remediación para un área contaminada y establece indicadores de éxito a 12 meses.",
+        "company_id": 18,
+        "category_id": 18,
+        "lore_context": "Eres ingeniero ambiental liderando un proyecto comunitario para remediar un sitio industrial contaminado con recursos públicos limitados.",
+        "scaffolding_phase": "Final Challenge",
+        "real_world_constraints": ["comunidad escéptica", "limitaciones presupuestarias"],
+        "immediate_feedback": {"links": ["https://www.epa.gov/","https://www.unep.org/"], "on_failure_explanation": "Si el plan no remedia contaminantes, prioriza medidas de contención y monitoreo; revisa tecnologías de biorremediación y su costo-beneficio."},
+        "skills_metrics_weights": {"Environmental Assessment": 0.45, "Project Management": 0.3, "Community Outreach": 0.25}
+    }}
+]
+
+
+# --- PARCHE PARA UNIR LAS NUEVAS SIMULACIONES ---
+for item in NEW_VOCATIONAL_SIMULATIONS:
+    # 1. Agregar la lista de módulos que faltaba
+    if 'modules' not in item:
+        item['modules'] = []
+    
+    # 2. Agregar los campos de texto que exige el script de la base de datos
+    sim_data = item['simulation']
+    if 'company_name' not in sim_data:
+        # Genera un nombre de empresa ficticio basado en el título (ej. "Derecho Corp")
+        sim_data['company_name'] = sim_data['title'].split(':')[0] + " Corp"
+        
+    if 'category_name' not in sim_data:
+        sim_data['category_name'] = "Simulación Vocacional"
+
+# Evitamos duplicar la lista si ejecutas el archivo varias veces
+if len(SIMULATION_DATA) == 3:
+    SIMULATION_DATA.extend(NEW_VOCATIONAL_SIMULATIONS)

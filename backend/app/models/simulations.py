@@ -3,6 +3,7 @@ Simulation Models (Core Content)
 Hierarchical structure: Simulation -> Modules -> Tasks -> Resources
 """
 from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime, Numeric, JSON
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base import Base
@@ -32,6 +33,13 @@ class Simulation(Base):
     intro_video_url = Column(String(500))
     thumbnail_url = Column(String(500))
     banner_url = Column(String(500))
+
+    # --- Immersive learning fields ---
+    lore_context = Column(Text, nullable=True, comment="Storytelling / immersive prompt for the simulation")
+    scaffolding_phase = Column(String(50), nullable=False, default='Guided', comment="Guided, Intermediate, Final Challenge")
+    real_world_constraints = Column(JSONB, default=list, nullable=False, comment="List of constraint descriptors or events")
+    immediate_feedback = Column(JSONB, default=dict, nullable=False, comment="Structured feedback and links for failures")
+    skills_metrics_weights = Column(JSONB, default=dict, nullable=False, comment="Weights per skill for dashboards e.g. {\"Problem Solving\":0.8}")
 
     # --- NUEVOS CAMPOS (Hybrid Model) ---
     start_date = Column(DateTime(timezone=True), nullable=True)
@@ -95,6 +103,13 @@ class ModuleTask(Base):
     estimated_minutes = Column(Integer)
     xp_reward = Column(Integer, default=50)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # --- Immersive task fields ---
+    lore_context = Column(Text, nullable=True, comment="Task-level storytelling prompt")
+    scaffolding_phase = Column(String(50), nullable=False, default='Guided', comment="Guided, Intermediate, Final Challenge")
+    real_world_constraints = Column(JSONB, default=list, nullable=False, comment="Task-level constraints/events")
+    immediate_feedback = Column(JSONB, default=dict, nullable=False, comment="Task-level immediate feedback payload")
+    skills_metrics_weights = Column(JSONB, default=dict, nullable=False, comment="Task-level skill weights for dashboards")
     
     module = relationship("SimulationModule", back_populates="tasks")
     resources = relationship("TaskResource", back_populates="task", cascade="all, delete-orphan")
