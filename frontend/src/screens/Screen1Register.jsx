@@ -148,7 +148,7 @@ function LoginPanel({ onNext, onGoRegister }) {
 
     return (
         <motion.div key="login" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
-            <h2 style={{ fontFamily: 'Playfair Display', fontSize: '2rem', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '32px', textAlign: 'center' }}>Inicia sesión en tu cuenta</h2>
+            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2rem', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '32px', textAlign: 'center' }}>Inicia sesión en tu cuenta</h2>
 
             <div title="Próximamente">
                 <GoogleButton disabled={true} />
@@ -224,7 +224,7 @@ function RegisterPanel({ onNext, onGoLogin }) {
             const payload = {
                 email: form.email,
                 password: form.password,
-                full_name: `${form.firstName} ${form.lastName}`,
+                full_name: `${form.firstName} ${form.lastName}`.trim(),
                 username: form.email.split('@')[0],
                 birth_year: parseInt(form.birthYear) || 2000
             };
@@ -244,7 +244,7 @@ function RegisterPanel({ onNext, onGoLogin }) {
             <AnimatePresence mode="wait">
                 {step === 1 && (
                     <motion.div key="step1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <h2 style={{ fontFamily: 'Playfair Display', fontSize: '2rem', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '8px', textAlign: 'center' }}>Crea tu cuenta</h2>
+                        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2rem', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '8px', textAlign: 'center' }}>Crea tu cuenta</h2>
                         <p style={{ fontFamily: 'Inter', fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '32px', textAlign: 'center' }}>Paso 1 de 2: Cuéntanos sobre ti</p>
 
                         <div style={{ display: 'flex', gap: '16px' }}>
@@ -280,7 +280,7 @@ function RegisterPanel({ onNext, onGoLogin }) {
                         <div style={{ marginBottom: '24px' }}>
                             <span onClick={() => setStep(1)} style={{ fontFamily: 'Inter', fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>← Volver al paso 1</span>
                         </div>
-                        <h2 style={{ fontFamily: 'Playfair Display', fontSize: '2rem', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '8px', textAlign: 'center' }}>Configura tu acceso</h2>
+                        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2rem', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '8px', textAlign: 'center' }}>Configura tu acceso</h2>
                         <p style={{ fontFamily: 'Inter', fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '32px', textAlign: 'center' }}>Paso 2 de 2: Credenciales de seguridad</p>
 
                         <Field label="Correo electrónico" type="email" placeholder="correo@ejemplo.com" value={form.email} onChange={set('email')} />
@@ -313,7 +313,7 @@ function RegisterPanel({ onNext, onGoLogin }) {
                         <div style={{ width: '80px', height: '80px', margin: '0 auto 24px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <CheckCircle2 size={40} color="#10B981" />
                         </div>
-                        <h2 style={{ fontFamily: 'Playfair Display', fontSize: '2.5rem', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '16px' }}>¡Bienvenido!</h2>
+                        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2.5rem', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '16px' }}>¡Bienvenido!</h2>
                         <p style={{ fontFamily: 'Inter', fontSize: '1rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '32px' }}>
                             Hola, <strong style={{ color: 'var(--text-bright)' }}>{form.firstName}</strong>. Tu perfil ha sido creado exitosamente. Comienza tu aprendizaje hoy mismo.
                         </p>
@@ -373,7 +373,7 @@ export default function Screen1Register({ onNext }) {
                     <AnimatePresence mode="wait">
                         {mode === 'login' ? (
                             <motion.div key="hero-login" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-                                <h1 style={{ fontFamily: 'Playfair Display', fontSize: '3.5rem', fontWeight: 700, lineHeight: 1.15, marginBottom: '24px', textShadow: '0 4px 16px rgba(0,0,0,0.6)', color: '#F59E0B' }}>
+                                <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '3.5rem', fontWeight: 700, lineHeight: 1.15, marginBottom: '24px', textShadow: '0 4px 16px rgba(0,0,0,0.6)', color: '#F59E0B' }}>
                                     Desarrolla tus<br />habilidades
                                 </h1>
                                 <p style={{ fontFamily: 'Inter', fontSize: '1.15rem', opacity: 0.95, lineHeight: 1.6, maxWidth: '420px', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
@@ -382,7 +382,7 @@ export default function Screen1Register({ onNext }) {
                             </motion.div>
                         ) : (
                             <motion.div key="hero-register" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-                                <h1 style={{ fontFamily: 'Playfair Display', fontSize: '3.5rem', fontWeight: 700, lineHeight: 1.15, marginBottom: '24px', textShadow: '0 4px 16px rgba(0,0,0,0.6)', color: '#F59E0B' }}>
+                                <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '3.5rem', fontWeight: 700, lineHeight: 1.15, marginBottom: '24px', textShadow: '0 4px 16px rgba(0,0,0,0.6)', color: '#F59E0B' }}>
                                     Impulsa tu<br />carrera.
                                 </h1>
                                 <p style={{ fontFamily: 'Inter', fontSize: '1.15rem', opacity: 0.95, lineHeight: 1.6, maxWidth: '420px', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>

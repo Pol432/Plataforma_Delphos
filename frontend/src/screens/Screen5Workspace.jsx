@@ -40,7 +40,7 @@ function EmptyWorkspace({ onNavigate }) {
                 <Target size={40} color="var(--primary)" />
             </div>
             <div>
-                <h2 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '2rem', color: 'var(--text-bright)', marginBottom: '12px' }}>
+                <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '2rem', color: 'var(--text-bright)', marginBottom: '12px' }}>
                     Tu Espacio de Trabajo
                 </h2>
                 <p style={{ fontFamily: 'Inter', fontSize: '1.05rem', color: 'var(--text-muted)', lineHeight: 1.6, maxWidth: '400px', margin: '0 auto' }}>
@@ -277,7 +277,7 @@ export default function Screen5Workspace({ onNext, onNavigate, activeMission }) 
                                             </span>
                                         </div>
                                         <h1 style={{
-                                            fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '2.5rem',
+                                            fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '2.5rem',
                                             color: 'var(--text-bright)', marginBottom: '12px', lineHeight: 1.2,
                                         }}>
                                             {currentStep.title}

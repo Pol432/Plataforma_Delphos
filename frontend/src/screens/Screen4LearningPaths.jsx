@@ -1,29 +1,82 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import api from '../services/api'
-import {
-    Flame, Lock, Cloud, Handshake, Palette,
-    ChevronRight, X, Clock, Layers, Building2,
-    Star, Zap, Award, CheckCircle2, ArrowRight,
-    Sparkles, Brain, Filter, Search, Grid, List,
-    Cpu, Briefcase, Pen, Globe, Target, Shuffle,
-    PlayCircle, BookOpen, MonitorPlay, ArrowLeft
-} from 'lucide-react'
+        import {motion, AnimatePresence} from 'framer-motion'
+        import api from '../services/api'
+        import {
+            Flame, Lock, Cloud, Handshake, Palette,
+            ChevronRight, X, Clock, Layers, Building2,
+            Star, Zap, Award, CheckCircle2, ArrowRight,
+            Sparkles, Brain, Filter, Search, Grid, List,
+            Cpu, Briefcase, Pen, Globe, Target, Shuffle,
+            PlayCircle, BookOpen, MonitorPlay, ArrowLeft
+        } from 'lucide-react'
 
-const TABS = ['Rutas Principales', 'Módulos Secundarios', 'Explorar Catálogo']
+        const TABS = ['Rutas Principales', 'Módulos Secundarios', 'Explorar Catálogo']
 
-const ICON_MAP = {
-    'Tecnología': Cpu,
-    'Negocios': Briefcase,
-    'Diseño': Pen,
-    'Marketing': Flame,
-    'Ciberseguridad': Target,
-    'Cloud': Cloud,
+        const ICON_MAP = {
+            'Tecnología': Cpu,
+        'Negocios': Briefcase,
+        'Diseño': Pen,
+        'Marketing': Flame,
+        'Ciberseguridad': Target,
+        'Cloud': Cloud,
 };
 
-const DIFFICULTY_LABELS = { 1: 'Básico', 2: 'Básico', 3: 'Intermedio', 4: 'Avanzado' }
+        const DIFFICULTY_LABELS = {1: 'Básico', 2: 'Básico', 3: 'Intermedio', 4: 'Avanzado' }
 
-function AIBadge({ active }) {
+// El oráculo devuelve `nivel_dificultad` como texto (enum DifficultyLevel del backend);
+// las tarjetas lo consumen como el número que indexa DIFFICULTY_LABELS.
+const DIFFICULTY_BY_LEVEL = {
+    'Beginner': 1,
+    'Lower-Intermediate': 2,
+    'Intermediate': 3,
+    'Upper-Intermediate': 3,
+    'Advanced': 4,
+    'Expert': 4
+}
+
+// Temario de relleno para contenidos que aún no traen módulos propios del backend.
+// Es una factoría porque cada plantilla interpola el título del contenido.
+function buildTemplates(title) {
+    return [
+        [
+            {
+                title: 'Fase 1: Contextualización', duration: '45m', steps: [
+                    { type: 'video', title: 'Introducción a ' + title, desc: `En este video repasaremos los fundamentos y conceptos críticos de ${title}.` },
+                    { type: 'lectura', title: 'Documentación técnica', desc: 'Revisa la documentación adjunta antes de proceder con la configuración.' }
+                ]
+            },
+            {
+                title: 'Fase 2: Ejecución Práctica', duration: '1h 30m', steps: [
+                    { type: 'tarea', title: 'Laboratorio de Entrenamiento', desc: `Inicia la simulación para implementar los requerimientos de ${title} en un entorno controlado.` }
+                ]
+            }
+        ],
+        [
+            {
+                title: 'Módulo A: Análisis del Caso', duration: '30m', steps: [
+                    { type: 'lectura', title: 'Requisitos del cliente', desc: `Briefing detallado del proyecto sobre ${title}.` },
+                    { type: 'video', title: 'Reunión de Kickoff', desc: 'Grabación de la toma de requerimientos iniciales con el stakeholder.' }
+                ]
+            },
+            {
+                title: 'Módulo B: Desarrollo', duration: '2h', steps: [
+                    { type: 'video', title: 'Setup de herramientas', desc: 'Configuración del espacio de trabajo.' },
+                    { type: 'tarea', title: 'Armado de Propuesta', desc: 'Ingresa al workspace para construir la propuesta final.' }
+                ]
+            }
+        ],
+        [
+            {
+                title: 'Etapa Única: Acción Inmediata', duration: '50m', steps: [
+                    { type: 'video', title: 'Brief del módulo', desc: `Video corto explicando tu objetivo en ${title}.` },
+                    { type: 'tarea', title: 'Despliegue de Tarea', desc: 'Accede a la terminal y ejecuta los comandos necesarios para resolver el ticket.' }
+                ]
+            }
+        ]
+    ]
+}
+
+        function AIBadge({active}) {
     return (
         <motion.div
             animate={{ opacity: active ? [0.7, 1, 0.7] : 1 }}
@@ -39,17 +92,17 @@ function AIBadge({ active }) {
                 </motion.div>
             )}
         </motion.div>
-    )
+        )
 }
 
-function CatalogCard({ module, onSelect }) {
+        function CatalogCard({module, onSelect}) {
     const CategoryIcon = module.categoryIcon || BookOpen
-    return (
+        return (
         <motion.div
             whileHover={{ y: -4, boxShadow: '0 12px 24px rgba(0,0,0,0.08)' }}
             onClick={() => onSelect(module)}
             style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-            
+
             <div style={{ height: '140px', background: `${module.color}15`, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                     <module.Icon size={32} color={module.color} strokeWidth={1.5} />
@@ -65,11 +118,11 @@ function CatalogCard({ module, onSelect }) {
                     <span style={{ fontFamily: 'Inter', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-bright)' }}>{module.category || 'General'}</span>
                 </div>
             </div>
-            
+
             <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <h3 style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-bright)', lineHeight: 1.3 }}>{module.title}</h3>
                 <p style={{ fontFamily: 'Inter', fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.5, flex: 1 }}>{module.subtitle}</p>
-                
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
                     <span style={{ fontFamily: 'Inter', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>{DIFFICULTY_LABELS[module.difficulty]}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -79,125 +132,156 @@ function CatalogCard({ module, onSelect }) {
                 </div>
             </div>
         </motion.div>
-    )
+        )
 }
 
-function SectionTitle({ icon: Icon, label, color }) {
+        function SectionTitle({icon: Icon, label, color }) {
     return (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <Icon size={18} color={color} />
             <span style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1rem', color: 'var(--text-bright)' }}>{label}</span>
         </div>
-    )
+        )
 }
 
-export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
+        export default function Screen4LearningPaths({onStartModule, onNavigate}) {
     const [activeTab, setActiveTab] = useState(0)
-    const [centerCard, setCenterCard] = useState(0)
-    const [selectedModule, setSelectedModule] = useState(null)
-    const [catFilter, setCatFilter] = useState('Todos')
-    const [search, setSearch] = useState('')
-    const [aiActive, setAiActive] = useState(false)
-    const [activeCourse, setActiveCourse] = useState(null)
-    const [currentStep, setCurrentStep] = useState({ modIndex: 0, stepIndex: 0 })
-    const [dbModules, setDbModules] = useState([])
-    const [loading, setLoading] = useState(true)
+        const [centerCard, setCenterCard] = useState(0)
+        const [selectedModule, setSelectedModule] = useState(null)
+        const [catFilter, setCatFilter] = useState('Todos')
+        const [search, setSearch] = useState('')
+        const [aiActive, setAiActive] = useState(false)
+        const [activeCourse, setActiveCourse] = useState(null)
+        const [currentStep, setCurrentStep] = useState({modIndex: 0, stepIndex: 0 })
+        const [dbModules, setDbModules] = useState([])
+        const [aiPaths, setAiPaths] = useState([])
+        const [aiRecs, setAiRecs] = useState([])
+        const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         const fetchModules = async () => {
             try {
                 const response = await api.get('/api/v1/simulaciones')
                 const formatted = response.data.map((m, index) => {
-                    let themeColor = 'var(--primary)';
-                    if (m.color === '#00E5FF') themeColor = 'var(--accent)';
-                    if (m.color === '#FF4500') themeColor = 'var(--primary)';
+            let themeColor = 'var(--primary)';
+        if (m.color === '#00E5FF') themeColor = 'var(--accent)';
+        if (m.color === '#FF4500') themeColor = 'var(--primary)';
 
-                    const TEMPLATES = [
-                        [
-                            {
-                                title: 'Fase 1: Contextualización', duration: '45m', steps: [
-                                    { type: 'video', title: 'Introducción a ' + m.title, desc: `En este video repasaremos los fundamentos y conceptos críticos de ${m.title}.` },
-                                    { type: 'lectura', title: 'Documentación técnica', desc: 'Revisa la documentación adjunta antes de proceder con la configuración.' }
-                                ]
-                            },
-                            {
-                                title: 'Fase 2: Ejecución Práctica', duration: '1h 30m', steps: [
-                                    { type: 'tarea', title: 'Laboratorio de Entrenamiento', desc: `Inicia la simulación para implementar los requerimientos de ${m.title} en un entorno controlado.` }
-                                ]
-                            }
-                        ],
-                        [
-                            {
-                                title: 'Módulo A: Análisis del Caso', duration: '30m', steps: [
-                                    { type: 'lectura', title: 'Requisitos del cliente', desc: `Briefing detallado del proyecto sobre ${m.title}.` },
-                                    { type: 'video', title: 'Reunión de Kickoff', desc: 'Grabación de la toma de requerimientos iniciales con el stakeholder.' }
-                                ]
-                            },
-                            {
-                                title: 'Módulo B: Desarrollo', duration: '2h', steps: [
-                                    { type: 'video', title: 'Setup de herramientas', desc: 'Configuración del espacio de trabajo.' },
-                                    { type: 'tarea', title: 'Armado de Propuesta', desc: 'Ingresa al workspace para construir la propuesta final.' }
-                                ]
-                            }
-                        ],
-                        [
-                            {
-                                title: 'Etapa Única: Acción Inmediata', duration: '50m', steps: [
-                                    { type: 'video', title: 'Brief del módulo', desc: `Video corto explicando tu objetivo en ${m.title}.` },
-                                    { type: 'tarea', title: 'Despliegue de Tarea', desc: 'Accede a la terminal y ejecuta los comandos necesarios para resolver el ticket.' }
-                                ]
-                            }
-                        ]
-                    ];
-                    const assignedModules = TEMPLATES[index % 3];
-                    return {
-                        ...m,
-                        color: themeColor,
-                        Icon: ICON_MAP[m.category] || BookOpen,
-                        categoryIcon: ICON_MAP[m.category] || BookOpen,
-                        unlocked: true,
-                        requiredLevel: 1,
-                        modules: m.modules?.length ? m.modules : assignedModules,
-                        skills: m.skills?.length ? m.skills : ['Habilidad Analítica', 'Resolución'],
-                        badge: m.badge || 'Certificado de Finalización'
+        const assignedModules = buildTemplates(m.title)[index % 3];
+        return {
+            ...m,
+            color: themeColor,
+        Icon: ICON_MAP[m.category] || BookOpen,
+        categoryIcon: ICON_MAP[m.category] || BookOpen,
+        unlocked: true,
+        requiredLevel: 1,
+        modules: m.modules?.length ? m.modules : assignedModules,
+        skills: m.skills?.length ? m.skills : ['Habilidad Analítica', 'Resolución'],
+        badge: m.badge || 'Certificado de Finalización'
                     }
                 })
-                setDbModules(formatted)
+        setDbModules(formatted)
+
+        // Load AI Data
+        const savedPaths = localStorage.getItem('oracleLearningPaths')
+        const savedRecs = localStorage.getItem('oracleRecommendations')
+
+        if (savedPaths) {
+            const parsedPaths = JSON.parse(savedPaths)
+            setAiPaths(parsedPaths.map((p, i) => ({
+                id: `ai-path-${i}`,
+                title: p.name || p.title || 'Ruta Generada',
+                subtitle: p.category || 'Recomendación de IA',
+                category: p.category || 'General',
+                color: 'var(--primary)',
+                Icon: Sparkles,
+                categoryIcon: Brain,
+                unlocked: true,
+                difficulty: p.difficulty_level ? 3 : 2,
+                estimatedTime: p.duration_hours ? `${p.duration_hours}h` : '4h',
+                modules: p.steps ? p.steps.map(s => ({
+                    title: s.step_title || s.title,
+                    duration: '1h',
+                    steps: [
+                        {type: 'video', title: 'Intro: ' + (s.step_title || s.title), desc: s.focus || '' },
+                        {type: 'tarea', title: 'Práctica', desc: 'Aplica lo aprendido' }
+                    ]
+                })) : [
+                    {
+                        title: 'Fase 1: Contextualización', duration: '45m', steps: [
+                            {type: 'video', title: 'Introducción', desc: 'Revisión de fundamentos.' },
+                            {type: 'lectura', title: 'Documentación', desc: 'Revisa la documentación técnica.' }
+                        ]
+                    }
+                ],
+                skills: p.matched_skills && p.matched_skills.length > 0 ? p.matched_skills : ['IA Recomendada', p.name || 'Ruta'],
+                description: p.description || `Ruta enfocada en ${p.category || 'aprendizaje'}`
+            })))
+        }
+
+        if (savedRecs) {
+            const parsedRecs = JSON.parse(savedRecs)
+            setAiRecs(parsedRecs.map((r, i) => ({
+                id: `ai-rec-${i}`,
+                title: r.title,
+                // El backend (RecommendationItem) no expone un campo de motivo:
+                // los únicos descriptores disponibles son la carrera y la categoría.
+                subtitle: r.base_career || r.categoria || 'Recomendación de IA',
+                category: r.categoria,
+                color: 'var(--accent)',
+                Icon: Target,
+                categoryIcon: Target,
+                unlocked: true,
+                difficulty: DIFFICULTY_BY_LEVEL[r.nivel_dificultad] || 2,
+                estimatedTime: r.duracion_horas ? `${r.duracion_horas}h` : '2h',
+                modules: buildTemplates(r.title)[0],
+                skills: r.matched_skills?.length ? r.matched_skills : ['Recomendado', r.categoria],
+                description: `Simulación recomendada para tu perfil en ${r.categoria || 'tu área'}.`
+            })))
+                }
+
             } catch (err) {
-                console.error("Error cargando módulos:", err)
-            } finally {
-                setLoading(false)
-            }
+            console.error("Error cargando módulos:", err)
+        } finally {
+            setLoading(false)
+        }
         }
         fetchModules()
     }, [])
 
     const handleCardClick = (module, idx) => {
-        setCenterCard(idx)
+            setCenterCard(idx)
         if (module.unlocked) setSelectedModule(module)
     }
 
     const handleCatalogInteract = () => {
-        setAiActive(true)
+            setAiActive(true)
         setTimeout(() => setAiActive(false), 3000)
     }
 
     const handleStartCourse = (module) => {
-        setActiveCourse(module)
-        setCurrentStep({ modIndex: 0, stepIndex: 0 })
+            setActiveCourse(module)
+        setCurrentStep({modIndex: 0, stepIndex: 0 })
         setSelectedModule(null)
     }
 
-    const catalogModules = dbModules.filter(m => {
+        let displayedModules = dbModules;
+    if (activeTab === 0 && aiPaths.length > 0) {
+            displayedModules = aiPaths;
+    } else if (activeTab === 1 && aiRecs.length > 0) {
+            displayedModules = aiRecs;
+    }
+
+    const catalogModules = displayedModules.filter(m => {
         const matchCat = catFilter === 'Todos' || m.category === catFilter
-        const matchSearch = !search || m.title.toLowerCase().includes(search.toLowerCase()) || m.subtitle.toLowerCase().includes(search.toLowerCase())
+        const matchSearch = !search || m.title.toLowerCase().includes(search.toLowerCase()) || m.subtitle?.toLowerCase().includes(search.toLowerCase())
         return matchCat && matchSearch
     })
 
-    return (
+        return (
         <div style={{ minHeight: '100vh', background: '#f8f9fa', padding: '48px 48px 120px 48px', position: 'relative' }}>
             <div style={{ marginBottom: '40px' }}>
-                <h1 style={{ fontSize: '2.5rem', fontFamily: 'Playfair Display', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '12px' }}>Catálogo de Aprendizaje</h1>
+                <h1 style={{ fontSize: '2.5rem', fontFamily: 'Outfit, sans-serif', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '12px' }}>Catálogo de Aprendizaje</h1>
                 <p style={{ fontFamily: 'Inter', fontSize: '1.1rem', color: 'var(--text-muted)' }}>Explora nuestras rutas formativas y comienza a desarrollar habilidades clave.</p>
             </div>
 
@@ -216,8 +300,8 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
                         <div style={{ display: 'flex', gap: '32px', padding: '20px 0', overflowX: 'auto', paddingBottom: '40px' }}>
                             {loading ? (
                                 <p style={{ color: 'var(--text-muted)', fontFamily: 'Inter', fontSize: '1.1rem' }}>Cargando rutas de aprendizaje...</p>
-                            ) : dbModules.length > 0 ? (
-                                dbModules.slice(0, 3).map((module, idx) => {
+                            ) : displayedModules.length > 0 ? (
+                                displayedModules.slice(0, 3).map((module, idx) => {
                                     const isCenter = idx === centerCard
                                     return (
                                         <motion.div key={module.id || idx} onClick={() => handleCardClick(module, idx)}
@@ -274,7 +358,7 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
                         <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 101, pointerEvents: 'none' }}>
                             <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
                                 style={{ width: '100%', maxWidth: '800px', maxHeight: '90vh', background: '#fff', borderRadius: '12px', display: 'flex', flexDirection: 'column', overflow: 'hidden', pointerEvents: 'all', boxShadow: '0 24px 48px rgba(0,0,0,0.15)' }}>
-                                
+
                                 {/* Modal Header */}
                                 <div style={{ padding: '32px 40px', background: '#fff', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <div style={{ display: 'flex', gap: '24px' }}>
@@ -283,7 +367,7 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
                                         </div>
                                         <div>
                                             <span style={{ fontFamily: 'Inter', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>{selectedModule.category?.toUpperCase() || 'GENERAL'}</span>
-                                            <h2 style={{ fontFamily: 'Playfair Display', fontSize: '2rem', fontWeight: 700, color: 'var(--text-bright)', lineHeight: 1.2, marginBottom: '12px' }}>{selectedModule.title}</h2>
+                                            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2rem', fontWeight: 700, color: 'var(--text-bright)', lineHeight: 1.2, marginBottom: '12px' }}>{selectedModule.title}</h2>
                                             <p style={{ fontFamily: 'Inter', fontSize: '1rem', color: 'var(--text-muted)' }}>{selectedModule.subtitle}</p>
                                         </div>
                                     </div>
@@ -291,14 +375,14 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
                                         <X size={24} />
                                     </button>
                                 </div>
-                                
+
                                 {/* Modal Body */}
                                 <div style={{ overflowY: 'auto', flex: 1, padding: '40px' }}>
                                     <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '48px' }}>
                                         <div>
                                             <SectionTitle icon={BookOpen} label="Acerca de este curso" color="var(--primary)" />
                                             <p style={{ fontFamily: 'Inter', fontSize: '1rem', color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: '32px' }}>{selectedModule.description}</p>
-                                            
+
                                             <SectionTitle icon={Star} label="Lo que aprenderás" color="var(--primary)" />
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                                                 {selectedModule.skills.map(s => (
@@ -306,7 +390,7 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
                                                 ))}
                                             </div>
                                         </div>
-                                        
+
                                         <div>
                                             <SectionTitle icon={Layers} label="Temario del curso" color="var(--primary)" />
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -328,7 +412,7 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 {/* Modal Footer */}
                                 <div style={{ padding: '24px 40px', background: '#f8f9fa', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
                                     <motion.button style={{ padding: '16px 32px', borderRadius: '4px', background: 'var(--primary)', color: '#fff', border: 'none', fontFamily: 'Inter', fontWeight: 700, fontSize: '1rem', cursor: 'pointer', transition: 'background 0.2s' }}
@@ -347,7 +431,7 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
                 {activeCourse && (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
                         style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 200, display: 'flex', flexDirection: 'column' }}>
-                        
+
                         {/* Player Header */}
                         <div style={{ height: '72px', borderBottom: '1px solid var(--border)', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
@@ -411,7 +495,7 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
                                     );
                                 })()}
                             </div>
-                            
+
                             {/* Course Sidebar */}
                             <div style={{ width: '400px', background: '#fff', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
                                 <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)' }}>
@@ -446,5 +530,6 @@ export default function Screen4LearningPaths({ onStartModule, onNavigate }) {
                 )}
             </AnimatePresence>
         </div>
-    )
+        )
 }
+

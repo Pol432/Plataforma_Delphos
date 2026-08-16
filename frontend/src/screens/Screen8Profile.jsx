@@ -62,7 +62,7 @@ export default function Screen8Profile({ onNavigate, onLogout }) {
     const STATS = [
         { label: 'Horas Invertidas', value: String(progressStats.totalHours), Icon: Clock },
         { label: 'Módulos Completados', value: String(progressStats.completed), Icon: BookOpen },
-        { label: 'Nivel Profesional', value: user?.level_current || '1', Icon: Trophy },
+        { label: 'Nivel Profesional', value: String(user?.level_current ?? 1), Icon: Trophy },
     ]
 
     return (
@@ -75,7 +75,7 @@ export default function Screen8Profile({ onNavigate, onLogout }) {
                         <User2 size={64} color="var(--text-muted)" strokeWidth={1} />
                     </div>
                     <div>
-                        <h1 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '2.5rem', color: 'var(--text-bright)', marginBottom: '8px' }}>
+                        <h1 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '2.5rem', color: 'var(--text-bright)', marginBottom: '8px' }}>
                             {user?.username || 'Estudiante'}
                         </h1>
                         <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
@@ -92,7 +92,7 @@ export default function Screen8Profile({ onNavigate, onLogout }) {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '16px' }}>
                     <div style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '8px', padding: '16px 32px', textAlign: 'center' }}>
                         <p style={{ fontFamily: 'Inter', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '4px', fontWeight: 600 }}>Rendimiento Global</p>
-                        <p style={{ fontFamily: 'Inter', fontWeight: 800, fontSize: '2rem', color: 'var(--text-bright)', lineHeight: 1 }}>{user?.xp_total || 0}</p>
+                        <p style={{ fontFamily: 'Inter', fontWeight: 800, fontSize: '2rem', color: 'var(--text-bright)', lineHeight: 1 }}>{user?.xp_total ?? 0}</p>
                     </div>
                     <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', fontSize: '0.95rem', color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'Inter', fontWeight: 500, padding: '8px 16px', borderRadius: '4px', transition: 'background 0.2s' }}
                         onMouseOver={e => e.currentTarget.style.background = '#f0f2f5'}
@@ -124,7 +124,7 @@ export default function Screen8Profile({ onNavigate, onLogout }) {
 
                     {/* Competencies Grid */}
                     <div style={{ marginBottom: '48px' }}>
-                        <h2 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '24px' }}>
+                        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '24px' }}>
                             Desarrollo de Competencias
                         </h2>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>

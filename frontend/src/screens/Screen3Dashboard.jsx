@@ -116,6 +116,7 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
         level_current: 0,
         streak_days: 0
     });
+    const [recommendations, setRecommendations] = useState([]);
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -127,6 +128,15 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
             }
         };
         fetchUserData();
+
+        try {
+            const savedRecs = localStorage.getItem('oracleRecommendations');
+            if (savedRecs) {
+                setRecommendations(JSON.parse(savedRecs));
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }, []);
 
     return (
@@ -175,7 +185,7 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
             }}>
 
                 <div style={{ marginBottom: '40px' }}>
-                    <h2 style={{ fontSize: '2.5rem', fontFamily: 'Playfair Display', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '8px' }}>Mi Aprendizaje</h2>
+                    <h2 style={{ fontSize: '2.5rem', fontFamily: 'Outfit, sans-serif', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '8px' }}>Mi Aprendizaje</h2>
                     <p style={{ fontFamily: 'Inter', fontSize: '1rem', color: 'var(--text-muted)' }}>Continúa donde lo dejaste y alcanza tus metas profesionales.</p>
                 </div>
 
@@ -191,7 +201,7 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
                     {activeModule ? (
                         <motion.div key="active" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
                             
-                            <h3 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '24px' }}>
+                            <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '24px' }}>
                                 Curso Actual
                             </h3>
                             
@@ -227,7 +237,7 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
                                 <BookOpen size={40} color="var(--text-muted)" strokeWidth={1.5} />
                             </div>
                             <div style={{ textAlign: 'center' }}>
-                                <h3 style={{ fontFamily: 'Playfair Display', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '12px' }}>Ningún curso en progreso</h3>
+                                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.8rem', color: 'var(--text-bright)', marginBottom: '12px' }}>Ningún curso en progreso</h3>
                                 <p style={{ fontSize: '1rem', color: 'var(--text-muted)', fontFamily: 'Inter', maxWidth: '400px', lineHeight: '1.6' }}>Explora nuestro catálogo para encontrar la ruta de aprendizaje que mejor se adapte a tus metas.</p>
                             </div>
                             <button style={{ marginTop: '24px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '4px', padding: '14px 28px', fontFamily: 'Inter', fontWeight: 600, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.2s' }}
@@ -245,7 +255,7 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
             {/* ── RIGHT SIDEBAR */}
             <aside style={{ width: '320px', flexShrink: 0, background: '#fff', padding: '40px 24px', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '24px', overflowY: 'auto' }}>
                 <div>
-                    <h3 style={{ fontSize: '1.1rem', fontFamily: 'Inter', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '24px' }}>{activeModule ? 'Próximas Clases' : 'Tareas Sugeridas'}</h3>
+                    <h3 style={{ fontSize: '1.1rem', fontFamily: 'Inter', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '24px' }}>{activeModule ? 'Próximas Clases' : 'Simulaciones Recomendadas'}</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {activeModule ? (
                             activeModule.modules.slice(1, 4).map((mod, i) => (
@@ -258,20 +268,37 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
                                 </div>
                             ))
                         ) : (
-                            EMPTY_STARTERS.map((m, i) => (
-                                <div key={i} onClick={() => onNavigate(4)}
-                                    style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
-                                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `${m.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <m.Icon size={18} color={m.color} />
+                            recommendations.length > 0 ? (
+                                recommendations.slice(0, 3).map((rec, i) => (
+                                    <div key={i} onClick={() => onNavigate(4)}
+                                        style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+                                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `rgba(59,130,246,0.1)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <Zap size={18} color="var(--primary)" />
+                                            </div>
+                                            <span style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-bright)' }}>{rec.title}</span>
                                         </div>
-                                        <span style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-bright)' }}>{m.label}</span>
+                                        <div style={{ display: 'inline-block', background: '#f0f2f5', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: '4px', fontSize: '0.75rem', fontFamily: 'Inter', fontWeight: 600 }}>
+                                            {rec.categoria}
+                                        </div>
                                     </div>
-                                    <div style={{ display: 'inline-block', background: '#f0f2f5', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: '4px', fontSize: '0.75rem', fontFamily: 'Inter', fontWeight: 600 }}>
-                                        {m.reward}
+                                ))
+                            ) : (
+                                EMPTY_STARTERS.map((m, i) => (
+                                    <div key={i} onClick={() => onNavigate(4)}
+                                        style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+                                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `${m.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <m.Icon size={18} color={m.color} />
+                                            </div>
+                                            <span style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-bright)' }}>{m.label}</span>
+                                        </div>
+                                        <div style={{ display: 'inline-block', background: '#f0f2f5', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: '4px', fontSize: '0.75rem', fontFamily: 'Inter', fontWeight: 600 }}>
+                                            Completar
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                ))
+                            )
                         )}
                     </div>
                 </div>
