@@ -62,7 +62,7 @@ export default function Screen8Profile({ onNavigate, onLogout }) {
     const STATS = [
         { label: 'Horas Invertidas', value: String(progressStats.totalHours), Icon: Clock },
         { label: 'Módulos Completados', value: String(progressStats.completed), Icon: BookOpen },
-        { label: 'Nivel Profesional', value: user?.level_current || '1', Icon: Trophy },
+        { label: 'Ruta Sugerida', value: 'Backend', Icon: Trophy },
     ]
 
     return (
@@ -91,8 +91,8 @@ export default function Screen8Profile({ onNavigate, onLogout }) {
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '16px' }}>
                     <div style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '8px', padding: '16px 32px', textAlign: 'center' }}>
-                        <p style={{ fontFamily: 'Inter', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '4px', fontWeight: 600 }}>Rendimiento Global</p>
-                        <p style={{ fontFamily: 'Inter', fontWeight: 800, fontSize: '2rem', color: 'var(--text-bright)', lineHeight: 1 }}>{user?.xp_total || 0}</p>
+                        <p style={{ fontFamily: 'Inter', fontSize: '0.85rem', color: 'var(--primary)', marginBottom: '4px', fontWeight: 600 }}>Tasa de Éxito</p>
+                        <p style={{ fontFamily: 'Inter', fontWeight: 800, fontSize: '2rem', color: 'var(--text-bright)', lineHeight: 1 }}>98%</p>
                     </div>
                     <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', fontSize: '0.95rem', color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'Inter', fontWeight: 500, padding: '8px 16px', borderRadius: '4px', transition: 'background 0.2s' }}
                         onMouseOver={e => e.currentTarget.style.background = '#f0f2f5'}

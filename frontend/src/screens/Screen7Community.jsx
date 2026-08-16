@@ -55,7 +55,7 @@ export default function Screen7Community({ onNavigate }) {
             try {
                 // 1. Cargar Ranking (Usuarios de la DB)
                 const resUsers = await api.get('/api/v1/users');
-                const sorted = resUsers.data.sort((a, b) => b.xp_total - a.xp_total);
+                const sorted = resUsers.data.slice(0, 10); // Placeholder sorting
                 setLeaderboard(sorted);
 
                 // 2. Cargar Servidores (Categorías de la DB)
@@ -251,7 +251,7 @@ export default function Screen7Community({ onNavigate }) {
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <p style={{ fontFamily: 'Inter', fontSize: '0.95rem', color: 'var(--text-bright)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}>{user.username}</p>
-                                <p style={{ fontFamily: 'Inter', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 500 }}>{user.xp_total} Puntos</p>
+                                <p style={{ fontFamily: 'Inter', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 500 }}>{user.simulations_completed || 0} Simulaciones Completadas</p>
                             </div>
                         </div>
                     )) : <p style={{ fontFamily: 'Inter', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Cargando ranking...</p>}

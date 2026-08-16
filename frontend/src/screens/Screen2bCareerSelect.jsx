@@ -131,27 +131,42 @@ export default function Screen2bCareerSelect({ oracleAnswers = [], onConfirm, on
         return next
     })
 
-    // B-04: Guardar carreras en localStorage y enviar al backend
     const handleConfirm = async () => {
         if (selected.size === 0) return
         setSaving(true)
         const careerIds = selectedList.map(c => c.id)
         const careerLabels = selectedList.map(c => c.label)
 
-        // Guardar localmente siempre
         localStorage.setItem('userCareers', JSON.stringify(careerIds))
         localStorage.setItem('userCareerLabels', JSON.stringify(careerLabels))
 
         try {
-            // Intentar persistir en el backend
             await api.patch('/api/v1/users/me', { careers: careerIds })
         } catch (err) {
-            // No bloquear el flujo si falla (campo puede no existir aún en el schema)
-            console.warn('No se pudo guardar carreras en backend:', err?.response?.status)
-        } finally {
-            setSaving(false)
-            onConfirm(selectedList)
+            console.warn("Could not patch users/me with careers (schema might not support it yet).")
         }
+
+        try {
+            const payload = {
+                skills: careerLabels,
+                education_level: "Bachelor's",
+                field_of_study: careerLabels[0] || "General",
+                analytical_score: 50,
+                creative_score: 50,
+                social_score: 50,
+                linguistic_score: 50,
+                hands_on_score: 50,
+                top_n: 5
+            }
+            const res = await api.post('/api/v1/oracle/full_profile', payload)
+            localStorage.setItem('oracleRecommendations', JSON.stringify(res.data.recommendations || []))
+            localStorage.setItem('oracleLearningPaths', JSON.stringify(res.data.learning_paths || []))
+        } catch (err) {
+            console.error("Error from oracle engine:", err)
+        }
+
+        setSaving(false)
+        onConfirm(careerIds)
     }
 
     const visible = useMemo(() => ranked.filter(c => {

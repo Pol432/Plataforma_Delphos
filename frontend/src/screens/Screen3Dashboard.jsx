@@ -116,6 +116,7 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
         level_current: 0,
         streak_days: 0
     });
+    const [recommendations, setRecommendations] = useState([]);
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -127,6 +128,15 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
             }
         };
         fetchUserData();
+
+        try {
+            const savedRecs = localStorage.getItem('oracleRecommendations');
+            if (savedRecs) {
+                setRecommendations(JSON.parse(savedRecs));
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }, []);
 
     return (
@@ -148,11 +158,8 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
 
                 <div style={{ width: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'Inter' }}>Progreso del curso</span>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 700, fontFamily: 'Inter' }}>{userData.xp_total % 100}%</span>
-                    </div>
-                    <div style={{ background: '#f0f2f5', borderRadius: '4px', overflow: 'hidden', height: '8px', width: '100%' }}>
-                        <div style={{ width: `${Math.min((userData.xp_total % 100), 100)}%`, height: '100%', background: 'var(--primary)', borderRadius: '4px', transition: 'width 0.5s ease' }} />
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'Inter' }}>Horas de Práctica</span>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 700, fontFamily: 'Inter' }}>12h</span>
                     </div>
                 </div>
 
@@ -162,8 +169,8 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
                             <Activity size={20} color="#10B981" />
                         </div>
                         <div>
-                            <p style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1rem', color: 'var(--text-bright)', marginBottom: '2px' }}>{userData.streak_days} Días</p>
-                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>Racha de estudio</p>
+                            <p style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1rem', color: 'var(--text-bright)', marginBottom: '2px' }}>3 Módulos</p>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>Completados</p>
                         </div>
                     </div>
                 </div>
@@ -181,9 +188,9 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
 
                 {activeModule && (
                     <div style={{ display: 'flex', gap: '24px', marginBottom: '48px' }}>
-                        <StatCard value={userData.xp_total} label="Puntos de Avance" color="var(--primary)" Icon={Zap} delay={0} />
+                        <StatCard value={"3"} label="Simulaciones" color="var(--primary)" Icon={Zap} delay={0} />
                         <StatCard value={activeModule.modules.length} label="Módulos Totales" color="var(--accent)" Icon={BookOpen} delay={0.1} />
-                        <StatCard value={userData.streak_days} label="Días seguidos" color="#10B981" Icon={Activity} delay={0.2} />
+                        <StatCard value={"12h"} label="Práctica" color="#10B981" Icon={Clock} delay={0.2} />
                     </div>
                 )}
 
@@ -245,7 +252,7 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
             {/* ── RIGHT SIDEBAR */}
             <aside style={{ width: '320px', flexShrink: 0, background: '#fff', padding: '40px 24px', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '24px', overflowY: 'auto' }}>
                 <div>
-                    <h3 style={{ fontSize: '1.1rem', fontFamily: 'Inter', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '24px' }}>{activeModule ? 'Próximas Clases' : 'Tareas Sugeridas'}</h3>
+                    <h3 style={{ fontSize: '1.1rem', fontFamily: 'Inter', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '24px' }}>{activeModule ? 'Próximas Clases' : 'Simulaciones Recomendadas'}</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {activeModule ? (
                             activeModule.modules.slice(1, 4).map((mod, i) => (
@@ -258,20 +265,37 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
                                 </div>
                             ))
                         ) : (
-                            EMPTY_STARTERS.map((m, i) => (
-                                <div key={i} onClick={() => onNavigate(4)}
-                                    style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
-                                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `${m.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <m.Icon size={18} color={m.color} />
+                            recommendations.length > 0 ? (
+                                recommendations.slice(0, 3).map((rec, i) => (
+                                    <div key={i} onClick={() => onNavigate(4)}
+                                        style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+                                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `rgba(59,130,246,0.1)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <Zap size={18} color="var(--primary)" />
+                                            </div>
+                                            <span style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-bright)' }}>{rec.title}</span>
                                         </div>
-                                        <span style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-bright)' }}>{m.label}</span>
+                                        <div style={{ display: 'inline-block', background: '#f0f2f5', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: '4px', fontSize: '0.75rem', fontFamily: 'Inter', fontWeight: 600 }}>
+                                            {rec.categoria}
+                                        </div>
                                     </div>
-                                    <div style={{ display: 'inline-block', background: '#f0f2f5', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: '4px', fontSize: '0.75rem', fontFamily: 'Inter', fontWeight: 600 }}>
-                                        {m.reward}
+                                ))
+                            ) : (
+                                EMPTY_STARTERS.map((m, i) => (
+                                    <div key={i} onClick={() => onNavigate(4)}
+                                        style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+                                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `${m.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <m.Icon size={18} color={m.color} />
+                                            </div>
+                                            <span style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-bright)' }}>{m.label}</span>
+                                        </div>
+                                        <div style={{ display: 'inline-block', background: '#f0f2f5', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: '4px', fontSize: '0.75rem', fontFamily: 'Inter', fontWeight: 600 }}>
+                                            Completar
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                ))
+                            )
                         )}
                     </div>
                 </div>
