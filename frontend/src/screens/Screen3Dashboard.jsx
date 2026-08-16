@@ -158,8 +158,11 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
 
                 <div style={{ width: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'Inter' }}>Horas de Práctica</span>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 700, fontFamily: 'Inter' }}>12h</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'Inter' }}>Progreso del curso</span>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 700, fontFamily: 'Inter' }}>{userData.xp_total % 100}%</span>
+                    </div>
+                    <div style={{ background: '#f0f2f5', borderRadius: '4px', overflow: 'hidden', height: '8px', width: '100%' }}>
+                        <div style={{ width: `${Math.min((userData.xp_total % 100), 100)}%`, height: '100%', background: 'var(--primary)', borderRadius: '4px', transition: 'width 0.5s ease' }} />
                     </div>
                 </div>
 
@@ -169,8 +172,8 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
                             <Activity size={20} color="#10B981" />
                         </div>
                         <div>
-                            <p style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1rem', color: 'var(--text-bright)', marginBottom: '2px' }}>3 Módulos</p>
-                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>Completados</p>
+                            <p style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1rem', color: 'var(--text-bright)', marginBottom: '2px' }}>{userData.streak_days} Días</p>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>Racha de estudio</p>
                         </div>
                     </div>
                 </div>
@@ -188,9 +191,9 @@ export default function Screen3Dashboard({ onNavigate, activeModule }) {
 
                 {activeModule && (
                     <div style={{ display: 'flex', gap: '24px', marginBottom: '48px' }}>
-                        <StatCard value={"3"} label="Simulaciones" color="var(--primary)" Icon={Zap} delay={0} />
+                        <StatCard value={userData.xp_total} label="Puntos de Avance" color="var(--primary)" Icon={Zap} delay={0} />
                         <StatCard value={activeModule.modules.length} label="Módulos Totales" color="var(--accent)" Icon={BookOpen} delay={0.1} />
-                        <StatCard value={"12h"} label="Práctica" color="#10B981" Icon={Clock} delay={0.2} />
+                        <StatCard value={userData.streak_days} label="Días seguidos" color="#10B981" Icon={Activity} delay={0.2} />
                     </div>
                 )}
 

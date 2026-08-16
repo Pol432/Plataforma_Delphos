@@ -23,6 +23,59 @@ import { useState, useEffect } from 'react'
 
         const DIFFICULTY_LABELS = {1: 'Básico', 2: 'Básico', 3: 'Intermedio', 4: 'Avanzado' }
 
+// El oráculo devuelve `nivel_dificultad` como texto (enum DifficultyLevel del backend);
+// las tarjetas lo consumen como el número que indexa DIFFICULTY_LABELS.
+const DIFFICULTY_BY_LEVEL = {
+    'Beginner': 1,
+    'Lower-Intermediate': 2,
+    'Intermediate': 3,
+    'Upper-Intermediate': 3,
+    'Advanced': 4,
+    'Expert': 4
+}
+
+// Temario de relleno para contenidos que aún no traen módulos propios del backend.
+// Es una factoría porque cada plantilla interpola el título del contenido.
+function buildTemplates(title) {
+    return [
+        [
+            {
+                title: 'Fase 1: Contextualización', duration: '45m', steps: [
+                    { type: 'video', title: 'Introducción a ' + title, desc: `En este video repasaremos los fundamentos y conceptos críticos de ${title}.` },
+                    { type: 'lectura', title: 'Documentación técnica', desc: 'Revisa la documentación adjunta antes de proceder con la configuración.' }
+                ]
+            },
+            {
+                title: 'Fase 2: Ejecución Práctica', duration: '1h 30m', steps: [
+                    { type: 'tarea', title: 'Laboratorio de Entrenamiento', desc: `Inicia la simulación para implementar los requerimientos de ${title} en un entorno controlado.` }
+                ]
+            }
+        ],
+        [
+            {
+                title: 'Módulo A: Análisis del Caso', duration: '30m', steps: [
+                    { type: 'lectura', title: 'Requisitos del cliente', desc: `Briefing detallado del proyecto sobre ${title}.` },
+                    { type: 'video', title: 'Reunión de Kickoff', desc: 'Grabación de la toma de requerimientos iniciales con el stakeholder.' }
+                ]
+            },
+            {
+                title: 'Módulo B: Desarrollo', duration: '2h', steps: [
+                    { type: 'video', title: 'Setup de herramientas', desc: 'Configuración del espacio de trabajo.' },
+                    { type: 'tarea', title: 'Armado de Propuesta', desc: 'Ingresa al workspace para construir la propuesta final.' }
+                ]
+            }
+        ],
+        [
+            {
+                title: 'Etapa Única: Acción Inmediata', duration: '50m', steps: [
+                    { type: 'video', title: 'Brief del módulo', desc: `Video corto explicando tu objetivo en ${title}.` },
+                    { type: 'tarea', title: 'Despliegue de Tarea', desc: 'Accede a la terminal y ejecuta los comandos necesarios para resolver el ticket.' }
+                ]
+            }
+        ]
+    ]
+}
+
         function AIBadge({active}) {
     return (
         <motion.div
@@ -114,44 +167,7 @@ import { useState, useEffect } from 'react'
         if (m.color === '#00E5FF') themeColor = 'var(--accent)';
         if (m.color === '#FF4500') themeColor = 'var(--primary)';
 
-        const TEMPLATES = [
-        [
-        {
-            title: 'Fase 1: Contextualización', duration: '45m', steps: [
-        {type: 'video', title: 'Introducción a ' + m.title, desc: `En este video repasaremos los fundamentos y conceptos críticos de ${m.title}.` },
-        {type: 'lectura', title: 'Documentación técnica', desc: 'Revisa la documentación adjunta antes de proceder con la configuración.' }
-        ]
-                            },
-        {
-            title: 'Fase 2: Ejecución Práctica', duration: '1h 30m', steps: [
-        {type: 'tarea', title: 'Laboratorio de Entrenamiento', desc: `Inicia la simulación para implementar los requerimientos de ${m.title} en un entorno controlado.` }
-        ]
-                            }
-        ],
-        [
-        {
-            title: 'Módulo A: Análisis del Caso', duration: '30m', steps: [
-        {type: 'lectura', title: 'Requisitos del cliente', desc: `Briefing detallado del proyecto sobre ${m.title}.` },
-        {type: 'video', title: 'Reunión de Kickoff', desc: 'Grabación de la toma de requerimientos iniciales con el stakeholder.' }
-        ]
-                            },
-        {
-            title: 'Módulo B: Desarrollo', duration: '2h', steps: [
-        {type: 'video', title: 'Setup de herramientas', desc: 'Configuración del espacio de trabajo.' },
-        {type: 'tarea', title: 'Armado de Propuesta', desc: 'Ingresa al workspace para construir la propuesta final.' }
-        ]
-                            }
-        ],
-        [
-        {
-            title: 'Etapa Única: Acción Inmediata', duration: '50m', steps: [
-        {type: 'video', title: 'Brief del módulo', desc: `Video corto explicando tu objetivo en ${m.title}.` },
-        {type: 'tarea', title: 'Despliegue de Tarea', desc: 'Accede a la terminal y ejecuta los comandos necesarios para resolver el ticket.' }
-        ]
-                            }
-        ]
-        ];
-        const assignedModules = TEMPLATES[index % 3];
+        const assignedModules = buildTemplates(m.title)[index % 3];
         return {
             ...m,
             color: themeColor,
@@ -204,22 +220,24 @@ import { useState, useEffect } from 'react'
         }
 
         if (savedRecs) {
-                    const parsedRecs = JSON.parse(savedRecs)
-                    setAiRecs(parsedRecs.map((r, i) => ({
-            id: `ai-rec-${i}`,
-        title: r.title,
-        subtitle: r.motivo,
-        category: r.categoria,
-        color: 'var(--accent)',
-        Icon: Target,
-        categoryIcon: Target,
-        unlocked: true,
-        difficulty: 2,
-        estimatedTime: '2h',
-        modules: TEMPLATES[0],
-        skills: ['Recomendado', r.categoria],
-        description: r.motivo
-                    })))
+            const parsedRecs = JSON.parse(savedRecs)
+            setAiRecs(parsedRecs.map((r, i) => ({
+                id: `ai-rec-${i}`,
+                title: r.title,
+                // El backend (RecommendationItem) no expone un campo de motivo:
+                // los únicos descriptores disponibles son la carrera y la categoría.
+                subtitle: r.base_career || r.categoria || 'Recomendación de IA',
+                category: r.categoria,
+                color: 'var(--accent)',
+                Icon: Target,
+                categoryIcon: Target,
+                unlocked: true,
+                difficulty: DIFFICULTY_BY_LEVEL[r.nivel_dificultad] || 2,
+                estimatedTime: r.duracion_horas ? `${r.duracion_horas}h` : '2h',
+                modules: buildTemplates(r.title)[0],
+                skills: r.matched_skills?.length ? r.matched_skills : ['Recomendado', r.categoria],
+                description: `Simulación recomendada para tu perfil en ${r.categoria || 'tu área'}.`
+            })))
                 }
 
             } catch (err) {
