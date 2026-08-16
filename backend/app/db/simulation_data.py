@@ -464,18 +464,481 @@ NEW_VOCATIONAL_SIMULATIONS = [
 ]
 
 
+# módulos inmersivos para las simulaciones finales (Comunicación, RRII, Ambiental)
+modules_comunicacion = [
+    {
+        "module": {
+            "title": "Módulo 1: Onboarding - Brief de la Crisis",
+            "description": "Recepción del brief: reportes sobre una posible filtración y rumores virales que afectan la reputación de la institución. Familiarización con audiencias y canales.",
+            "order": 1,
+            "estimated_hours": 0.75
+        },
+        "tasks": [
+            {
+                "task": {
+                    "title": "Tarea 1.1: Analizar el brief y mapear stakeholders",
+                    "description": "Lore: Eres el responsable de comunicación junior. El director te pide un mapa de stakeholders priorizado y un resumen ejecutivo de 200 palabras para preparar el primer comunicado.",
+                    "order": 1,
+                    "task_type": "submission",
+                    "instructor_name": "María Valdés",
+                    "instructor_role": "Directora de Comunicaciones (ficticia)",
+                    "estimated_minutes": 45,
+                    "xp_reward": 150,
+                    "lore_context": "Tienes 2 horas antes de la reunión con liderazgo; la información es parcial y hay presión mediática.",
+                    "scaffolding_phase": "Guided",
+                    "real_world_constraints": ["Información incompleta", "Presión de medios y redes sociales"],
+                    "immediate_feedback": {
+                        "on_failure_explanation": "Fallar en priorizar stakeholders suele deberse a no distinguir entre influencia y vulnerabilidad: la teoría sugiere mapear por poder, interés y vulnerabilidad para priorizar recursos. Sin ese marco, las comunicaciones serán reactivas y mal dirigidas.",
+                        "links": ["https://www.prsa.org/", "https://www.unesco.org/themes/safety-journalists"]
+                    },
+                    "skills_metrics_weights": {"Stakeholder Mapping": 0.4, "Crisis Framing": 0.35, "Prioritization": 0.25}
+                },
+                "resources": [
+                    {"name": "Brief Template (ficticio)", "resource_type": "document", "url": "/resources/simulations/comunicacion/brief_template.pdf"}
+                ],
+                "model_answer": {
+                    "description": "Mapa de stakeholders con 5 actores clave (internos/externos), justificación y resumen ejecutivo de 200 palabras con tono institucional y call-to-action.",
+                    "key_learnings": ["Diferencia poder/impacto", "Cómo priorizar mensajes iniciales"]
+                }
+            }
+        ]
+    },
+    {
+        "module": {
+            "title": "Módulo 2: Primer Comunicado - Propuesta de Valor Pública",
+            "description": "Redacta y valida el primer comunicado público y notas para portavoces alineadas con la estrategia de contención.",
+            "order": 2,
+            "estimated_hours": 1.25
+        },
+        "tasks": [
+            {
+                "task": {
+                    "title": "Tarea 2.1: Redactar y justificar el primer comunicado",
+                    "description": "Lore: El CEO solicita un comunicado que calme audiencias claves y proteja la continuidad operativa. Entrega el comunicado y tres talking points para portavoces.",
+                    "order": 1,
+                    "task_type": "submission",
+                    "instructor_name": "Andrés Gómez",
+                    "instructor_role": "Jefe de Prensa (ficticio)",
+                    "estimated_minutes": 60,
+                    "xp_reward": 200,
+                    "lore_context": "Redacción bajo plazo con riesgo de filtraciones adicionales; el comunicado será evaluado por legal.",
+                    "scaffolding_phase": "Intermediate",
+                    "real_world_constraints": ["Revisión legal", "Riesgo de información filtrada en redes"],
+                    "immediate_feedback": {
+                        "on_failure_explanation": "Un comunicado inefectivo suele carecer de claridad en el mensaje central y de un call-to-action; la teoría recomienda usar estructura: acknowledge, action, future steps. Ignorar esto genera percepción de evasión.",
+                        "links": ["https://www.prsa.org/", "https://www.unesco.org/themes/safety-journalists"]
+                    },
+                    "skills_metrics_weights": {"Message Crafting": 0.45, "Stakeholder Alignment": 0.3, "Risk Awareness": 0.25}
+                },
+                "resources": [
+                    {"name": "Guía de Mensajes (ficticia)", "resource_type": "document", "url": "/resources/simulations/comunicacion/message_guide.pdf"}
+                ],
+                "model_answer": {
+                    "description": "Comunicado claro de 3 párrafos: reconocimiento breve, medidas inmediatas, compromiso de transparencia; 3 talking points accionables para portavoces.",
+                    "key_learnings": ["Estructura ACK-ACTION-FOLLOWUP", "Alineación con jurídico y operaciones"]
+                }
+            }
+        ]
+    },
+    {
+        "module": {
+            "title": "Módulo 3: Crisis - El Improvisto (Audio Filtrado)",
+            "description": "Un audio comprometedor se filtra y se vuelve viral; debes pivotar la estrategia y proponer respuesta en 30 minutos.",
+            "order": 3,
+            "estimated_hours": 1.5
+        },
+        "tasks": [
+            {
+                "task": {
+                    "title": "Tarea 3.1: Respuesta en caliente y plan de mitigación",
+                    "description": "Lore: Eres el profesional junior en turno. Se filtra un audio que contradice el comunicado previo. Envía una respuesta en caliente y un plan de mitigación de 6 pasos para la próxima semana.",
+                    "order": 1,
+                    "task_type": "submission",
+                    "instructor_name": "Lucía Herrera",
+                    "instructor_role": "Coordinadora de Crisis (ficticia)",
+                    "estimated_minutes": 45,
+                    "xp_reward": 300,
+                    "lore_context": "Redes impulsan narrativas adversas; tienes información parcial y stakeholders exigen respuestas rápidas.",
+                    "scaffolding_phase": "Intermediate",
+                    "real_world_constraints": ["Narrativa viral", "Leyes de privacidad y posible investigación interna"],
+                    "immediate_feedback": {
+                        "on_failure_explanation": "Fracasar en la respuesta en caliente suele venir de reaccionar sin verificación o desde la defensiva; la teoría indica priorizar verificación de hechos, transparencia gradual y control de canales para no amplificar la crisis.",
+                        "links": ["https://www.prsa.org/", "https://www.unesco.org/themes/safety-journalists"]
+                    },
+                    "skills_metrics_weights": {"Rapid Verification": 0.35, "Tone Management": 0.35, "Operational Coordination": 0.3}
+                },
+                "resources": [
+                    {"name": "Checklist Respuesta Rápida", "resource_type": "document", "url": "/resources/simulations/comunicacion/rapid_response_checklist.pdf"}
+                ],
+                "model_answer": {
+                    "description": "Respuesta en caliente validada, pasos de mitigación claros (6 pasos) con responsables y calendarización; señales de monitoreo de impacto.",
+                    "key_learnings": ["Verificación antes de publicación", "Coordinación cross-funcional"]
+                }
+            }
+        ]
+    },
+    {
+        "module": {
+            "title": "Módulo 4: Desafío Final - Gestión Autónoma de la Reputación",
+            "description": "Entrega final: diseña una estrategia integral de 2 semanas para recuperar reputación y evitar escalada regulatoria.",
+            "order": 4,
+            "estimated_hours": 2.0
+        },
+        "tasks": [
+            {
+                "task": {
+                    "title": "Tarea 4.1: Plan de recuperación integral",
+                    "description": "Lore: Presenta un plan completo (documento de 2-3 páginas) que integre comunicaciones, seguimiento legal, relación con medios y plan de escucha social.",
+                    "order": 1,
+                    "task_type": "submission",
+                    "instructor_name": "María Valdés",
+                    "instructor_role": "Directora de Comunicaciones (ficticia)",
+                    "estimated_minutes": 120,
+                    "xp_reward": 350,
+                    "lore_context": "La organización espera una propuesta lista para ejecución por equipos operativos; no habrá asistencia directa.",
+                    "scaffolding_phase": "Final Challenge",
+                    "real_world_constraints": ["Limitaciones presupuestales", "Calendario de reguladores y audiencias"],
+                    "immediate_feedback": {
+                        "on_failure_explanation": "Un plan incompleto suele deberse a no integrar métricas, responsables y tiempos; la teoría de gestión de crisis exige KPIs claros y ownership para cada acción para evitar ejecución fallida.",
+                        "links": ["https://www.prsa.org/", "https://www.unesco.org/themes/safety-journalists"]
+                    },
+                    "skills_metrics_weights": {"Strategic Design": 0.45, "Operational Planning": 0.3, "Measurement": 0.25}
+                },
+                "resources": [
+                    {"name": "Plantilla Plan Recuperación (ficticia)", "resource_type": "document", "url": "/resources/simulations/comunicacion/recovery_plan_template.pdf"}
+                ],
+                "model_answer": {
+                    "description": "Plan con objetivos, tácticas por canal, cronograma, responsables y KPIs; plan de comunicación con stakeholders clave.",
+                    "key_learnings": ["Integración estrategia-operaciones", "KPIs orientados a reputación"]
+                }
+            }
+        ]
+    }
+]
+
+modules_rrii = [
+    {
+        "module": {
+            "title": "Módulo 1: Onboarding - Brief Multilateral",
+            "description": "Lectura del mandato y briefing sobre el tema multilateral (p. ej. seguridad alimentaria regional). Identificar objetivos nacionales y aliados potenciales.",
+            "order": 1,
+            "estimated_hours": 0.75
+        },
+        "tasks": [
+            {
+                "task": {
+                    "title": "Tarea 1.1: Mapear posiciones nacionales y objetivos",
+                    "description": "Lore: Como diplomático/a junior, prepara un memo de 1 página con la posición de tu país y tres objetivos negociadores a presentar al equipo senior.",
+                    "order": 1,
+                    "task_type": "submission",
+                    "instructor_name": "Emb. Carlos Méndez",
+                    "instructor_role": "Jefe de Delegación (ficticio)",
+                    "estimated_minutes": 45,
+                    "xp_reward": 150,
+                    "lore_context": "Tienes acceso limitado a informes y debes priorizar intereses nacionales antes de la ronda de delegados.",
+                    "scaffolding_phase": "Guided",
+                    "real_world_constraints": ["Información diplomática parcial", "Plazo para coordinación interministerial"],
+                    "immediate_feedback": {
+                        "on_failure_explanation": "Fracasar en identificar objetivos negociadores suele venir de confundir intereses con posiciones; la teoría diplomática distingue intereses (subyacentes) de posiciones (demandas), y las concesiones se diseñan sobre intereses.",
+                        "links": ["https://treaties.un.org/", "https://www.un.org/"]
+                    },
+                    "skills_metrics_weights": {"Analytical Framing": 0.45, "Interest Identification": 0.35, "Conciseness": 0.2}
+                },
+                "resources": [
+                    {"name": "Template Memo Diplomático", "resource_type": "document", "url": "/resources/simulations/rrii/memo_template.pdf"}
+                ],
+                "model_answer": {
+                    "description": "Memo con 3 objetivos claros, breve justificación geoestratégica y sugerencia de aliados potenciales.",
+                    "key_learnings": ["Diferenciar intereses y posiciones", "Cómo priorizar objetivos negociadores"]
+                }
+            }
+        ]
+    },
+    {
+        "module": {
+            "title": "Módulo 2: Borrador de Acuerdo - Primera Propuesta",
+            "description": "Elabora un borrador de disposiciones clave para la negociación multilateral y una nota de posición para tu delegación.",
+            "order": 2,
+            "estimated_hours": 1.5
+        },
+        "tasks": [
+            {
+                "task": {
+                    "title": "Tarea 2.1: Redactar cláusulas clave y nota de posición",
+                    "description": "Lore: Se espera un primer texto negociable y una nota de posición que explique concesiones posibles y límites rojos.",
+                    "order": 1,
+                    "task_type": "submission",
+                    "instructor_name": "Dr. Elena Ruiz",
+                    "instructor_role": "Asesora de Política Externa (ficticia)",
+                    "estimated_minutes": 75,
+                    "xp_reward": 220,
+                    "lore_context": "Ronda de negociación en 48 horas; el borrador servirá como base para consultas internas.",
+                    "scaffolding_phase": "Intermediate",
+                    "real_world_constraints": ["Mandato legal limitado", "Diversidad de intereses regionales"],
+                    "immediate_feedback": {
+                        "on_failure_explanation": "Un borrador débil suele omitir mecanismos de implementación y monitoreo; la teoría recomienda incluir lenguaje claro de obligaciones, plazos y mecanismos de verificación para facilitar adherencia.",
+                        "links": ["https://treaties.un.org/", "https://www.un.org/"]
+                    },
+                    "skills_metrics_weights": {"Legal Drafting": 0.4, "Policy Coherence": 0.35, "Clarity": 0.25}
+                },
+                "resources": [
+                    {"name": "Model Clause Examples", "resource_type": "document", "url": "/resources/simulations/rrii/model_clauses.pdf"}
+                ],
+                "model_answer": {
+                    "description": "Borrador con cláusulas claras, indicadores de implementación y nota justificativa de límites y concesiones.",
+                    "key_learnings": ["Importancia de mecanismos de verificación", "Redacción que facilita negociación"]
+                }
+            }
+        ]
+    },
+    {
+        "module": {
+            "title": "Módulo 3: Crisis - El Imprevisto (Amenaza de Veto)",
+            "description": "Un actor clave amenaza con veto; debes reconfigurar la coalición y ofrecer alternativas negociables en 60 minutos.",
+            "order": 3,
+            "estimated_hours": 1.5
+        },
+        "tasks": [
+            {
+                "task": {
+                    "title": "Tarea 3.1: Pivot estratégico y paquetización de concesiones",
+                    "description": "Lore: Eres el negociador a cargo. Diseña un paquete alternativo que aborde las preocupaciones del veto y proponga incentivos para cambiar la posición.",
+                    "order": 1,
+                    "task_type": "submission",
+                    "instructor_name": "Emb. Carlos Méndez",
+                    "instructor_role": "Jefe de Delegación (ficticio)",
+                    "estimated_minutes": 60,
+                    "xp_reward": 300,
+                    "lore_context": "Escasez de tiempo y riesgo de fractura de la negociación; se requiere creatividad política.",
+                    "scaffolding_phase": "Intermediate",
+                    "real_world_constraints": ["Presión diplomática pública", "Necesidad de soluciones técnicas y políticas"],
+                    "immediate_feedback": {
+                        "on_failure_explanation": "Fallar al renegociar suele ser consecuencia de no identificar los intereses reales detrás del veto; la teoría de negociación integrativa sugiere crear paquetes de valor que permitan ganar-ganar y salvar vetos.",
+                        "links": ["https://treaties.un.org/", "https://www.un.org/"]
+                    },
+                    "skills_metrics_weights": {"Negotiation Design": 0.45, "Coalition Building": 0.35, "Trade-off Engineering": 0.2}
+                },
+                "resources": [
+                    {"name": "Guía de Paquetización (ficticia)", "resource_type": "document", "url": "/resources/simulations/rrii/packaging_guide.pdf"}
+                ],
+                "model_answer": {
+                    "description": "Paquete alternativo con concesiones calibradas, incentivos y ruta de implementación que neutraliza la amenaza de veto.",
+                    "key_learnings": ["Negociación integrativa", "Diseño de paquetes de concesión"]
+                }
+            }
+        ]
+    },
+    {
+        "module": {
+            "title": "Módulo 4: Desafío Final - Negociación Autónoma",
+            "description": "Conduce una sesión de negociación final sin asistencia y entrega el texto acordado y un plan de ratificación nacional.",
+            "order": 4,
+            "estimated_hours": 2.0
+        },
+        "tasks": [
+            {
+                "task": {
+                    "title": "Tarea 4.1: Cerrar texto y plan de ratificación",
+                    "description": "Lore: Presenta el texto final con reservas, mecanismos de monitoreo y una hoja de ruta de ratificación para tu país.",
+                    "order": 1,
+                    "task_type": "submission",
+                    "instructor_name": "Dr. Elena Ruiz",
+                    "instructor_role": "Asesora de Política Externa (ficticia)",
+                    "estimated_minutes": 120,
+                    "xp_reward": 350,
+                    "lore_context": "La delegación espera un cierre ejecutable y defendible ante autoridades nacionales.",
+                    "scaffolding_phase": "Final Challenge",
+                    "real_world_constraints": ["Procedimientos parlamentarios nacionales", "Plazos políticos"],
+                    "immediate_feedback": {
+                        "on_failure_explanation": "Un acuerdo sin camino claro de ratificación falla en implementación; la teoría remarca que las negociaciones multilaterales deben conectar texto con mecanismos domésticos de adopción.",
+                        "links": ["https://treaties.un.org/", "https://www.un.org/"]
+                    },
+                    "skills_metrics_weights": {"Agreement Design": 0.45, "Domestic Translation": 0.3, "Defensibility": 0.25}
+                },
+                "resources": [
+                    {"name": "Plantilla Ratificación (ficticia)", "resource_type": "document", "url": "/resources/simulations/rrii/ratification_template.pdf"}
+                ],
+                "model_answer": {
+                    "description": "Texto final con reservas técnicas, plan de implementación y calendario de ratificación con responsables.",
+                    "key_learnings": ["Vinculación internacional-doméstica", "Preparación para defensa política"]
+                }
+            }
+        ]
+    }
+]
+
+modules_ambiental = [
+    {
+        "module": {
+            "title": "Módulo 1: Onboarding - Evaluación Rápida del Sitio",
+            "description": "Lectura del caso: contaminación puntual en un río local por descarga industrial. Objetivo: diseñar plan de muestreo inicial.",
+            "order": 1,
+            "estimated_hours": 0.75
+        },
+        "tasks": [
+            {
+                "task": {
+                    "title": "Tarea 1.1: Diseñar plan de muestreo inicial",
+                    "description": "Lore: Eres el ingeniero ambiental junior asignado. Entrega un plan práctico de muestreo (sitios, frecuencias, parámetros) para evaluar la extensión del daño.",
+                    "order": 1,
+                    "task_type": "submission",
+                    "instructor_name": "Ing. Rafael Ortega",
+                    "instructor_role": "Coordinador de Respuesta Ambiental (ficticio)",
+                    "estimated_minutes": 45,
+                    "xp_reward": 150,
+                    "lore_context": "Tiempo limitado y comunidad preocupada; datos iniciales determinarán si se aplica cierre temporal de la planta.",
+                    "scaffolding_phase": "Guided",
+                    "real_world_constraints": ["Acceso restringido a puntos de muestreo", "Recursos limitados de laboratorio"],
+                    "immediate_feedback": {
+                        "on_failure_explanation": "Un muestreo mal diseñado produce datos sesgados; la teoría de muestreo ambiental sugiere seleccionar puntos representativos, replicados y parámetros clave (pH, sólidos, metales) para inferir extensión.",
+                        "links": ["https://www.epa.gov/", "https://www.unep.org/"]
+                    },
+                    "skills_metrics_weights": {"Sampling Design": 0.5, "Parameter Selection": 0.3, "Practical Constraints": 0.2}
+                },
+                "resources": [
+                    {"name": "Checklist Muestreo Rápido", "resource_type": "document", "url": "/resources/simulations/ambiental/sampling_checklist.pdf"}
+                ],
+                "model_answer": {
+                    "description": "Plan con 4 sitios de muestreo representativos, parámetros priorizados, replicados y cronograma de 72 horas.",
+                    "key_learnings": ["Representatividad del muestreo", "Prioridad de parámetros críticos"]
+                }
+            }
+        ]
+    },
+    {
+        "module": {
+            "title": "Módulo 2: Primer Informe Técnico - Propuesta de Remediación Inicial",
+            "description": "Analiza resultados iniciales y propone medidas de contención y remediación a corto plazo.",
+            "order": 2,
+            "estimated_hours": 1.5
+        },
+        "tasks": [
+            {
+                "task": {
+                    "title": "Tarea 2.1: Proponer medidas inmediatas y justificación técnica",
+                    "description": "Lore: Con datos preliminares, entrega un informe técnico de 2 páginas con medidas inmediatas (barreras, flujo, tratamientos) y riesgos asociados.",
+                    "order": 1,
+                    "task_type": "submission",
+                    "instructor_name": "Dra. Paula Martínez",
+                    "instructor_role": "Especialista en Remediación (ficticia)",
+                    "estimated_minutes": 75,
+                    "xp_reward": 200,
+                    "lore_context": "Se requiere acción rápida para proteger fuentes de agua potable; opciones deben ser factibles localmente.",
+                    "scaffolding_phase": "Intermediate",
+                    "real_world_constraints": ["Recursos técnicos limitados", "Regulación ambiental local"],
+                    "immediate_feedback": {
+                        "on_failure_explanation": "Medidas ineficientes frecuentemente omiten análisis de rutas de exposición; la teoría de remediación exige evaluar fuentes, rutas y receptores para seleccionar técnicas proporcionales.",
+                        "links": ["https://www.epa.gov/", "https://www.unep.org/"]
+                    },
+                    "skills_metrics_weights": {"Technical Justification": 0.45, "Feasibility": 0.35, "Risk Assessment": 0.2}
+                },
+                "resources": [
+                    {"name": "Guía Remediación Rápida (ficticia)", "resource_type": "document", "url": "/resources/simulations/ambiental/remediation_guide.pdf"}
+                ],
+                "model_answer": {
+                    "description": "Informe con medidas de contención inmediatas, estimación de recursos y plan de monitoreo básico.",
+                    "key_learnings": ["Prioridad en rutas de exposición", "Medidas proporcionales al riesgo"]
+                }
+            }
+        ]
+    },
+    {
+        "module": {
+            "title": "Módulo 3: Crisis - El Imprevisto (Bloqueo Comunitario)",
+            "description": "La comunidad local bloquea el acceso a zonas de muestreo por desconfianza; debes negociar acceso y ajustar el plan.",
+            "order": 3,
+            "estimated_hours": 1.5
+        },
+        "tasks": [
+            {
+                "task": {
+                    "title": "Tarea 3.1: Negociación comunitaria y ajuste técnico",
+                    "description": "Lore: Como ingeniero/a junior, propon un protocolo de acercamiento comunitario y ajusta el plan de muestreo/remediación para operar con aceptación social.",
+                    "order": 1,
+                    "task_type": "submission",
+                    "instructor_name": "Ing. Rafael Ortega",
+                    "instructor_role": "Coordinador de Respuesta Ambiental (ficticio)",
+                    "estimated_minutes": 60,
+                    "xp_reward": 300,
+                    "lore_context": "Tensión en sitio; acceso crítico para definir la magnitud de la remediación y evitar daños mayores.",
+                    "scaffolding_phase": "Intermediate",
+                    "real_world_constraints": ["Desconfianza comunitaria", "Riesgo de confrontación física"],
+                    "immediate_feedback": {
+                        "on_failure_explanation": "Fallar en la negociación comunitaria a menudo ignora factores sociales y de confianza; la teoría de participación exige transparencia, liderazgos locales y compromisos verificables para permitir acceso seguro.",
+                        "links": ["https://www.epa.gov/", "https://www.unep.org/"]
+                    },
+                    "skills_metrics_weights": {"Community Engagement": 0.4, "Adaptive Sampling": 0.35, "Risk Communication": 0.25}
+                },
+                "resources": [
+                    {"name": "Protocolos de Comunicación Comunitaria", "resource_type": "document", "url": "/resources/simulations/ambiental/community_protocol.pdf"}
+                ],
+                "model_answer": {
+                    "description": "Protocolo con pasos de acercamiento, acuerdos mínimos para acceso y ajuste del muestreo que preserva representatividad.",
+                    "key_learnings": ["Importancia del trust-building", "Ajuste técnico preservando validez"]
+                }
+            }
+        ]
+    },
+    {
+        "module": {
+            "title": "Módulo 4: Desafío Final - Plan de Remediación Local",
+            "description": "Presenta un plan de remediación completo y escalable con cronograma, presupuesto estimado y métricas de éxito.",
+            "order": 4,
+            "estimated_hours": 2.5
+        },
+        "tasks": [
+            {
+                "task": {
+                    "title": "Tarea 4.1: Plan final de remediación y monitoreo",
+                    "description": "Lore: Entrega un plan técnico-operativo de remediación (3-5 páginas) con responsables, cronograma, presupuesto estimado y KPIs de recuperación ambiental.",
+                    "order": 1,
+                    "task_type": "submission",
+                    "instructor_name": "Dra. Paula Martínez",
+                    "instructor_role": "Especialista en Remediación (ficticia)",
+                    "estimated_minutes": 150,
+                    "xp_reward": 350,
+                    "lore_context": "Autoridades locales evaluarán el plan para decidir asignación de fondos; debe ser defendible técnica y políticamente.",
+                    "scaffolding_phase": "Final Challenge",
+                    "real_world_constraints": ["Presupuesto limitado", "Plazos regulatorios para reporte"],
+                    "immediate_feedback": {
+                        "on_failure_explanation": "Un plan que no integra monitoreo y métricas fallará en demostrar eficacia; la teoría de remediación enfatiza indicadores claros de recuperación y responsabilidades para asegurar cumplimiento.",
+                        "links": ["https://www.epa.gov/", "https://www.unep.org/"]
+                    },
+                    "skills_metrics_weights": {"Remediation Strategy": 0.45, "Monitoring Design": 0.35, "Budgeting": 0.2}
+                },
+                "resources": [
+                    {"name": "Template Plan Remediación", "resource_type": "document", "url": "/resources/simulations/ambiental/remediation_plan_template.pdf"}
+                ],
+                "model_answer": {
+                    "description": "Plan con fases (contención, remediación, monitoreo), presupuesto estimado, responsables y KPIs claros de recuperación.",
+                    "key_learnings": ["Fases de remediación", "Diseño de monitoreo para evaluación"]
+                }
+            }
+        ]
+    }
+]
+
 # --- PARCHE PARA UNIR LAS NUEVAS SIMULACIONES ---
 for item in NEW_VOCATIONAL_SIMULATIONS:
-    # 1. Agregar la lista de módulos que faltaba
+    # 1. Asegurar que exista la lista de módulos
     if 'modules' not in item:
         item['modules'] = []
-    
-    # 2. Agregar los campos de texto que exige el script de la base de datos
+
+    # 1.b Mapear módulos detallados por slug específico cuando los tengamos
     sim_data = item['simulation']
+    slug = sim_data.get('slug', '')
+    if slug == 'comunicacion-gestion-crisis-medios':
+        item['modules'] = modules_comunicacion
+    elif slug == 'relaciones-internacionales-negociacion-multilateral':
+        item['modules'] = modules_rrii
+    elif slug == 'ingenieria-ambiental-plan-remediacion-local':
+        item['modules'] = modules_ambiental
+
+    # 2. Agregar los campos de texto que exige el script de la base de datos
     if 'company_name' not in sim_data:
         # Genera un nombre de empresa ficticio basado en el título (ej. "Derecho Corp")
         sim_data['company_name'] = sim_data['title'].split(':')[0] + " Corp"
-        
+
     if 'category_name' not in sim_data:
         sim_data['category_name'] = "Simulación Vocacional"
 
