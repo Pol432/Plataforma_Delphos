@@ -229,8 +229,29 @@ function RegisterPanel({ onNext, onGoLogin }) {
                 birth_year: parseInt(form.birthYear) || 2000
             };
             await api.post('/api/v1/register', payload);
+
+            // El paso 3 lleva directo al onboarding, y `POST /oracle/full_profile`
+            // exige `get_current_user`. Sin este login automático el usuario recién
+            // registrado llega al oráculo sin token y la recomendación muere en un
+            // 401 que el frontend se traga en silencio.
+            const params = new URLSearchParams();
+            params.append('username', form.email);
+            params.append('password', form.password);
+            const { data } = await api.post('/api/v1/token', params, {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            });
+            if (!data.access_token) throw new Error('El backend no devolvió access_token');
+            localStorage.setItem('token', data.access_token);
+
             setStep(3);
         } catch (err) {
+            // Si la cuenta se creó pero el login falló, mandamos a iniciar sesión:
+            // entrar al onboarding sin token daría un perfil sin recomendaciones.
+            if (err.response?.status === 401 || err.message?.includes('access_token')) {
+                alert("Tu cuenta se creó, pero no pudimos iniciar sesión automáticamente. Entra con tus credenciales.");
+                onGoLogin();
+                return;
+            }
             alert(err.response?.data?.detail || "Error al crear la cuenta");
         } finally {
             setLoading(false);

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from '../services/api'
+import { getSkillsForCareers } from '../data/careerSkills'
 import {
     CheckCircle2, ArrowRight, RotateCcw, Sparkles,
     Cloud, Handshake, Palette, Cpu, BarChart2, Globe,
@@ -178,7 +179,9 @@ export default function Screen2bCareerSelect({ oracleAnswers = [], onConfirm, on
             };
 
             const payload = {
-                skills: careerLabels,
+                // Los nombres de carrera en español no existen en el vocabulario
+                // del oráculo; hay que traducirlos. Ver frontend/src/data/careerSkills.js
+                skills: getSkillsForCareers(careerIds),
                 education_level: "Bachelor's",
                 field_of_study: careerLabels[0] || "General",
                 ...scores,
