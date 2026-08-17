@@ -3,11 +3,17 @@
  *
  * POR QUÉ EXISTE ESTE FICHERO
  * ---------------------------
- * `POST /api/v1/oracle/full_profile` resuelve el campo `skills` contra
- * `oracle/recommendation/data/processed/skills_catalog.csv` usando
- * `_slugify_skill()` (backend/app/services/oracle_catalog.py). Ese vocabulario
- * son 52 skills técnicas en inglés — "Python", "Docker", "Excel"… — mientras
- * que las etiquetas de `CAREERS` son nombres de carrera en español.
+ * `POST /api/v1/oracle/full_profile` resuelve el campo `skills` con
+ * `_slugify_skill()` (backend/app/services/oracle_catalog.py). El vocabulario
+ * son skills técnicas en inglés — "Python", "Docker", "Excel"… — mientras que
+ * las etiquetas de `CAREERS` son nombres de carrera en español.
+ *
+ * OJO: el vocabulario NO es sólo `skills_catalog.csv` (52 filas). El catálogo
+ * añade IDs sintéticos para skills que las simulaciones referencian pero el
+ * CSV no cubre, más 16 alias. `GET /api/v1/oracle/skills` devuelve las 68
+ * entradas reales y es la única fuente fiable — comprobado contra la API viva.
+ * Los alias colapsan a su canónico ("Figma" → "Adobe Creative Suite"), así que
+ * usar uno u otro resuelve al mismo skill_id.
  *
  * Enviar las etiquetas directamente resolvía 0 de 50: `resolved_skill_ids`
  * llegaba vacío, `skill_overlap_score` era 0 para todas las simulaciones y el
@@ -16,10 +22,10 @@
  *
  * MANTENIMIENTO
  * -------------
- * Los valores deben coincidir con la columna `skill_name` del CSV (la
- * comparación es por slug, así que mayúsculas y espacios dan igual, pero el
- * nombre tiene que existir). `npm run build` no valida esto: si tocas el
- * catálogo, vuelve a comprobar que todo resuelve.
+ * Los valores tienen que existir en `GET /api/v1/oracle/skills` (la comparación
+ * es por slug, así que mayúsculas y espacios dan igual). `npm run build` no
+ * valida esto: si tocas el catálogo, comprueba que `unresolved_skills` sigue
+ * viniendo vacío para las 50 carreras.
  *
  * LIMITACIÓN CONOCIDA
  * -------------------
@@ -43,13 +49,13 @@ export const CAREER_SKILLS = {
     // ── Negocios
     product: ['Requirements Gathering', 'Business Analysis', 'Strategic Planning', 'Data Analysis'],
     biz: ['Business Analysis', 'Strategic Planning', 'Case Analysis', 'Excel'],
-    finance: ['Financial Analysis', 'Financial Modeling', 'Valuation', 'DCF Analysis', 'Excel'],
+    finance: ['Financial Analysis', 'Financial Modeling', 'Valuation', 'DCF Analysis', 'Accounting', 'Excel'],
     marketing: ['Marketing', 'SEO', 'Google Analytics', 'Content Strategy', 'Email Marketing', 'Social Media'],
     intl: ['Strategic Planning', 'Business Analysis', 'Marketing', 'Forecasting'],
     hr: ['Counseling', 'Strategic Planning', 'Business Analysis'],
     logistics: ['Forecasting', 'Excel', 'Data Analysis', 'Budgeting', 'Strategic Planning'],
     ecommerce: ['SEO', 'Google Analytics', 'Marketing', 'Content Creation', 'Social Media'],
-    banking: ['Financial Analysis', 'Valuation', 'DCF Analysis', 'Bloomberg Terminal', 'Excel'],
+    banking: ['Financial Analysis', 'Valuation', 'DCF Analysis', 'Bloomberg Terminal', 'Accounting', 'Excel'],
     startup: ['Strategic Planning', 'Business Analysis', 'Marketing', 'Budgeting', 'Financial Modeling'],
 
     // ── Diseño
