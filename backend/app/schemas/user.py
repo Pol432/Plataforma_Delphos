@@ -89,6 +89,9 @@ class UserOut(UserBase):
     birth_date: Optional[date] = None
     city_id: Optional[int] = None
     avatar_url: Optional[str] = None
+    # Se expone para que el perfil del oráculo haga round-trip: el frontend lo
+    # escribe vía PATCH /users/me y lo rehidrata al arrancar sin repetir el test.
+    inferred_skills: Optional[Dict[str, Any]] = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ChevronRight, Brain, RotateCcw } from 'lucide-react'
 import { questionBank, shuffleQuestions } from '../data/questionBank'
+import api from '../services/api'
 
 export default function Screen2Onboarding({ onNext }) {
     const [allQuestions, setAllQuestions] = useState([])
@@ -57,7 +58,7 @@ export default function Screen2Onboarding({ onNext }) {
         setActiveQuestions(prev => [...prev, ...nextQuestions])
     }
 
-    const handleAccept = () => {
+    const handleAccept = async () => {
         // Normalize scores to 0-100 based on max possible or relative to max
         // To normalize properly without knowing max possible easily, we can find the max score achieved,
         // and scale so that the highest is 95, or we can just scale by total points.
@@ -70,6 +71,15 @@ export default function Screen2Onboarding({ onNext }) {
             social_score: Math.round((scores.social / maxScore) * 95) || 10,
             linguistic_score: Math.round((scores.linguistic / maxScore) * 95) || 10,
             hands_on_score: Math.round((scores.hands_on / maxScore) * 95) || 10,
+        }
+
+        // Persistimos el perfil en el backend (`users.inferred_skills`, ya
+        // existe desde la migración aa27223640d5). Si falla no bloqueamos el
+        // flujo: App.jsx también lo guarda en localStorage.
+        try {
+            await api.patch('/api/v1/users/me', { inferred_skills: normalized })
+        } catch (err) {
+            console.warn('No se pudo persistir el perfil del oráculo:', err?.response?.status || err.message)
         }
 
         onNext({ normalizedScores: normalized })

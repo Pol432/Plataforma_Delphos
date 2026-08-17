@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './index.css'
+import api from './services/api'
 import Screen1Register from './screens/Screen1Register'
 import Screen2Onboarding from './screens/Screen2Onboarding'
 import Screen2bCareerSelect from './screens/Screen2bCareerSelect'
@@ -119,7 +120,16 @@ function App() {
       return parsed
     } catch { return null }
   })
-  const [oracleAnswers, setOracleAnswers] = useState([])
+  // El perfil del oráculo vive aquí, pero NO sólo aquí: un refresh entre el
+  // onboarding y la selección de carrera lo perdía y `Screen2bCareerSelect`
+  // caía al fallback de 50s sin avisar. Se rehidrata de localStorage al
+  // arrancar y, si no hay nada, del backend (`inferred_skills`).
+  const [oracleAnswers, setOracleAnswers] = useState(() => {
+    try {
+      const saved = localStorage.getItem('oracleProfile')
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
+  })
 
   useEffect(() => {
     if (activeModule) {
@@ -130,12 +140,40 @@ function App() {
     }
   }, [activeModule])
 
+  useEffect(() => {
+    if (oracleAnswers?.normalizedScores) {
+      localStorage.setItem('oracleProfile', JSON.stringify(oracleAnswers))
+    } else {
+      localStorage.removeItem('oracleProfile')
+    }
+  }, [oracleAnswers])
+
+  // Si el usuario vuelve con sesión abierta pero sin perfil en local, lo
+  // recuperamos del backend en vez de rehacerle el test.
+  useEffect(() => {
+    if (oracleAnswers?.normalizedScores) return
+    if (!localStorage.getItem('token')) return
+
+    let cancelled = false
+    api.get('/api/v1/users/me')
+      .then(({ data }) => {
+        const stored = data?.inferred_skills
+        if (!cancelled && stored && Object.keys(stored).length > 0) {
+          setOracleAnswers({ normalizedScores: stored })
+        }
+      })
+      .catch(() => { /* sin perfil guardado: el onboarding lo generará */ })
+
+    return () => { cancelled = true }
+  }, [])
+
   const navigate = (screenId) => setCurrentScreen(screenId)
 
   const handleLogout = () => {
     setActiveModule(null)
     localStorage.removeItem('activeModule')
     localStorage.removeItem('token')
+    localStorage.removeItem('oracleProfile')
     setOracleAnswers([])
     setCurrentScreen(1)
   }
