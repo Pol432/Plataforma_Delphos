@@ -121,10 +121,14 @@ saturación no es memoria de las filas vistas: ocurre igual sobre datos nuevos.
 
 ## RIESGO ABIERTO — Calibración del modelo
 
-**Estado: documentado, sin arreglar.** Desde el cableado del 2026-08-06 el
-endpoint SÍ usa este checkpoint, pero sigue sin ser bloqueante: el modelo sólo
-decide el orden y su probabilidad cruda no se publica, justamente porque la
-calibración no está resuelta. Ver la sección "Cableado al endpoint" al final.
+**Estado: documentado, sin arreglar — y CONGELADO hasta después del piloto por
+decisión del 2026-08-17** (última sección del documento: no se aplica ni Platt
+scaling ni retrain; se revisita con datos reales de outcome).
+
+Desde el cableado del 2026-08-06 el endpoint SÍ usa este checkpoint, pero sigue
+sin ser bloqueante: el modelo sólo decide el orden y su probabilidad cruda no se
+publica, justamente porque la calibración no está resuelta. Ver la sección
+"Cableado al endpoint" al final.
 
 ### Qué se midió
 
@@ -170,11 +174,18 @@ interpretables y no dependen de la calibración.
 ### Qué NO se hizo y por qué
 
 No se aplicó ningún ajuste de calibración (temperature scaling, Platt scaling,
-isotonic). Es una decisión de coste/beneficio para el timeline del piloto y no
-urge: el endpoint no usa este modelo todavía. Si se decide abordarlo, temperature
-scaling sobre el logit es lo más barato — un solo parámetro ajustado en el split
-de test — pero conviene medir antes si mueve el AUC o sólo la calibración
-(típicamente sólo lo segundo, que es justo lo que aquí importa para el ranking).
+isotonic). Es una decisión de coste/beneficio para el timeline del piloto.
+
+> **Nota 2026-08-17.** La frase original añadía "y no urge: el endpoint no usa
+> este modelo todavía". Eso quedó obsoleto con el cableado del 2026-08-06: el
+> endpoint sí lo usa. Lo que mantiene el asunto como no urgente es otra cosa —
+> que el modelo sólo ordena y su probabilidad no se publica. La decisión de
+> dejarlo así hasta después del piloto está en la última sección.
+
+Si se decide abordarlo, temperature scaling sobre el logit es lo más barato — un
+solo parámetro ajustado en el split de test — pero conviene medir antes si mueve
+el AUC o sólo la calibración (típicamente sólo lo segundo, que es justo lo que
+aquí importa para el ranking).
 
 Cualquier decisión sobre esto debe considerar además que el sobreajuste es real:
 recalibrar no arregla un modelo que generaliza a 0.77.
@@ -564,5 +575,66 @@ Suites: **436 passed / 19 skipped** en el backend, **56 passed** en
 
 * La calibración (sección "RIESGO ABIERTO"). Mitigada, no resuelta: se evita
   publicar la probabilidad, pero el modelo sigue generalizando a 0.77.
+  **Congelada hasta después del piloto por decisión del 2026-08-17** — ver la
+  última sección de este documento.
 * El skew de `sim_database_designer` en los pesos, y la paridad train/serve que
   el mapeo de OOV rompe a propósito. Las dos se cierran reentrenando.
+
+---
+
+## 2026-08-17 — DECISIÓN TOMADA: no se calibra ni se reentrena antes del piloto
+
+**Estado: decidido el 2026-08-17. No hay cambio de código — esta sección
+documenta que se mantiene el setup actual.**
+
+### Qué se decidió
+
+No se aplica **ni Platt scaling ni retrain** antes del piloto. Se mantiene tal
+cual está:
+
+* Wide&Deep como motor de orden (`ORACLE_ENGINE=auto`).
+* `heuristic_bridge_v1` como fallback ante cualquier fallo de carga del modelo.
+* Desempate por solapamiento de skills en `rank_candidates()`, no por logit.
+* La probabilidad cruda sigue sin publicarse.
+
+Es decir: no se toca nada. Lo que cambia es que el riesgo pasa de "abierto y
+sin decidir" a "aceptado conscientemente para el piloto".
+
+### Razón
+
+Riesgo/beneficio no justifica tocar el modelo a **11 días de la demo**
+(2026-08-28). Tocar el checkpoint o la capa de calibración a esta distancia
+mete riesgo de regresión en el único camino que hoy está validado end-to-end,
+a cambio de una mejora que no está demostrada para lo que el piloto necesita.
+
+Se revisita **post-piloto, con datos reales de outcome** — que es justamente lo
+que hoy no hay y lo que haría la decisión informada en vez de especulativa.
+
+### Por qué Platt no era la opción que parecía
+
+Conviene dejarlo escrito para que no se vuelva a plantear en estos términos:
+**Platt scaling es una sigmoide monótona sobre el logit, así que no puede
+alterar el orden y por tanto no puede mover el AUC.** Es invariante por
+construcción. Como hoy el modelo sólo decide el orden y su probabilidad no se
+publica, Platt no aportaba nada al problema que importa.
+
+Además no resolvería los empates: el 25 % de las predicciones es exactamente
+0.0 por *underflow* de sigmoid en float32, y una transformación monótona de un
+0.0 duro sigue siendo una constante. Aplicarla sobre el logit sí los separaría,
+pero ya está medido que el logit es **anti-informativo en esa cola** (AUC
+0.2129, peor que el azar) y que ordenar por logit baja el AUC global de 0.7764
+a 0.7652. Por eso `rank_candidates()` desempata con los diagnósticos.
+
+Si en el futuro se quiere calibrar de verdad —para publicar la probabilidad—
+la recomendación de la sección "Qué NO se hizo y por qué" sigue en pie:
+temperature scaling, un solo parámetro, antes que Platt.
+
+### Lo que esta decisión NO dice
+
+No dice que el modelo esté bien. El sobreajuste sigue siendo real (0.9928 train
+contra 0.7740 test) y **recalibrar nunca iba a arreglar un modelo que
+generaliza a 0.77**. El retrain sigue siendo la vía para eso, y sigue siendo
+la que cierra también el skew de `sim_database_designer` y la paridad
+train/serve. Se pospone, no se descarta.
+
+Precondición para reabrirlo: datos de outcome del piloto.
