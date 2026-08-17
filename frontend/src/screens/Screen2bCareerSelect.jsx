@@ -80,10 +80,32 @@ const CAT_COLORS = {
     'Salud': 'var(--primary)', 'Ciencias': 'var(--accent)', 'Ingeniería': 'var(--accent)', 'Social': 'var(--primary)',
 }
 
+const CAT_WEIGHTS = {
+    'Tecnología': { analytical: 0.4, hands_on: 0.3, creative: 0.1, social: 0.1, linguistic: 0.1 },
+    'Ciencias': { analytical: 0.4, hands_on: 0.2, creative: 0.1, social: 0.1, linguistic: 0.2 },
+    'Ingeniería': { analytical: 0.4, hands_on: 0.3, creative: 0.1, social: 0.1, linguistic: 0.1 },
+    'Negocios': { social: 0.3, linguistic: 0.3, analytical: 0.2, creative: 0.1, hands_on: 0.1 },
+    'Diseño': { creative: 0.4, hands_on: 0.2, social: 0.15, linguistic: 0.15, analytical: 0.1 },
+    'Salud': { analytical: 0.3, social: 0.3, hands_on: 0.2, linguistic: 0.1, creative: 0.1 },
+    'Social': { social: 0.35, linguistic: 0.3, analytical: 0.15, creative: 0.15, hands_on: 0.05 }
+}
+
 function computeScores(answers) {
+    if (!answers?.normalizedScores) {
+        return [...CAREERS]
+    }
+    
+    const { analytical_score, creative_score, social_score, linguistic_score, hands_on_score } = answers.normalizedScores
+
     return CAREERS.map(c => {
-        let score = 0
-        answers.forEach((ans, qi) => { score += ans === 0 ? c.affinity[qi] : (2 - c.affinity[qi]) })
+        const w = CAT_WEIGHTS[c.cat] || { analytical: 0.2, creative: 0.2, social: 0.2, linguistic: 0.2, hands_on: 0.2 }
+        const score = (
+            (analytical_score || 0) * w.analytical +
+            (creative_score || 0) * w.creative +
+            (social_score || 0) * w.social +
+            (linguistic_score || 0) * w.linguistic +
+            (hands_on_score || 0) * w.hands_on
+        )
         return { ...c, score }
     }).sort((a, b) => b.score - a.score)
 }
@@ -147,15 +169,19 @@ export default function Screen2bCareerSelect({ oracleAnswers = [], onConfirm, on
         }
 
         try {
-            const payload = {
-                skills: careerLabels,
-                education_level: "Bachelor's",
-                field_of_study: careerLabels[0] || "General",
+            const scores = oracleAnswers?.normalizedScores || {
                 analytical_score: 50,
                 creative_score: 50,
                 social_score: 50,
                 linguistic_score: 50,
-                hands_on_score: 50,
+                hands_on_score: 50
+            };
+
+            const payload = {
+                skills: careerLabels,
+                education_level: "Bachelor's",
+                field_of_study: careerLabels[0] || "General",
+                ...scores,
                 top_n: 5
             }
             const res = await api.post('/api/v1/oracle/full_profile', payload)
