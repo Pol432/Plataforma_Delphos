@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, CheckCircle2, ChevronRight, Brain, RotateCcw } from 'lucide-react'
+import { ArrowRight, ChevronRight, Brain, RotateCcw } from 'lucide-react'
 import { questionBank, shuffleQuestions } from '../data/questionBank'
 
 export default function Screen2Onboarding({ onNext }) {
@@ -35,7 +35,7 @@ export default function Screen2Onboarding({ onNext }) {
         // Add weights to scores
         const newScores = { ...scores }
         for (const [trait, weight] of Object.entries(option.weights || {})) {
-            newScores[trait] += weight
+            newScores[trait] = (newScores[trait] || 0) + weight
         }
         setScores(newScores)
 
@@ -51,10 +51,8 @@ export default function Screen2Onboarding({ onNext }) {
         const currentCount = activeQuestions.length
         const nextQuestions = allQuestions.slice(currentCount, currentCount + 5)
         
-        if (nextQuestions.length === 0) {
-            alert("Has respondido todas las preguntas disponibles.")
-            return
-        }
+        // El botón se oculta al agotar el banco; esto es sólo una salvaguarda.
+        if (nextQuestions.length === 0) return
 
         setActiveQuestions(prev => [...prev, ...nextQuestions])
     }
