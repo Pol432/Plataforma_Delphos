@@ -226,7 +226,7 @@ function RegisterPanel({ onNext, onGoLogin }) {
                 password: form.password,
                 full_name: `${form.firstName} ${form.lastName}`.trim(),
                 username: form.email.split('@')[0],
-                birth_year: 2000 // Placeholder required by backend
+                birth_year: parseInt(form.birthYear) || 2000
             };
             await api.post('/api/v1/register', payload);
             setStep(3);
