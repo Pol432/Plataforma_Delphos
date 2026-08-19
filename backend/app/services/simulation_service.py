@@ -10,6 +10,23 @@ from difflib import SequenceMatcher
 import re
 
 
+def _skill_names(weights: Any) -> List[str]:
+    """Nombres de skill de un `skills_metrics_weights`.
+
+    Es la única fuente real de skills por tarea: `habilidades_tarea` existe como
+    tabla pero está vacía (0 filas), así que leerla devolvería siempre nada.
+
+    Sólo interesan las claves; el peso queda fuera a propósito porque el oráculo
+    resuelve nombres contra su vocabulario y no acepta ponderaciones. Los
+    nombres que no estén en el vocabulario no se filtran aquí: el endpoint ya
+    los reporta en `unresolved_skills`, y descartarlos en silencio escondería
+    justo el dato que hace falta para ampliar el catálogo.
+    """
+    if not isinstance(weights, dict):
+        return []
+    return [name for name in weights.keys() if isinstance(name, str) and name.strip()]
+
+
 class SimulationService:
     def __init__(self, db: Session):
         self.db = db
@@ -205,7 +222,12 @@ class SimulationService:
         creative_score = int(min(100, max(0, round(average_score - 5))))
         social_score = int(min(100, max(0, round(average_score + (20 if any(s in {"communication", "leadership", "teamwork"} for s in unique_skills) else 0)))))
         linguistic_score = int(min(100, max(0, round(average_score + (5 if any(s in {"communication", "writing"} for s in unique_skills) else 0)))))
-        hands_on_score = int(min(100, max(0, round(average_score + (5 if any(s in {"analysis", "problem_solving", "technical"} for s in unique_skills) else 0)))))
+        # Los tokens iban con guión bajo ("problem_solving") pero `unique_skills`
+        # sólo pasa por `.lower()`, así que un skill real llamado "Problem
+        # Solving" llegaba aquí como "problem solving" y NUNCA casaba: el bonus
+        # de `hands_on_score` era inalcanzable. Con `skills` hardcodeado a []
+        # daba igual; ahora que llegan skills de verdad, no.
+        hands_on_score = int(min(100, max(0, round(average_score + (5 if any(s in {"analysis", "problem solving", "technical"} for s in unique_skills) else 0)))))
 
         return OracleProfileInput(
             skills=[s for s in unique_skills if s],
@@ -238,9 +260,24 @@ class SimulationService:
                     {
                         "task_id": submission.task_id,
                         "score": float(submission.calificacion_obtenida or 0.0),
-                        "skills": [],
+                        "skills": _skill_names(task.skills_metrics_weights),
                     }
                 )
+
+        # Se cuentan las tareas ENTREGADAS, no sólo las aprobadas: haber
+        # intentado una tarea de SQL ya dice algo del interés del estudiante, y
+        # la nota no se pierde — `build_oracle_profile_from_results` la usa
+        # aparte para los puntajes psicométricos. Filtrar por score >= 70 aquí
+        # dejaría sin perfil a quien más ayuda necesita.
+        #
+        # Si ninguna tarea declara pesos, se cae a los de la simulación. No es
+        # lo mismo —son las skills del ejercicio entero, no de lo que la
+        # persona tocó— pero es mucho mejor que un perfil vacío, que hace que el
+        # oráculo recomiende por psicometría pura.
+        if not any(t["skills"] for t in task_payload):
+            fallback = _skill_names(simulation.skills_metrics_weights)
+            if fallback and task_payload:
+                task_payload[0]["skills"] = fallback
 
         current_user_fields = {
             "field_of_study": getattr(current_user, "campo_estudio", None) or getattr(current_user, "field_of_study", None) or "General"
