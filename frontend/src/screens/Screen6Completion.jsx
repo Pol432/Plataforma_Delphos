@@ -23,7 +23,22 @@ export default function Screen6Completion({ onNext, activeModule }) {
                     })
                     progressId = startRes.data?.id
                 } catch (startErr) {
-                    console.warn('Progreso ya iniciado o error al iniciar:', startErr?.response?.status)
+                    // 400 = ya estaba iniciado, que es lo normal: enviar una tarea
+                    // desde el workspace ya crea el registro. Hay que recuperar su
+                    // id, o el PATCH que lo marca completado no llega a ejecutarse.
+                    if (startErr?.response?.status === 400) {
+                        try {
+                            const listRes = await api.get(`/api/v1/progress/user/${userId}`)
+                            const existing = (listRes.data || []).find(
+                                p => p.simulation_id === activeModule.id
+                            )
+                            progressId = existing?.id ?? null
+                        } catch (listErr) {
+                            console.warn('No se pudo recuperar el progreso existente:', listErr?.response?.status)
+                        }
+                    } else {
+                        console.warn('Error al iniciar progreso:', startErr?.response?.status)
+                    }
                 }
 
                 if (progressId) {

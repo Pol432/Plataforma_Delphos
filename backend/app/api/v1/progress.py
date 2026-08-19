@@ -11,7 +11,7 @@ from app.db.session import get_db
 from app.models.user_progress import UserSimulationProgress, ProgressStatus
 from app.models.user import User
 from app.models.simulations import Simulation
-from app.schemas.progress import EnrollmentCreate, TaskSubmission, UserProgressOut
+from app.schemas.progress import EnrollmentCreate, ProgressUpdate, UserProgressOut
 from app.api.deps import get_current_user
 
 router = APIRouter()
@@ -27,8 +27,11 @@ def start_simulation(
     Start a simulation
     Creates progress record with status='started'
     """
+    # `user_id` es opcional: si no viene, el dueño es quien manda el token.
+    target_user_id = progress_data.user_id or current_user.id
+
     # Authorization: users can only start for themselves
-    if current_user.id != progress_data.user_id:
+    if current_user.id != target_user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only start simulations for yourself"
@@ -47,7 +50,7 @@ def start_simulation(
     
     # Check if already started
     existing = db.query(UserSimulationProgress).filter(
-        UserSimulationProgress.user_id == progress_data.user_id,
+        UserSimulationProgress.user_id == target_user_id,
         UserSimulationProgress.simulation_id == progress_data.simulation_id
     ).first()
     
@@ -59,7 +62,7 @@ def start_simulation(
     
     # Create progress
     db_progress = UserSimulationProgress(
-        user_id=progress_data.user_id,
+        user_id=target_user_id,
         simulation_id=progress_data.simulation_id,
         status=ProgressStatus.STARTED,
         started_at=datetime.utcnow(),
@@ -99,7 +102,7 @@ def get_user_progress(
 @router.patch("/progress/{progress_id}", response_model=UserProgressOut)
 def update_progress(
     progress_id: int,
-    progress_data: TaskSubmission,
+    progress_data: ProgressUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -132,7 +135,7 @@ def update_progress(
     # Auto-update timestamps
     progress.last_activity_at = datetime.utcnow()
     
-    if progress_data.status == "completed" and not progress.completed_at:
+    if progress_data.status == ProgressStatus.COMPLETED and not progress.completed_at:
         progress.completed_at = datetime.utcnow()
         progress.completion_percentage = 100.0
     
