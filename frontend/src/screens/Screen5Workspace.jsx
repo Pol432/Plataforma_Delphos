@@ -212,7 +212,7 @@ export default function Screen5Workspace({ onNext, onNavigate, activeModule }) {
     }
 
     const missionColor = 'var(--primary)'
-    const totalModules = activeModule.modules?.length || 1
+    const totalModules = displayModules.length || 1
     const progress = Math.round(((activeStep + 1) / Math.max(allSteps.length, 1)) * 100)
 
     return (
@@ -291,7 +291,7 @@ export default function Screen5Workspace({ onNext, onNavigate, activeModule }) {
                         </p>
                     </div>
                     <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
-                        {activeModule.modules?.map((mod, mIdx) => (
+                        {displayModules.map((mod, mIdx) => (
                             <div key={mIdx} style={{ marginBottom: '24px' }}>
                                 {/* Module header */}
                                 <div style={{ marginBottom: '12px' }}>
