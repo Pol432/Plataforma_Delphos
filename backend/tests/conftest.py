@@ -3,58 +3,93 @@ Test configuration and fixtures
 """
 import pytest
 import os
+from urllib.parse import urlsplit, urlunsplit
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, text, event
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from app.db.base import Base
 from app.main import app
 from app.db.session import get_db
 from app.api.deps import get_db as deps_get_db
 
-TEST_DB_FILE = "test.db"
-
-# Por defecto SQLite en fichero: es lo que había y lo que hace que la suite
-# corra sin depender de ningún servicio. `TEST_DATABASE_URL` permite apuntarla
-# a un motor real —en la práctica el Postgres del compose— para verificar lo
-# que SQLite no cubre: tipos de columna reales y FKs con su semántica nativa.
+# La suite corre contra el Postgres del compose, no contra SQLite. El stack
+# real es Postgres y los modelos usan tipos que sólo existen ahí (JSONB en
+# `simulations.real_world_constraints`, entre otros): sobre SQLite la suite ni
+# siquiera llega a crear las tablas. Mantener un modo SQLite significaba
+# mantener columnas que funcionaran en ambos motores, y eso ya se descartó.
 #
-#   docker compose exec -e TEST_DATABASE_URL=postgresql://postgres:postgres@db:5432/aurum_test web pytest
-#
-# No apuntar a la base de la app: la suite hace create_all/drop_all.
-SQLALCHEMY_DATABASE_URL = os.getenv("TEST_DATABASE_URL") or f"sqlite:///{TEST_DB_FILE}"
-IS_SQLITE = SQLALCHEMY_DATABASE_URL.startswith("sqlite")
+# La URL sale, por orden: de `TEST_DATABASE_URL`; si no, de `DATABASE_URL`
+# cambiándole el nombre de la base; si no, del default del compose.
+DEFAULT_TEST_DB = "aurum_test"
+FALLBACK_URL = f"postgresql://postgres:postgres@db:5432/{DEFAULT_TEST_DB}"
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    # `check_same_thread` es un argumento del driver de SQLite; pasárselo a
-    # psycopg2 revienta la conexión.
-    connect_args={"check_same_thread": False} if IS_SQLITE else {},
-)
 
-# CRITICAL: Activar Foreign Keys en SQLite
-# SQLite las ignora salvo que se pidan por conexión. En Postgres son nativas,
-# así que el listener sobra (y `PRAGMA` ni siquiera es SQL válido ahí).
-if IS_SQLITE:
-    @event.listens_for(engine, "connect")
-    def set_sqlite_pragma(dbapi_connection, connection_record):
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.close()
+def _derive_test_url() -> str:
+    explicit = os.getenv("TEST_DATABASE_URL")
+    if explicit:
+        return explicit
+    app_url = os.getenv("DATABASE_URL")
+    if not app_url:
+        return FALLBACK_URL
+    # Misma conexión que la app pero otra base: la suite hace create_all y
+    # drop_all, así que apuntarla a la base de la app borraría los datos de
+    # desarrollo de quien la corra.
+    parts = urlsplit(app_url)
+    return urlunsplit(parts._replace(path=f"/{DEFAULT_TEST_DB}"))
+
+
+SQLALCHEMY_DATABASE_URL = _derive_test_url()
+
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    raise RuntimeError(
+        "La suite ya no corre sobre SQLite: los modelos usan tipos propios de "
+        "Postgres (JSONB) que SQLite no sabe crear. Apunta TEST_DATABASE_URL a "
+        f"un Postgres, p. ej. {FALLBACK_URL}"
+    )
+
+
+def _ensure_database_exists(url: str) -> None:
+    """Crea la base de test si no existe.
+
+    `Base.metadata.create_all` crea las tablas, pero la base tiene que existir
+    antes. Hacerlo aquí es lo que permite correr `pytest` a secas sin depender
+    de que alguien haya pasado antes por `oracle/scripts/run_tests.sh`.
+    """
+    parts = urlsplit(url)
+    db_name = parts.path.lstrip("/")
+    # `postgres` es la base de mantenimiento: siempre existe y no se toca.
+    admin_url = urlunsplit(parts._replace(path="/postgres"))
+    admin_engine = create_engine(admin_url, isolation_level="AUTOCOMMIT")
+    try:
+        with admin_engine.connect() as conn:
+            exists = conn.execute(
+                text("SELECT 1 FROM pg_database WHERE datname = :name"),
+                {"name": db_name},
+            ).scalar()
+            if not exists:
+                # El nombre viene de nuestra propia config, no de entrada de
+                # usuario; CREATE DATABASE no admite parámetros ligados.
+                conn.execute(text(f'CREATE DATABASE "{db_name}"'))
+    finally:
+        admin_engine.dispose()
+
+
+_ensure_database_exists(SQLALCHEMY_DATABASE_URL)
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
     """Create tables once per test session"""
-    if IS_SQLITE and os.path.exists(TEST_DB_FILE):
-        os.remove(TEST_DB_FILE)
-
+    # Arrancar de cero: si una ejecución anterior se cortó a media, las tablas
+    # viejas siguen ahí y el create_all no las actualiza.
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
     engine.dispose()
-    if IS_SQLITE and os.path.exists(TEST_DB_FILE):
-        os.remove(TEST_DB_FILE)
 
 @pytest.fixture(scope="function")
 def db_session():

@@ -187,15 +187,15 @@ Puntos verificados en un arranque limpio, útiles para no perder tiempo:
   no hay una base de datos accesible, porque `app/main.py` ejecuta
   `create_all()` contra el engine real en tiempo de import.
 
-  **Estado actual: 408 passed, 19 skipped, 0 failed**, verificado tanto contra
-  SQLite como contra el PostgreSQL del compose. La suite usa SQLite por defecto;
-  para validarla contra Postgres real:
+  **Estado actual: 445 passed, 19 skipped, 0 failed** contra el PostgreSQL del
+  compose, que es el único motor soportado: los modelos usan tipos propios de
+  Postgres (JSONB) que SQLite no sabe crear. `pytest` a secas ya apunta a
+  Postgres —conftest deriva la URL de `DATABASE_URL` y crea `aurum_test` si no
+  existe—, así que no hace falta ninguna variable:
 
-      docker compose exec \
-        -e TEST_DATABASE_URL=postgresql://postgres:postgres@db:5432/aurum_test \
-        web pytest
+      docker compose exec web pytest
 
-  Conviene hacerlo antes de cerrar cualquier hito: SQLite oculta fallos reales.
+  `TEST_DATABASE_URL` sigue disponible para apuntar a otro Postgres.
   Al habilitarlo aparecieron 2 tests que sólo pasaban por artefactos suyos
   (comparación de datetimes naive contra columnas `timezone=True`, y un id de
   usuario fijo que asumía que las secuencias vuelven atrás con el rollback —

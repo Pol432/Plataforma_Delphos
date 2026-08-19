@@ -14,8 +14,8 @@ from app.db.session import get_db as session_get_db
 # ============================================================================
 #
 # Las tablas las crea una sola vez `setup_test_db` en tests/conftest.py, sobre
-# el mismo fichero `test.db`. Este módulo NO debe crear su propio engine ni
-# llamar a `drop_all`: al compartir el fichero, borraba las tablas para todos
+# la base de test compartida. Este módulo NO debe crear su propio engine ni
+# llamar a `drop_all`: al compartir la base, borraba las tablas para todos
 # los módulos que se recolectan después de `tests/api/` (empresas, content,
 # simulations, ...) y los hacía fallar con "no such table".
 #
@@ -29,9 +29,9 @@ from app.db.session import get_db as session_get_db
 def seed_location(db_session):
     """Región → provincia → ciudad que referencia VALID_USER_DATA["city_id"].
 
-    El engine de tests activa `PRAGMA foreign_keys=ON`, así que `city_id` tiene
-    que existir de verdad; antes estos tests pasaban solo porque el engine
-    propio de este módulo no activaba el pragma y la FK no se comprobaba.
+    Postgres comprueba las FKs de forma nativa, así que `city_id` tiene que
+    existir de verdad; antes estos tests pasaban solo porque el engine propio
+    de este módulo corría sobre SQLite sin `PRAGMA foreign_keys=ON`.
     """
     from app.models.catalog import Region, Province, City
 

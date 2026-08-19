@@ -2,18 +2,16 @@
 # ============================================================================
 # Plataforma Delphos — suite completa del backend contra PostgreSQL real
 # ----------------------------------------------------------------------------
-# Levanta el stack si hace falta y corre `pytest` dentro del contenedor `web`
-# apuntando a Postgres, no a SQLite. La suite por defecto usa SQLite en fichero
-# (ver `backend/tests/conftest.py`), que no cubre ni los tipos de columna
-# reales ni la semántica nativa de las FKs. Esto es lo que sí los cubre.
+# Levanta el stack si hace falta y corre `pytest` dentro del contenedor `web`.
+# La suite corre siempre contra Postgres (ver `backend/tests/conftest.py`, que
+# ya lo usa por defecto); este script además se encarga de levantar el stack y
+# de esperar a que la base acepte conexiones.
 #
 #   ./oracle/scripts/run_tests.sh              toda la suite
 #   ./oracle/scripts/run_tests.sh tests/oracle sólo un subdirectorio
 #   ./oracle/scripts/run_tests.sh -h
 #
 # Opciones:
-#   --sqlite      corre contra SQLite en vez de Postgres (más rápido, cubre
-#                 menos). Sin esto siempre se usa Postgres.
 #   --no-start    no levanta nada; falla si el stack no está ya arriba.
 #   -h | --help   esta ayuda
 #
@@ -34,7 +32,6 @@ COMPOSE_FILE="$ROOT/backend/docker-compose.yml"
 TEST_DB="aurum_test"
 TEST_DATABASE_URL="postgresql://postgres:postgres@db:5432/$TEST_DB"
 
-USE_POSTGRES=1
 DO_START=1
 PYTEST_ARGS=()
 
@@ -68,7 +65,6 @@ die_missing() {
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -h|--help)  usage; exit 0 ;;
-    --sqlite)   USE_POSTGRES=0; shift ;;
     --no-start) DO_START=0; shift ;;
     *)          PYTEST_ARGS+=("$1"); shift ;;
   esac
@@ -135,41 +131,36 @@ fi
 ok "contenedor web listo"
 
 # --- 3. Base de datos de test ----------------------------------------------
-PYTEST_ENV=()
-if [[ $USE_POSTGRES -eq 1 ]]; then
-  say "Preparando la base de datos de test ($TEST_DB)"
+say "Preparando la base de datos de test ($TEST_DB)"
 
-  for _ in $(seq 1 30); do
-    "${DC[@]}" exec -T db pg_isready -U postgres >/dev/null 2>&1 && break
-    sleep 1
-  done
-  if ! "${DC[@]}" exec -T db pg_isready -U postgres >/dev/null 2>&1; then
-    bad "Postgres no acepta conexiones tras 30 s"
-    printf "      Mira el log con: docker compose -f %s logs db\n" "$COMPOSE_FILE"
+for _ in $(seq 1 30); do
+  "${DC[@]}" exec -T db pg_isready -U postgres >/dev/null 2>&1 && break
+  sleep 1
+done
+if ! "${DC[@]}" exec -T db pg_isready -U postgres >/dev/null 2>&1; then
+  bad "Postgres no acepta conexiones tras 30 s"
+  printf "      Mira el log con: docker compose -f %s logs db\n" "$COMPOSE_FILE"
+  exit 2
+fi
+
+# create_all/drop_all crea las TABLAS, pero la base de datos tiene que
+# existir antes. conftest.py también sabe crearla (para quien corra `pytest`
+# a secas), pero hacerlo aquí da un error claro si Postgres no coopera.
+# Idempotente: si ya está, no se toca ni se borra al acabar.
+if "${DC[@]}" exec -T db psql -U postgres -tAc \
+     "SELECT 1 FROM pg_database WHERE datname='$TEST_DB'" 2>/dev/null | grep -q 1; then
+  ok "la base $TEST_DB ya existía"
+else
+  if "${DC[@]}" exec -T db createdb -U postgres "$TEST_DB" >/dev/null 2>&1; then
+    ok "base $TEST_DB creada"
+  else
+    bad "no se pudo crear la base $TEST_DB"
     exit 2
   fi
-
-  # create_all/drop_all crea las TABLAS, pero la base de datos tiene que
-  # existir antes. Idempotente: si ya está, no se toca ni se borra al acabar
-  # (así la siguiente ejecución no vuelve a pagar la creación).
-  if "${DC[@]}" exec -T db psql -U postgres -tAc \
-       "SELECT 1 FROM pg_database WHERE datname='$TEST_DB'" 2>/dev/null | grep -q 1; then
-    ok "la base $TEST_DB ya existía"
-  else
-    if "${DC[@]}" exec -T db createdb -U postgres "$TEST_DB" >/dev/null 2>&1; then
-      ok "base $TEST_DB creada"
-    else
-      bad "no se pudo crear la base $TEST_DB"
-      exit 2
-    fi
-  fi
-
-  PYTEST_ENV=(-e "TEST_DATABASE_URL=$TEST_DATABASE_URL")
-  MOTOR="PostgreSQL ($TEST_DB)"
-else
-  warn "modo --sqlite: NO se está verificando contra Postgres"
-  MOTOR="SQLite (fichero)"
 fi
+
+PYTEST_ENV=(-e "TEST_DATABASE_URL=$TEST_DATABASE_URL")
+MOTOR="PostgreSQL ($TEST_DB)"
 
 # --- 4. La suite ------------------------------------------------------------
 printf "\n${C_BOLD}Suite del backend${C_OFF}\n"

@@ -22,16 +22,14 @@ sirven tal cual para CI.
 Levanta el stack si no estaba, crea la base `aurum_test` si no existía y corre
 `pytest` dentro del contenedor.
 
-**Por qué existe:** la suite por defecto corre contra SQLite en fichero, que no
-cubre ni los tipos de columna reales ni la semántica nativa de las claves
-ajenas. Este script fija `TEST_DATABASE_URL` al Postgres del compose para que
-sí se cubran. Es fácil olvidarse de esa variable y creer que has probado más de
-lo que has probado.
+**Por qué existe:** la suite ya corre contra Postgres por sí sola (conftest.py
+lo usa por defecto), pero este script además levanta el stack si hacía falta,
+espera a que la base acepte conexiones y resume el resultado. Corriendo
+`pytest` a secas dentro del contenedor obtienes lo mismo.
 
 ```bash
 ./oracle/scripts/run_tests.sh                # toda la suite
 ./oracle/scripts/run_tests.sh tests/oracle   # sólo un subdirectorio
-./oracle/scripts/run_tests.sh --sqlite       # más rápido, cubre menos
 ./oracle/scripts/run_tests.sh --no-start     # falla si el stack no está ya arriba
 ./oracle/scripts/run_tests.sh --help
 ```
