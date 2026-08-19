@@ -66,11 +66,15 @@ function EmptyWorkspace({ onNavigate }) {
 }
 
 // ════════════════════════════════════════════════════════════════
-export default function Screen5Workspace({ onNext, onNavigate, activeMission }) {
+export default function Screen5Workspace({ onNext, onNavigate, activeModule }) {
     const [submission, setSubmission] = useState('')
     const [submitting, setSubmitting] = useState(false)
+    const [submitError, setSubmitError] = useState(null)
     const [activeStep, setActiveStep] = useState(0)
     const [userData, setUserData] = useState(null)
+    // Módulos y tareas reales del backend. `null` = todavía cargando; `[]` =
+    // esta simulación no tiene contenido propio y se usa el temario de relleno.
+    const [dbModules, setDbModules] = useState(null)
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -84,10 +88,67 @@ export default function Screen5Workspace({ onNext, onNavigate, activeMission }) 
         fetchUser()
     }, [])
 
-    if (!activeMission) return <EmptyWorkspace onNavigate={onNavigate} />
+    // `GET /simulaciones` no devuelve módulos (SimulationOut no tiene ese
+    // campo), así que hay que pedirlos aparte. Sin esto los pasos vienen del
+    // temario de relleno, que no trae `task_id` y no se puede enviar nada.
+    useEffect(() => {
+        const simId = activeModule?.id
+        if (!simId) return
+        let cancelled = false
+
+        const fetchContent = async () => {
+            try {
+                const modRes = await api.get('/api/v1/modules', { params: { simulation_id: simId } })
+                const mods = modRes.data || []
+                const withTasks = await Promise.all(
+                    mods.map(async (m) => {
+                        const taskRes = await api.get('/api/v1/tasks', { params: { module_id: m.id } })
+                        return { ...m, tasks: taskRes.data || [] }
+                    })
+                )
+                if (!cancelled) setDbModules(withTasks)
+            } catch (e) {
+                console.error('Error cargando módulos/tareas de la simulación:', e)
+                if (!cancelled) setDbModules([])
+            }
+        }
+        fetchContent()
+
+        return () => { cancelled = true }
+    }, [activeModule?.id])
+
+    // Cada paso lleva su propia respuesta: al cambiar de paso se limpia el
+    // textarea y el error, si no el texto de una tarea se arrastra a la siguiente.
+    useEffect(() => {
+        setSubmission('')
+        setSubmitError(null)
+    }, [activeStep])
+
+    if (!activeModule) return <EmptyWorkspace onNavigate={onNavigate} />
+
+    // Los módulos reales mandan sobre el temario de relleno: son los únicos que
+    // traen `task_id`, que es lo que permite enviar la respuesta. La descripción
+    // del módulo se muestra como lectura previa y cada tarea es un paso enviable.
+    const realModules = (dbModules || []).length
+        ? dbModules.map(m => ({
+            title: m.title,
+            duration: m.duration || '1h',
+            steps: [
+                { type: 'lectura', title: m.title, desc: m.description },
+                ...(m.tasks || []).map(t => ({
+                    type: 'tarea',
+                    title: t.title,
+                    desc: t.description,
+                    taskId: t.id,
+                })),
+            ],
+        }))
+        : null
+
+    const displayModules = realModules || activeModule.modules || []
 
     // Flatten all steps across all modules
-    const allSteps = activeMission.modules?.flatMap((mod, mIdx) =>
+    const allSteps = displayModules.flatMap((mod, mIdx) =>
         (mod.steps || []).map((step, sIdx) => ({
             ...step,
             moduleTitle: mod.title,
@@ -101,23 +162,57 @@ export default function Screen5Workspace({ onNext, onNavigate, activeMission }) 
     const isLastStep = activeStep === allSteps.length - 1
     const isTareaStep = currentStep?.type === 'tarea'
 
-    const handleComplete = async () => {
-        if (isTareaStep && !submission.trim()) return
-        setSubmitting(true)
+    // Envía la respuesta de la tarea actual. Devuelve true si se puede avanzar.
+    // Los pasos sin `taskId` (temario de relleno) no tienen nada que enviar.
+    const submitCurrentTask = async () => {
+        if (!isTareaStep || !currentStep?.taskId) return true
         try {
-            // Navigate to Victory screen (which will handle backend calls)
-            setTimeout(() => {
-                setSubmitting(false)
-                onNext()
-            }, 800)
+            await api.post(
+                `/api/v1/simulaciones/${activeModule.id}/tasks/${currentStep.taskId}/submit`,
+                { response: submission }
+            )
+            setSubmitError(null)
+            return true
         } catch (err) {
-            console.error('Error al completar paso:', err)
-            setSubmitting(false)
+            console.error('Error al enviar la respuesta:', err)
+            setSubmitError(
+                'No pudimos guardar tu respuesta. Revisa tu conexión y vuelve a intentarlo.'
+            )
+            return false
         }
     }
 
+    const goToNextStep = () => setActiveStep(s => Math.min(allSteps.length - 1, s + 1))
+
+    // Avanzar de paso también envía: si sólo enviara el último, las tareas
+    // intermedias se perderían igual que antes.
+    const handleAdvance = async () => {
+        if (isTareaStep && !submission.trim()) return
+        setSubmitting(true)
+        const ok = await submitCurrentTask()
+        setSubmitting(false)
+        if (ok) goToNextStep()
+    }
+
+    const handleComplete = async () => {
+        if (isTareaStep && !submission.trim()) return
+        setSubmitting(true)
+        const ok = await submitCurrentTask()
+        setSubmitting(false)
+        if (ok) onNext()
+    }
+
+    // Salida de emergencia: si el envío falla, el estudiante no se queda
+    // atrapado en la pantalla, pero sólo tras haberlo intentado y con el aviso
+    // delante — nunca en silencio.
+    const handleSkipAfterError = () => {
+        setSubmitError(null)
+        if (isLastStep) onNext()
+        else goToNextStep()
+    }
+
     const missionColor = 'var(--primary)'
-    const totalModules = activeMission.modules?.length || 1
+    const totalModules = activeModule.modules?.length || 1
     const progress = Math.round(((activeStep + 1) / Math.max(allSteps.length, 1)) * 100)
 
     return (
@@ -144,9 +239,9 @@ export default function Screen5Workspace({ onNext, onNavigate, activeMission }) 
                     </motion.button>
                     <div style={{ width: '1px', height: '32px', background: 'var(--border)' }} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {activeMission.Icon && <activeMission.Icon size={20} color={missionColor} strokeWidth={1.5} />}
+                        {activeModule.Icon && <activeModule.Icon size={20} color={missionColor} strokeWidth={1.5} />}
                         <span style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-bright)' }}>
-                            {activeMission.title}
+                            {activeModule.title}
                         </span>
                     </div>
                 </div>
@@ -196,7 +291,7 @@ export default function Screen5Workspace({ onNext, onNavigate, activeMission }) 
                         </p>
                     </div>
                     <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
-                        {activeMission.modules?.map((mod, mIdx) => (
+                        {activeModule.modules?.map((mod, mIdx) => (
                             <div key={mIdx} style={{ marginBottom: '24px' }}>
                                 {/* Module header */}
                                 <div style={{ marginBottom: '12px' }}>
@@ -336,7 +431,7 @@ export default function Screen5Workspace({ onNext, onNavigate, activeMission }) 
                                                             Material de lectura
                                                         </p>
                                                         <p style={{ fontFamily: 'Inter', fontSize: '1.2rem', color: 'var(--text-bright)', fontWeight: 600 }}>
-                                                            {activeMission.title}
+                                                            {activeModule.title}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -404,6 +499,34 @@ export default function Screen5Workspace({ onNext, onNavigate, activeMission }) 
                                         )}
                                     </div>
 
+                                    {/* Aviso de fallo de envío: el botón principal reintenta,
+                                        y hay una salida explícita para no bloquear al estudiante. */}
+                                    {submitError && (
+                                        <div style={{
+                                            display: 'flex', alignItems: 'flex-start', gap: '12px',
+                                            background: 'rgba(239, 68, 68, 0.08)',
+                                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                                            borderRadius: '4px', padding: '16px 20px', marginBottom: '20px',
+                                        }}>
+                                            <AlertCircle size={20} color="#EF4444" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                            <div>
+                                                <p style={{ fontFamily: 'Inter', fontSize: '0.95rem', color: 'var(--text-bright)', lineHeight: 1.5 }}>
+                                                    {submitError}
+                                                </p>
+                                                <button
+                                                    onClick={handleSkipAfterError}
+                                                    style={{
+                                                        marginTop: '8px', background: 'none', border: 'none', padding: 0,
+                                                        fontFamily: 'Inter', fontSize: '0.9rem', fontWeight: 600,
+                                                        color: '#EF4444', cursor: 'pointer', textDecoration: 'underline',
+                                                    }}
+                                                >
+                                                    Continuar sin guardar esta respuesta
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Navigation buttons */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <motion.button
@@ -445,18 +568,22 @@ export default function Screen5Workspace({ onNext, onNavigate, activeMission }) 
                                             </motion.button>
                                         ) : (
                                             <motion.button
-                                                onClick={() => setActiveStep(s => Math.min(allSteps.length - 1, s + 1))}
-                                                whileHover={{ background: 'var(--primary-dim)' }}
+                                                onClick={handleAdvance}
+                                                disabled={submitting || (isTareaStep && !submission.trim())}
+                                                whileHover={!submitting && (!isTareaStep || submission.trim()) ? { background: 'var(--primary-dim)' } : {}}
                                                 whileTap={{ scale: 0.98 }}
                                                 style={{
                                                     display: 'flex', alignItems: 'center', gap: '8px',
                                                     padding: '14px 32px', borderRadius: '4px',
-                                                    background: 'var(--primary)', color: '#fff', border: 'none',
+                                                    background: (!isTareaStep || submission.trim()) && !submitting ? 'var(--primary)' : '#f0f2f5',
+                                                    color: (!isTareaStep || submission.trim()) && !submitting ? '#fff' : 'var(--text-muted)',
+                                                    border: 'none',
                                                     fontFamily: 'Inter', fontWeight: 600, fontSize: '1rem',
-                                                    cursor: 'pointer', transition: 'background 0.2s'
+                                                    cursor: submitting || (isTareaStep && !submission.trim()) ? 'not-allowed' : 'pointer',
+                                                    transition: 'all 0.2s'
                                                 }}
                                             >
-                                                Siguiente lección <ChevronRight size={18} />
+                                                {submitting ? 'Enviando...' : <>Siguiente lección <ChevronRight size={18} /></>}
                                             </motion.button>
                                         )}
                                     </div>
