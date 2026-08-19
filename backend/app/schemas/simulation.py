@@ -75,11 +75,28 @@ class ModuleOut(ModuleBase):
 # TASK SCHEMAS
 # =============================================================================
 
+#: Tipos de tarea aceptados. El patrón anterior —(video|quiz|pdf|text|code)— no
+#: incluía `submission`, que es el DEFAULT del propio modelo
+#: (`models/simulations.py:96`), así que `GET /api/v1/tasks` reventaba con
+#: ResponseValidationError (500) en cuanto la tabla tenía una fila normal: la
+#: validación de RESPUESTA rechazaba datos que el backend mismo había escrito.
+#:
+#: Se añaden los dos que existen en la base y faltaban —`submission` (24 filas) e
+#: `interactive` (12)— y se conservan los cinco originales aunque hoy sólo se
+#: usen `video` y `text`: quitarlos rompería a quien ya cree tareas con ellos.
+#:
+#: Va como tupla y no como regex suelto para que sea la única lista, la
+#: compartan TaskBase y TaskUpdate, y añadir un tipo sea tocar un sitio.
+TASK_TYPES = ("submission", "interactive", "video", "quiz", "pdf", "text", "code")
+
+TaskType = Literal[TASK_TYPES]  # type: ignore[valid-type]
+
+
 class TaskBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=300)
     module_id: int
     order: int = Field(..., ge=1)
-    task_type: str = Field(..., pattern="^(video|quiz|pdf|text|code)$")
+    task_type: TaskType
     lore_context: Optional[str] = None
     scaffolding_phase: Optional[Literal['Guided','Intermediate','Final Challenge']] = Field(default='Guided')
     real_world_constraints: Optional[List[str]] = Field(default_factory=list)
@@ -95,7 +112,9 @@ class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     order: Optional[int] = Field(None, ge=1)
-    task_type: Optional[str] = None
+    # Antes era `Optional[str]` sin validar: se podía PATCHear un `task_type`
+    # arbitrario que luego hacía fallar la lectura. Misma lista que TaskBase.
+    task_type: Optional[TaskType] = None
 
 
 class TaskOut(TaskBase):
