@@ -130,18 +130,22 @@ def get_skill_vocabulary(current_user=Depends(get_current_user)):
     return {"count": len(vocabulary), "skills": vocabulary}
 
 
-@router.post("/recommend", response_model=RecommendationResponse)
-def recommend_simulations(
+def recommend_for_profile(
     profile: OracleProfileInput,
-    current_user=Depends(get_current_user),
-):
+    user_id: int,
+    *,
+    use_model: bool,
+) -> RecommendationResponse:
     """
-    Puntúa las 64 simulaciones del catálogo contra el perfil y devuelve el top-N.
+    Motor de `/recommend`, invocable sin pasar por HTTP.
 
-    Los `scores` de cada item los produce siempre el heurístico, cualquiera que
-    sea el motor que ordene (`confidence_interval` es null: nadie lo estima). El
-    orden lo decide el Wide&Deep si está disponible; si no, la probabilidad
-    heurística.
+    `use_model=False` salta el Wide&Deep y ordena por la probabilidad
+    heurística — el mismo camino al que se cae cuando el modelo no carga, así
+    que no es una tercera ruta sino la que ya existía.
+
+    Existe como función aparte para que `SimulationService.finish_simulation`
+    pueda pedir explícitamente el heurístico. Añadir un flag a la ruta no
+    servía: FastAPI lo habría publicado como query param del endpoint.
     """
     try:
         catalog = get_catalog()
@@ -196,7 +200,7 @@ def recommend_simulations(
             )
         )
 
-    order = oracle_engine.model_ranking(matching_inputs)
+    order = oracle_engine.model_ranking(matching_inputs) if use_model else None
     if order is not None:
         engine = oracle_engine.ENGINE_WIDEDEEP
         scored = [scored[i] for i in order]
@@ -205,7 +209,7 @@ def recommend_simulations(
         scored.sort(key=lambda item: item.scores.engagement_probability, reverse=True)
 
     return RecommendationResponse(
-        user_id=current_user.id,
+        user_id=user_id,
         # `engine` se mantiene tal cual estaba: el motor que ordenó. `ranked_by`
         # es su alias explícito y sale de la MISMA variable, así que los dos
         # reflejan siempre el mismo camino de fallback; no hay semántica nueva.
@@ -220,6 +224,22 @@ def recommend_simulations(
         unresolved_skills=unresolved,
         recommendations=scored[: profile.top_n],
     )
+
+
+@router.post("/recommend", response_model=RecommendationResponse)
+def recommend_simulations(
+    profile: OracleProfileInput,
+    current_user=Depends(get_current_user),
+):
+    """
+    Puntúa las 64 simulaciones del catálogo contra el perfil y devuelve el top-N.
+
+    Los `scores` de cada item los produce siempre el heurístico, cualquiera que
+    sea el motor que ordene (`confidence_interval` es null: nadie lo estima). El
+    orden lo decide el Wide&Deep si está disponible; si no, la probabilidad
+    heurística.
+    """
+    return recommend_for_profile(profile, current_user.id, use_model=True)
 
 
 @router.post("/full_profile", response_model=FullProfileResponse)

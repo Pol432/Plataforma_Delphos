@@ -292,9 +292,27 @@ class SimulationService:
             current_user_fields=current_user_fields,
         )
 
-        from app.api.v1.oracle import recommend_simulations
+        from app.api.v1.oracle import recommend_for_profile
 
-        recommendation_response = recommend_simulations(profile=profile, current_user=current_user)
+        # `use_model=False` a propósito: el cierre de simulación va por el
+        # heurístico, no por el Wide&Deep.
+        #
+        # El modelo está saturado y no discrimina. Medido sobre el catálogo
+        # completo: entre 26 y 37 de las 64 simulaciones reciben probabilidad
+        # 0.0 EXACTA, y las que quedan arriba se separan por ~5 diezmilésimas
+        # —ruido numérico, no preferencia—. Con perfiles de datos o diseño
+        # acierta; con finanzas o ingeniería de datos el orden sale
+        # prácticamente igual que con un perfil VACÍO (Spearman 0.72 y 0.94
+        # contra el perfil sin skills). Los 5 puntajes psicométricos y
+        # `field_of_study` no mueven el ranking en absoluto.
+        #
+        # Justo aquí es donde más se nota: el estudiante acaba de hacer una
+        # simulación concreta y la lista siguiente debe reflejar lo que
+        # demostró. El heurístico ordena por solapamiento real de skills, que es
+        # exactamente eso. Mismo criterio que ya sigue `/oracle/full_profile`.
+        recommendation_response = recommend_for_profile(
+            profile, user_id, use_model=False
+        )
 
         # El snapshot se recalcula PRIMERO (crea las filas si no existen y deja
         # UserSimulationProgress al día) y el cierre explícito se escribe DESPUÉS.
