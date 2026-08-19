@@ -55,23 +55,12 @@ function SelectField({ label, value, onChange, options }) {
     )
 }
 
-const COUNTRIES = [
-    '', 'Argentina', 'Bolivia', 'Chile', 'Colombia', 'Costa Rica', 'Cuba',
-    'Ecuador', 'El Salvador', 'Guatemala', 'Honduras', 'México', 'Nicaragua',
-    'Panamá', 'Paraguay', 'Perú', 'República Dominicana', 'Uruguay', 'Venezuela',
-    'España', 'Estados Unidos', 'Otro',
-].map(c => ({ value: c, label: c || 'Selecciona tu país' }))
-
-const ROLES = [
-    { value: '', label: 'Selecciona tu rol' },
-    { value: 'student', label: 'Estudiante universitario' },
-    { value: 'graduate', label: 'Recién graduado' },
-    { value: 'professional', label: 'Profesional en activo' },
-    { value: 'career_change', label: 'En transición de carrera' },
-    { value: 'teacher', label: 'Docente / Académico' },
-    { value: 'entrepreneur', label: 'Emprendedor' },
-    { value: 'other', label: 'Otro' },
-]
+// `ROLES` y `COUNTRIES` se han retirado junto con sus dos campos del paso 1.
+// El backend no tiene columnas para `role` ni `country` (ver
+// TODO_MATIAS_SCHEMA.md), así que el formulario los pedía como obligatorios y
+// los descartaba antes de llamar a la API: el usuario los rellenaba para nada.
+// Pedirle datos a un colegio y no guardarlos es peor que no pedirlos.
+// Cuando exista la migración, se recuperan de git junto con los campos.
 
 const GDPR_TEXT = 'Acepto los Términos de servicio y la Política de privacidad.'
 
@@ -202,24 +191,28 @@ function LoginPanel({ onNext, onGoRegister }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // ── REGISTER PANEL ────────────────────────────────────────────────────────────
 function RegisterPanel({ onNext, onGoLogin }) {
-    const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '', confirm: '', country: '', role: '', birthYear: '', terms: false })
+    const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '', confirm: '', birthYear: '', terms: false })
     const [step, setStep] = useState(1)
     const [loading, setLoading] = useState(false)
 
     const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
 
     const passwordMatch = form.password && form.confirm && form.password === form.confirm
-    const step1Valid = form.firstName && form.lastName && form.role && form.country
+    // `birthYear` entra en la validación: antes el paso sólo exigía rol y país,
+    // y el año —el único de los tres que el backend SÍ guarda— podía quedarse
+    // vacío y caer al 2000 por defecto sin que nadie se enterara.
+    const step1Valid = form.firstName && form.lastName && form.birthYear
     const step2Valid = form.email && form.password.length >= 8 && passwordMatch && form.terms
 
     const handleSubmit = async () => {
         if (!step2Valid) return;
         setLoading(true);
         try {
-            // TEMPORAL: `role` y `country` se recogen en el paso 1 pero no se envían.
-            // El backend (UserCreate, `extra="forbid"`) los rechaza con 422 porque
-            // todavía no existen como columnas. NO volver a añadirlos aquí hasta que
-            // esté hecha la migración descrita en TODO_MATIAS_SCHEMA.md.
+            // `role` y `country` ya no se piden en el formulario: el backend
+            // (UserCreate, `extra="forbid"`) los rechaza con 422 porque no existen
+            // como columnas. NO añadirlos aquí hasta que esté hecha la migración
+            // descrita en TODO_MATIAS_SCHEMA.md — y entonces devolver también los
+            // campos al paso 1.
             // `birth_year` sí se manda: el backend ya lo mapea a `birth_date`.
             const payload = {
                 email: form.email,
@@ -273,16 +266,7 @@ function RegisterPanel({ onNext, onGoLogin }) {
                             <div style={{ flex: 1 }}><Field label="Apellido" placeholder="García" value={form.lastName} onChange={set('lastName')} /></div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '16px' }}>
-                            <div style={{ flex: 1 }}>
-                                <SelectField label="Rol actual" value={form.role} onChange={set('role')} options={ROLES} />
-                            </div>
-                            <div style={{ flex: 1 }}>
-                                <SelectField label="Año de nacimiento" value={form.birthYear} onChange={set('birthYear')} options={[{ value: '', label: 'Año' }, ...years.map(y => ({ value: y, label: String(y) }))]} />
-                            </div>
-                        </div>
-
-                        <SelectField label="País" value={form.country} onChange={set('country')} options={COUNTRIES} />
+                        <SelectField label="Año de nacimiento" value={form.birthYear} onChange={set('birthYear')} options={[{ value: '', label: 'Año' }, ...years.map(y => ({ value: y, label: String(y) }))]} />
 
                         <motion.button onClick={() => step1Valid && setStep(2)}
                             whileHover={step1Valid ? { background: 'var(--primary-dim)' } : {}} whileTap={step1Valid ? { scale: 0.98 } : {}}
