@@ -77,6 +77,19 @@ class UserUpdate(BaseModel):
         description="Diccionario de micro-habilidades inferidas por el algoritmo vocacional"
     )
 
+    # `Screen2bCareerSelect.jsx` ya mandaba este campo, pero al no estar
+    # declarado Pydantic lo descartaba y el PATCH devolvía 200 como si se
+    # hubiera guardado. La selección sólo sobrevivía en localStorage, así que se
+    # perdía al cambiar de dispositivo. Mismo fallo silencioso que `role` y
+    # `country` en el registro, y por eso también aquí hay `extra="forbid"`:
+    # el siguiente campo no declarado dará 422 en vez de fingir que persistió.
+    careers: Optional[List[str]] = Field(
+        default=None,
+        description="Slugs de las carreras elegidas en el onboarding",
+    )
+
+    model_config = ConfigDict(extra="forbid")
+
 class UserOut(UserBase):
     id: int
     is_active: bool
@@ -92,6 +105,10 @@ class UserOut(UserBase):
     # Se expone para que el perfil del oráculo haga round-trip: el frontend lo
     # escribe vía PATCH /users/me y lo rehidrata al arrancar sin repetir el test.
     inferred_skills: Optional[Dict[str, Any]] = None
+    # Se expone por la misma razón que `inferred_skills`: sin esto el cliente
+    # puede escribir las carreras pero no volver a leerlas, y la rehidratación
+    # desde el backend no serviría de nada.
+    careers: Optional[List[str]] = None
 
     model_config = ConfigDict(from_attributes=True)
 

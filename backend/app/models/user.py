@@ -17,6 +17,13 @@ class User(Base):
     campo_estudio = Column(String(150), nullable=True)
     nombre_institucion = Column(String(200), nullable=True)
     inferred_skills = Column(JSON().with_variant(JSONB, 'postgresql'), default=dict, nullable=True)
+    # Carreras que el usuario elige en el onboarding (Screen2bCareerSelect).
+    # Lista de slugs del catálogo del frontend — "ux-designer", "data-scientist"…
+    # No es FK a ninguna tabla: el catálogo de 50 carreras vive en
+    # `frontend/src/data/careerSkills.js` y no tiene contraparte en la base.
+    # Se guarda como JSON por lo mismo que `inferred_skills`: es una lista corta
+    # que sólo se lee entera, nunca se consulta por elemento.
+    careers = Column(JSON().with_variant(JSONB, 'postgresql'), default=list, nullable=True)
     origen_datos = Column(String(50), default='organic')
 
     id = Column(Integer, primary_key=True, index=True)
