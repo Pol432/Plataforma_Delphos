@@ -13,9 +13,13 @@ heurístico y el Wide&Deep hablan el mismo idioma.
 
 Mapeo OOV compartido
 --------------------
-Los 16 skills que las simulaciones piden y el vocabulario entrenado no cubre se
+Los skills que las simulaciones piden y el vocabulario entrenado no cubre se
 traducen a su equivalente más cercano usando `OOV_SKILL_FALLBACKS`, la MISMA
-tabla que aplica `inference.py` del lado del modelo. Sin esto los dos motores
+tabla que aplica `inference.py` del lado del modelo. Se registran por dos vías:
+los que aparecen en `simulation_catalog.csv` (16, los únicos que reciben ID
+sintético) y los que sólo existen en `skills_metrics_weights` de la base del
+backend, como el vocabulario clínico de las simulaciones inmersivas. Ver los dos
+bucles de `_build_skill_vocabulary`. Sin esto los dos motores
 leían el catálogo distinto: el modelo veía `sim_ux_designer` con sus skills
 mapeados y la subía al top, mientras el heurístico la seguía viendo con IDs
 sintéticos sin resolver y le calculaba solapamiento 0 — la recomendación #1
@@ -199,6 +203,40 @@ class OracleCatalog:
 
             self.skill_id_by_slug[_slugify_skill(name)] = synthetic_id
             self.skill_name_by_id[synthetic_id] = name
+
+        # Segunda pasada: alias de `OOV_SKILL_FALLBACKS` que NO salen del
+        # catálogo. Los skills de las simulaciones inmersivas viven en
+        # `skills_metrics_weights` (base del backend), no en
+        # `simulation_catalog.csv`, así que el bucle de arriba no los ve nunca y
+        # añadirlos a la tabla no servía de nada: seguían cayendo en
+        # `unresolved_skills`.
+        #
+        # Va DESPUÉS y en su propio bucle, sin `enumerate`, a propósito: el
+        # `offset` de arriba se calcula sobre el conjunto derivado del catálogo y
+        # `inference._build_oov_map` reconstruye esa misma numeración leyendo el
+        # mismo CSV. Meter estos nombres en `unknown` desplazaría los IDs
+        # sintéticos 1000..1015 en un lado y no en el otro, y el featurizador
+        # empezaría a mapear al skill equivocado en silencio.
+        #
+        # Aquí no se asigna ID sintético: un nombre de esta tabla o resuelve a su
+        # equivalente entrenado o no se registra. Sin destino válido no hay nada
+        # que ofrecer, y `skill_name_by_id` queda intacto por lo mismo que
+        # arriba: el ID destino ya tiene su nombre real.
+        for name, fallback_name in fallbacks.items():
+            slug = _slugify_skill(name)
+            if slug in self.skill_id_by_slug:
+                continue  # ya lo registró el catálogo
+            fallback_id = self.skill_id_by_slug.get(_slugify_skill(fallback_name))
+            if fallback_id is None:
+                logger.warning(
+                    "OOV_SKILL_FALLBACKS mapea '%s' a '%s', que no está en "
+                    "skills_catalog.csv; se ignora la entrada.",
+                    name, fallback_name,
+                )
+                continue
+            self.skill_id_by_slug[slug] = fallback_id
+            self.mapped_skill_names[name] = fallback_name
+            self.alias_skill_ids[name] = fallback_id
 
     @staticmethod
     def _parse_skill_names(row: dict) -> List[str]:

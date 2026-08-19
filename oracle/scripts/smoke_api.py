@@ -46,7 +46,7 @@ TEST_PASSWORD = "Demo12345!"
 # propósito (se añade una simulación, crece el vocabulario), hay que
 # actualizarlos aquí: que el script falle ante un cambio no anunciado es
 # justamente lo que se quiere.
-N_SKILLS = 68
+N_SKILLS = 70
 N_SIMULACIONES = 64
 
 # El grupo de alias más usado como ejemplo: un canónico y dos alias que

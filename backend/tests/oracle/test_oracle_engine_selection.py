@@ -477,18 +477,24 @@ class TestOovMappingCoherence:
                 == right[sim_id]["scores"]["skill_overlap_score"]
             ), sim_id
 
-    def test_published_vocabulary_still_has_68_names(self, client, auth_headers):
+    def test_published_vocabulary_still_has_70_names(self, client, auth_headers):
         """
-        Mapear no debe reducir lo que el cliente puede ofrecer. Los 16 nombres
-        OOV siguen listados, apuntando al ID de su equivalente — que es el que
+        Mapear no debe reducir lo que el cliente puede ofrecer. Los nombres OOV
+        siguen listados, apuntando al ID de su equivalente — que es el que
         `resolve_skill_names` devuelve de verdad.
+
+        70 = 52 entrenados + 18 alias. Eran 68 mientras los únicos alias eran
+        los 16 que salen de `simulation_catalog.csv`; se sumaron 'Clinical
+        Knowledge' y 'Clinical Reasoning', que sólo existen en
+        `skills_metrics_weights` de la base y los registra la segunda pasada de
+        `_build_skill_vocabulary`.
         """
         response = client.get("/api/v1/oracle/skills", headers=auth_headers)
         assert response.status_code == 200, response.text
         body = response.json()
 
-        assert body["count"] == 68
-        assert len(body["skills"]) == 68
+        assert body["count"] == 70
+        assert len(body["skills"]) == 70
 
         names = {entry["name"] for entry in body["skills"]}
         assert "Figma" in names
@@ -539,6 +545,19 @@ class TestOovMappingCoherence:
             assert entry["canonical_name"] == "Adobe Creative Suite"
             assert entry["name"] != entry["canonical_name"]
 
-        # Exactamente 16 alias, que es lo que mapea OOV_SKILL_FALLBACKS.
+        # Exactamente 18 alias, que es lo que mapea OOV_SKILL_FALLBACKS: los 16
+        # del catálogo más los 2 clínicos que sólo vienen de la base.
         aliases = [e for e in skills if e["name"] != e["canonical_name"]]
-        assert len(aliases) == 16
+        assert len(aliases) == 18
+
+        # Los dos nuevos resuelven a su equivalente entrenado. Se comprueban por
+        # nombre y no sólo por el total: un cambio en la tabla que los perdiera
+        # y añadiera otros dos dejaría el 18 intacto y pasaría desapercibido.
+        assert by_name["Clinical Knowledge"]["canonical_name"] == "Medical Knowledge"
+        assert by_name["Clinical Reasoning"]["canonical_name"] == "Clinical Assessment"
+
+        # Y los dos que se decidió NO mapear siguen fuera: son nombres
+        # transversales y mapearlos a un skill clínico desviaría cualquier
+        # simulación no médica que los use.
+        assert "Documentation" not in by_name
+        assert "Decision Making" not in by_name

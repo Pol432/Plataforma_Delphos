@@ -157,6 +157,20 @@ OOV_SKILL_FALLBACKS = {
     "Compliance": "Legal Research",
     "Contract Review": "Case Analysis",
     "PPC": "Marketing",
+    # --- Vocabulario clínico de las simulaciones inmersivas -------------------
+    # Estos dos NO vienen de `simulation_catalog.csv` sino de
+    # `skills_metrics_weights` (base del backend), así que sólo los registra el
+    # segundo bucle de `oracle_catalog._build_skill_vocabulary` y nunca reciben
+    # ID sintético: no desplazan los 1000..1015 de los 16 de arriba.
+    "Clinical Knowledge": "Medical Knowledge",
+    "Clinical Reasoning": "Clinical Assessment",
+    # Deliberadamente FUERA: "Documentation" y "Decision Making". Los dos son
+    # nombres transversales que hoy sólo aparecen en simulaciones médicas, pero
+    # esta tabla es global y permanente: mapear "Decision Making" a un skill
+    # clínico haría que una simulación de negocio que use el mismo nombre
+    # recomiende carreras de salud. Se dejan sin resolver a propósito — salen en
+    # `unresolved_skills`, que es justo la lista que hace falta para decidir si
+    # merecen entrar al vocabulario entrenado.
 }
 
 #: Offset de los IDs sintéticos que asigna `app/services/oracle_catalog.py`.
