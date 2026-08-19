@@ -17,9 +17,20 @@ def create_simulation(sim_data: SimulationCreate, db: Session = Depends(get_db))
     return service.create_simulation(sim_data.model_dump())
 
 @router.get("", response_model=List[SimulationOut])
-def list_simulations(skip: int = 0, limit: int = 100, company_id: Optional[int] = None, state: Optional[str] = None, db: Session = Depends(get_db)):
+def list_simulations(
+    skip: int = 0,
+    limit: int = 100,
+    company_id: Optional[int] = None,
+    state: Optional[str] = Query(
+        "published",
+        description="Estado a filtrar. Por defecto solo 'published'; usar 'all' para incluir draft/archived.",
+    ),
+    db: Session = Depends(get_db),
+):
     service = SimulationService(db)
-    return service.list_simulations(skip, limit, company_id, state)
+    # `state=all` es la vía explícita (ej. admin) para ver también draft/archived.
+    state_filter = None if state == "all" else state
+    return service.list_simulations(skip, limit, company_id, state_filter)
 
 @router.get("/{sim_id}", response_model=SimulationOut)
 def get_simulation(sim_id: int, db: Session = Depends(get_db)):
