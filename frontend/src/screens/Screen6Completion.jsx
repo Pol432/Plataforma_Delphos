@@ -5,6 +5,9 @@ import api from '../services/api'
 
 export default function Screen6Completion({ onNext, activeModule }) {
     const [registering, setRegistering] = useState(false)
+    // Respuesta de POST /simulaciones/{id}/finish. Es la que trae el cierre real
+    // del oráculo: las skills que el estudiante demostró y qué hacer después.
+    const [finishResult, setFinishResult] = useState(null)
 
     useEffect(() => {
         const registerCompletion = async () => {
@@ -47,6 +50,16 @@ export default function Screen6Completion({ onNext, activeModule }) {
                         completion_percentage: 100,
                     })
                 }
+
+                // Cierre de la simulación. Devuelve la recomendación del
+                // oráculo calculada sobre las tareas que se acaban de entregar;
+                // sin esto la pantalla enseñaba un texto fijo.
+                try {
+                    const finishRes = await api.post(`/api/v1/simulaciones/${activeModule.id}/finish`, {})
+                    setFinishResult(finishRes.data)
+                } catch (finishErr) {
+                    console.warn('No se pudo cerrar la simulación:', finishErr?.response?.status)
+                }
             } catch (err) {
                 console.error('Error al registrar módulo completado:', err)
             } finally {
@@ -56,6 +69,13 @@ export default function Screen6Completion({ onNext, activeModule }) {
 
         registerCompletion()
     }, [activeModule])
+
+    // `matched_skills` son los nombres de las skills que el catálogo resolvió a
+    // partir de las tareas entregadas: es lo más cercano a "qué demostró" que
+    // devuelve el endpoint. Se unen sin repetir, respetando el orden del ranking.
+    const recomendaciones = finishResult?.recommendation?.recommendations || []
+    const demostradas = [...new Set(recomendaciones.flatMap(r => r.matched_skills || []))]
+    const siguiente = recomendaciones[0] || null
 
     const handleContinue = () => {
         localStorage.removeItem('activeModule')
@@ -140,28 +160,59 @@ export default function Screen6Completion({ onNext, activeModule }) {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
                     <h3 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '4px' }}>Feedback del Instructor IA</h3>
-                    <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}
-                        style={{ background: 'rgba(6, 182, 212, 0.05)', border: '1px solid rgba(6, 182, 212, 0.2)', borderLeft: '3px solid var(--accent)', borderRadius: '8px', padding: '16px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}
-                    >
-                        <div style={{ width: '32px', height: '32px', flexShrink: 0, background: 'var(--bg)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)' }}>
-                            <CheckCircle size={16} color="var(--accent)" strokeWidth={2.5} />
-                        </div>
-                        <div>
-                            <p style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '0.75rem', color: 'var(--accent)', marginBottom: '6px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Ejecución Óptima</p>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text)', lineHeight: '1.5', fontFamily: 'Inter' }}>Tu lógica fue impecable. La estructura mostrada fue clara y profesional.</p>
-                        </div>
-                    </motion.div>
-                    <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}
-                        style={{ background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)', borderLeft: '3px solid var(--primary)', borderRadius: '8px', padding: '16px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}
-                    >
-                        <div style={{ width: '32px', height: '32px', flexShrink: 0, background: 'var(--bg)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)' }}>
-                            <Lightbulb size={16} color="var(--primary)" strokeWidth={2.5} />
-                        </div>
-                        <div>
-                            <p style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '0.75rem', color: 'var(--primary)', marginBottom: '6px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Área de Mejora Recomendada</p>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text)', lineHeight: '1.5', fontFamily: 'Inter' }}>Intenta documentar tus próximos pasos para que el equipo pueda darte seguimiento más fácilmente.</p>
-                        </div>
-                    </motion.div>
+
+                    {registering && !finishResult && (
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>
+                            Analizando tus entregas...
+                        </p>
+                    )}
+
+                    {!registering && !finishResult && (
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>
+                            No pudimos generar el análisis de esta entrega.
+                        </p>
+                    )}
+
+                    {finishResult && (
+                        <>
+                            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}
+                                style={{ background: 'rgba(6, 182, 212, 0.05)', border: '1px solid rgba(6, 182, 212, 0.2)', borderLeft: '3px solid var(--accent)', borderRadius: '8px', padding: '16px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}
+                            >
+                                <div style={{ width: '32px', height: '32px', flexShrink: 0, background: 'var(--bg)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)' }}>
+                                    <CheckCircle size={16} color="var(--accent)" strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                    <p style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '0.75rem', color: 'var(--accent)', marginBottom: '6px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Habilidades demostradas</p>
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--text)', lineHeight: '1.5', fontFamily: 'Inter' }}>
+                                        {demostradas.length
+                                            ? `Tus entregas evidencian ${demostradas.join(', ')}.`
+                                            : 'Registramos tus entregas, pero aún no pudimos asociarlas a habilidades del catálogo.'}
+                                    </p>
+                                </div>
+                            </motion.div>
+
+                            {siguiente && (
+                                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}
+                                    style={{ background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)', borderLeft: '3px solid var(--primary)', borderRadius: '8px', padding: '16px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}
+                                >
+                                    <div style={{ width: '32px', height: '32px', flexShrink: 0, background: 'var(--bg)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)' }}>
+                                        <Lightbulb size={16} color="var(--primary)" strokeWidth={2.5} />
+                                    </div>
+                                    <div>
+                                        <p style={{ fontFamily: 'Inter', fontWeight: 700, fontSize: '0.75rem', color: 'var(--primary)', marginBottom: '6px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Siguiente paso recomendado</p>
+                                        <p style={{ fontSize: '0.85rem', color: 'var(--text)', lineHeight: '1.5', fontFamily: 'Inter' }}>
+                                            {siguiente.title}
+                                            {siguiente.matched_skills?.length ? ` — refuerza ${siguiente.matched_skills.join(', ')}.` : '.'}
+                                        </p>
+                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'Inter' }}>
+                                            {[siguiente.categoria, siguiente.nivel_dificultad, siguiente.duracion_horas ? `${siguiente.duracion_horas} h` : null]
+                                                .filter(Boolean).join(' · ')}
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </>
+                    )}
                 </div>
 
                 <motion.button
