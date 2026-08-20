@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { CheckCircle, Lightbulb, Award, BookOpen, Clock } from 'lucide-react'
+import { CheckCircle, Lightbulb, BookOpen, Clock } from 'lucide-react'
 import api from '../services/api'
 
 export default function Screen6Completion({ onNext, activeModule }) {
@@ -131,7 +131,7 @@ export default function Screen6Completion({ onNext, activeModule }) {
                     </p>
                 )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '32px' }}>
                     <div style={{
                         background: 'var(--bg2)', border: '1px solid var(--border)',
                         borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px'
@@ -142,18 +142,6 @@ export default function Screen6Completion({ onNext, activeModule }) {
                         <div>
                             <p style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-bright)' }}>{activeModule?.estimatedTime || '1h 30m'}</p>
                             <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>TIEMPO INVERTIDO</p>
-                        </div>
-                    </div>
-                    <div style={{
-                        background: 'var(--bg2)', border: '1px solid var(--border)',
-                        borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px'
-                    }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--bg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Award size={20} color="var(--accent)" />
-                        </div>
-                        <div>
-                            <p style={{ fontFamily: 'Inter', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-bright)' }}>100%</p>
-                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>PRECISIÓN</p>
                         </div>
                     </div>
                 </div>
